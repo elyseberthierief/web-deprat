@@ -1,0 +1,893 @@
+<?php
+
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
+/* ============================================================
+ * DEPRAT - Ouverture de compte professionnel - VERSION V2
+ * WooCommerce + Astra + Code Snippets (PHP / Exécuter partout)
+ * NE PAS ajouter <?php dans Code Snippets.
+ * Remplacer l'ancien snippet en entier, sans en créer un second.
+ * ============================================================ */
+
+/**
+ * Coordonnées affichées dans les e-mails clients.
+ * À actualiser ici si le téléphone ou l'adresse e-mail évoluent.
+ * Logo officiel DEPRAT utilisé dans les e-mails clients :
+ * https://deprat.eu/wp-content/uploads/2026/11/cropped-Logo-Deprat.png
+ */
+function deprat_pro_contact() {
+    return array(
+        'company' => 'DEPRAT',
+        'street'  => '4 rue de la Papinerie',
+        'city'    => '59115 Leers, France',
+        'phone'   => '03 20 89 68 00',
+        'email'   => 'contact@deprat.com',
+        'web'     => 'https://www.deprat.fr/',
+    );
+}
+
+/** Produit un HTML autonome compatible avec WP Mail SMTP. */
+function deprat_pro_email_html( $heading, $inner_html ) {
+    $coord = deprat_pro_contact();
+    // Logo officiel fourni par DEPRAT, sans dépendre du réglage Astra.
+    $logo_url = 'https://deprat.eu/wp-content/uploads/2026/11/cropped-Logo-Deprat.png';
+    $logo_html = '<img src="' . esc_url( $logo_url ) . '" alt="DEPRAT" width="145" style="width:145px;max-width:100%;height:auto;display:block;border:0;">';
+
+    $out = '<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head>';
+    $out .= '<body style="margin:0;padding:0;background:#f4f6fa;font-family:Arial,Helvetica,sans-serif;color:#1c2b42;">';
+    $out .= '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f4f6fa;"><tr><td align="center" style="padding:28px 12px;">';
+    $out .= '<table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:600px;background:#ffffff;border:1px solid #e3e8ef;">';
+    $out .= '<tr><td style="padding:26px 34px;border-top:5px solid #0a3c8a;border-bottom:2px solid #ad963f;">' . $logo_html . '</td></tr>';
+    $out .= '<tr><td style="padding:34px;font-size:15px;line-height:1.65;color:#33435b;">';
+    $out .= '<h1 style="margin:0 0 22px;font-size:25px;line-height:1.25;color:#0b2e64;font-weight:700;">' . esc_html( $heading ) . '</h1>';
+    $out .= $inner_html;
+    $out .= '<p style="margin:26px 0 0;">Cordialement,<br><strong style="color:#0a3c8a;">L’équipe DEPRAT</strong></p>';
+    $out .= '</td></tr>';
+    $out .= '<tr><td style="padding:22px 34px;background:#f7f9fc;border-top:1px solid #e4e9f2;color:#66758a;font-size:12px;line-height:1.8;">';
+    $out .= '<strong style="color:#0b2e64;">' . esc_html( $coord['company'] ) . '</strong><br>';
+    $out .= esc_html( $coord['street'] ) . ' – ' . esc_html( $coord['city'] ) . '<br>';
+    $out .= 'Tél. : <a style="color:#0a3c8a;text-decoration:none;" href="tel:' . esc_attr( preg_replace( '/[^0-9+]/', '', $coord['phone'] ) ) . '">' . esc_html( $coord['phone'] ) . '</a> &nbsp;|&nbsp; ';
+    $out .= '<a href="mailto:' . esc_attr( $coord['email'] ) . '" style="color:#0a3c8a;">' . esc_html( $coord['email'] ) . '</a><br>';
+    $out .= '<a href="' . esc_url( $coord['web'] ) . '" style="color:#0a3c8a;">www.deprat.fr</a>';
+    $out .= '</td></tr></table></td></tr></table></body></html>';
+    return $out;
+}
+
+/** Envoyer les messages clients en HTML tout en utilisant WP Mail SMTP. */
+function deprat_pro_send_client_email( $to, $subject, $heading, $html_content ) {
+    return wp_mail(
+        sanitize_email( $to ),
+        $subject,
+        deprat_pro_email_html( $heading, $html_content ),
+        array( 'Content-Type: text/html; charset=UTF-8' )
+    );
+}
+
+/**
+ * Couper UNIQUEMENT le message de bienvenue WooCommerce pour
+ * un compte en attente. Le code custom ci-dessous envoie déjà
+ * son propre e-mail de confirmation (évite donc les doublons).
+ * WC_Email::is_enabled() fournit l'objet utilisateur en 2e argument.
+ */
+add_filter( 'woocommerce_email_enabled_customer_new_account', function( $enabled, $object ) {
+    $user_id = 0;
+    if ( $object instanceof WP_User ) {
+        $user_id = (int) $object->ID;
+    } elseif ( is_numeric( $object ) ) {
+        $user_id = (int) $object;
+    }
+    if ( $user_id && 'pending' === get_user_meta( $user_id, 'deprat_account_status', true ) ) {
+        return false;
+    }
+    return $enabled;
+}, 10, 2 );
+
+/**
+ * 1. Création du rôle "Compte pro en attente"
+ */
+add_action( 'init', function() {
+
+	if ( ! get_role( 'deprat_pending' ) ) {
+
+		add_role(
+			'deprat_pending',
+			'Compte pro en attente',
+			array(
+				'read' => true,
+			)
+		);
+
+	}
+
+} );
+
+
+/**
+ * Fonction utilitaire :
+ * récupère proprement une valeur envoyée par le formulaire.
+ */
+function deprat_get_registration_value( $key ) {
+
+	if ( ! isset( $_POST[ $key ] ) ) {
+		return '';
+	}
+
+	return wc_clean( wp_unslash( $_POST[ $key ] ) );
+
+}
+
+
+/**
+ * 2. Ajout des champs au formulaire WooCommerce "Mon compte"
+ */
+add_action( 'woocommerce_register_form', function() {
+
+	?>
+
+	<h3 style="margin-top:30px;">
+		Informations professionnelles
+	</h3>
+
+	<?php
+
+	woocommerce_form_field(
+		'billing_company',
+		array(
+			'type'        => 'text',
+			'required'    => true,
+			'label'       => 'Raison sociale',
+			'placeholder' => 'Nom de votre entreprise',
+			'class'       => array( 'form-row-wide' ),
+		),
+		deprat_get_registration_value( 'billing_company' )
+	);
+
+
+	woocommerce_form_field(
+		'deprat_siret',
+		array(
+			'type'        => 'text',
+			'required'    => true,
+			'label'       => 'N° SIRET',
+			'placeholder' => '14 chiffres',
+			'class'       => array( 'form-row-wide' ),
+		),
+		deprat_get_registration_value( 'deprat_siret' )
+	);
+
+
+	woocommerce_form_field(
+		'billing_last_name',
+		array(
+			'type'        => 'text',
+			'required'    => true,
+			'label'       => 'Nom',
+			'placeholder' => 'Votre nom',
+			'class'       => array( 'form-row-first' ),
+		),
+		deprat_get_registration_value( 'billing_last_name' )
+	);
+
+
+	woocommerce_form_field(
+		'billing_first_name',
+		array(
+			'type'        => 'text',
+			'required'    => true,
+			'label'       => 'Prénom',
+			'placeholder' => 'Votre prénom',
+			'class'       => array( 'form-row-last' ),
+		),
+		deprat_get_registration_value( 'billing_first_name' )
+	);
+
+
+	woocommerce_form_field(
+		'billing_phone',
+		array(
+			'type'        => 'tel',
+			'required'    => true,
+			'label'       => 'Téléphone',
+			'placeholder' => 'Ex. 03 20 00 00 00',
+			'class'       => array( 'form-row-wide' ),
+		),
+		deprat_get_registration_value( 'billing_phone' )
+	);
+
+
+	woocommerce_form_field(
+		'billing_address_1',
+		array(
+			'type'        => 'text',
+			'required'    => true,
+			'label'       => 'Adresse',
+			'placeholder' => 'N° et nom de voie',
+			'class'       => array( 'form-row-wide' ),
+		),
+		deprat_get_registration_value( 'billing_address_1' )
+	);
+
+
+	woocommerce_form_field(
+		'billing_postcode',
+		array(
+			'type'        => 'text',
+			'required'    => true,
+			'label'       => 'Code postal',
+			'placeholder' => 'Ex. 59115',
+			'class'       => array( 'form-row-first' ),
+		),
+		deprat_get_registration_value( 'billing_postcode' )
+	);
+
+
+	woocommerce_form_field(
+		'billing_city',
+		array(
+			'type'        => 'text',
+			'required'    => true,
+			'label'       => 'Ville',
+			'placeholder' => 'Votre ville',
+			'class'       => array( 'form-row-last' ),
+		),
+		deprat_get_registration_value( 'billing_city' )
+	);
+
+
+	woocommerce_form_field(
+		'deprat_activity',
+		array(
+			'type'     => 'select',
+			'required' => true,
+			'label'    => 'Votre activité',
+			'class'    => array( 'form-row-wide' ),
+			'options'  => array(
+				''             => 'Sélectionnez votre activité',
+				'fabricant'    => 'Fabricant',
+				'installateur' => 'Installateur / Poseur',
+				'reparateur'   => 'Réparateur / SAV',
+				'revendeur'    => 'Revendeur / Négoce',
+				'industriel'   => 'Industriel',
+				'autre'        => 'Autre',
+			),
+		),
+		deprat_get_registration_value( 'deprat_activity' )
+	);
+
+
+	woocommerce_form_field(
+		'deprat_customer_number',
+		array(
+			'type'        => 'text',
+			'required'    => false,
+			'label'       => 'N° client DEPRAT',
+			'placeholder' => 'Si vous êtes déjà client DEPRAT',
+			'class'       => array( 'form-row-wide' ),
+		),
+		deprat_get_registration_value( 'deprat_customer_number' )
+	);
+
+
+	woocommerce_form_field(
+		'deprat_note',
+		array(
+			'type'        => 'textarea',
+			'required'    => false,
+			'label'       => 'Informations complémentaires',
+			'placeholder' => 'Vous pouvez préciser ici votre activité ou votre demande.',
+			'class'       => array( 'form-row-wide' ),
+		),
+		deprat_get_registration_value( 'deprat_note' )
+	);
+
+} );
+
+
+/**
+ * 3. Vérification des champs obligatoires
+ */
+add_filter(
+	'woocommerce_process_registration_errors',
+	function( $errors, $username, $password, $email ) {
+
+		$required_fields = array(
+
+			'billing_company'    => 'Raison sociale',
+			'deprat_siret'       => 'N° SIRET',
+			'billing_last_name'  => 'Nom',
+			'billing_first_name' => 'Prénom',
+			'billing_phone'      => 'Téléphone',
+			'billing_address_1'  => 'Adresse',
+			'billing_postcode'   => 'Code postal',
+			'billing_city'       => 'Ville',
+			'deprat_activity'    => 'Activité',
+
+		);
+
+
+		foreach ( $required_fields as $field => $label ) {
+
+			if ( empty( deprat_get_registration_value( $field ) ) ) {
+
+				$errors->add(
+					'deprat_' . $field,
+					'Le champ « ' . $label . ' » est obligatoire.'
+				);
+
+			}
+
+		}
+
+
+		/**
+		 * Vérification simple du SIRET :
+		 * exactement 14 chiffres.
+		 */
+		$siret = preg_replace(
+			'/\D/',
+			'',
+			deprat_get_registration_value( 'deprat_siret' )
+		);
+
+
+		if ( ! empty( $siret ) && strlen( $siret ) !== 14 ) {
+
+			$errors->add(
+				'deprat_invalid_siret',
+				'Le numéro SIRET doit comporter exactement 14 chiffres.'
+			);
+
+		}
+
+
+		return $errors;
+
+	},
+	10,
+	4
+);
+
+
+/**
+ * 4. Enregistrement des informations lors de la création du compte
+ */
+add_action(
+	'woocommerce_created_customer',
+	function( $customer_id, $new_customer_data = array(), $password_generated = false ) {
+
+
+		/**
+		 * Champs utilisateur à enregistrer.
+		 */
+		$fields = array(
+
+			'billing_company',
+			'billing_first_name',
+			'billing_last_name',
+			'billing_phone',
+			'billing_address_1',
+			'billing_postcode',
+			'billing_city',
+			'deprat_activity',
+			'deprat_customer_number',
+			'deprat_note',
+
+		);
+
+
+		foreach ( $fields as $field ) {
+
+			if ( isset( $_POST[ $field ] ) ) {
+
+				$value = wp_unslash( $_POST[ $field ] );
+
+				/**
+				 * Le commentaire accepte plusieurs lignes.
+				 */
+				if ( 'deprat_note' === $field ) {
+
+					$value = sanitize_textarea_field( $value );
+
+				} else {
+
+					$value = sanitize_text_field( $value );
+
+				}
+
+
+				update_user_meta(
+					$customer_id,
+					$field,
+					$value
+				);
+
+			}
+
+		}
+
+
+		/**
+		 * Enregistrement du SIRET.
+		 */
+		$siret = preg_replace(
+			'/\D/',
+			'',
+			deprat_get_registration_value( 'deprat_siret' )
+		);
+
+
+		update_user_meta(
+			$customer_id,
+			'deprat_siret',
+			$siret
+		);
+
+
+		/**
+		 * Pays par défaut : France.
+		 */
+		update_user_meta(
+			$customer_id,
+			'billing_country',
+			'FR'
+		);
+
+
+		/**
+		 * Statut interne DEPRAT.
+		 */
+		update_user_meta(
+			$customer_id,
+			'deprat_account_status',
+			'pending'
+		);
+
+		// Mémoriser si WooCommerce a généré automatiquement le mot de passe.
+		update_user_meta( $customer_id, 'deprat_generated_password', $password_generated ? 'yes' : 'no' );
+
+
+		/**
+		 * Nom et prénom WordPress.
+		 */
+		wp_update_user(
+			array(
+
+				'ID' => $customer_id,
+
+				'first_name' =>
+					deprat_get_registration_value(
+						'billing_first_name'
+					),
+
+				'last_name' =>
+					deprat_get_registration_value(
+						'billing_last_name'
+					),
+
+				'display_name' =>
+					trim(
+						deprat_get_registration_value(
+							'billing_first_name'
+						)
+						.
+						' '
+						.
+						deprat_get_registration_value(
+							'billing_last_name'
+						)
+					),
+
+			)
+		);
+
+
+		/**
+		 * Le compte devient "Compte pro en attente"
+		 * au lieu de "Client".
+		 */
+		$user = new WP_User( $customer_id );
+
+		$user->set_role( 'deprat_pending' );
+
+
+		/* =====================================================
+		 * EMAIL ENVOYÉ À DEPRAT
+		 * ===================================================== */
+
+
+		/**
+		 * Pour l'instant :
+		 * l'e-mail administrateur du site reçoit la demande.
+		 *
+		 * On pourra remplacer cette ligne plus tard par
+		 * une adresse DEPRAT précise.
+		 */
+		$recipient = get_option( 'admin_email' );
+
+
+		$company =
+			deprat_get_registration_value(
+				'billing_company'
+			);
+
+
+		$subject =
+			'Nouvelle demande d’ouverture de compte pro - '
+			.
+			$company;
+
+
+		$customer =
+			get_userdata( $customer_id );
+
+
+		$message  =
+			"Nouvelle demande d'ouverture de compte professionnel DEPRAT\n\n";
+
+
+		$message .=
+			"Entreprise : "
+			.
+			$company
+			.
+			"\n";
+
+
+		$message .=
+			"SIRET : "
+			.
+			$siret
+			.
+			"\n";
+
+
+		$message .=
+			"Contact : "
+			.
+			deprat_get_registration_value(
+				'billing_first_name'
+			)
+			.
+			' '
+			.
+			deprat_get_registration_value(
+				'billing_last_name'
+			)
+			.
+			"\n";
+
+
+		$message .=
+			"E-mail : "
+			.
+			$customer->user_email
+			.
+			"\n";
+
+
+		$message .=
+			"Téléphone : "
+			.
+			deprat_get_registration_value(
+				'billing_phone'
+			)
+			.
+			"\n";
+
+
+		$message .=
+			"Adresse : "
+			.
+			deprat_get_registration_value(
+				'billing_address_1'
+			)
+			.
+			"\n";
+
+
+		$message .=
+			"Code postal : "
+			.
+			deprat_get_registration_value(
+				'billing_postcode'
+			)
+			.
+			"\n";
+
+
+		$message .=
+			"Ville : "
+			.
+			deprat_get_registration_value(
+				'billing_city'
+			)
+			.
+			"\n";
+
+
+		$message .=
+			"Activité : "
+			.
+			deprat_get_registration_value(
+				'deprat_activity'
+			)
+			.
+			"\n";
+
+
+		$message .=
+			"N° client DEPRAT : "
+			.
+			deprat_get_registration_value(
+				'deprat_customer_number'
+			)
+			.
+			"\n\n";
+
+
+		$message .=
+			"Informations complémentaires :\n"
+			.
+			deprat_get_registration_value(
+				'deprat_note'
+			);
+
+
+		wp_mail(
+			$recipient,
+			$subject,
+			$message
+		);
+
+
+		/* =====================================================
+		 * EMAIL ENVOYÉ AU CLIENT
+		 * ===================================================== */
+
+
+        // E-mail unique au client : inscription reçue, attente de validation.
+        $first_name = (string) get_user_meta( $customer_id, 'billing_first_name', true );
+        $client_html  = '<p>Bonjour ' . esc_html( $first_name ? $first_name : $customer->display_name ) . ',</p>';
+        $client_html .= '<p>Nous vous remercions de votre intérêt pour DEPRAT. ';
+        $client_html .= 'Nous avons bien reçu votre demande d’ouverture de compte professionnel.</p>';
+        $client_html .= '<p style="padding:15px 18px;background:#f1f5fa;border-left:4px solid #0a3c8a;color:#0b2e64;">';
+        $client_html .= '<strong>Votre compte est actuellement en attente de validation par notre équipe.</strong></p>';
+        $client_html .= '<p>Nous allons vérifier vos informations professionnelles. ';
+        $client_html .= 'Vous recevrez un nouvel e-mail dès que votre compte aura été validé.</p>';
+        $client_html .= '<p>Une fois activé, votre espace professionnel vous permettra de consulter le catalogue ';
+        $client_html .= 'DEPRAT et d’envoyer vos demandes de devis en ligne.</p>';
+        $client_html .= '<p><strong>Votre identifiant :</strong> ' . esc_html( $customer->user_login ) . '</p>';
+        $client_html .= '<p><small style="color:#66758a;">L’accès au compte n’est pas encore possible avant notre validation.</small></p>';
+
+        deprat_pro_send_client_email(
+            $customer->user_email,
+            'DEPRAT – Votre demande de compte professionnel est bien reçue',
+            'Votre demande de compte est bien reçue',
+            $client_html
+        );
+
+    },
+    5,
+    3
+);
+
+
+/**
+ * 5. Empêcher WooCommerce de connecter automatiquement
+ * le client après son inscription.
+ *
+ * WooCommerce peut normalement connecter automatiquement
+ * un nouveau client après création du compte.
+ */
+add_filter(
+	'woocommerce_registration_auth_new_customer',
+	function( $authenticate, $customer_id ) {
+
+		$status =
+			get_user_meta(
+				$customer_id,
+				'deprat_account_status',
+				true
+			);
+
+
+		if ( 'pending' === $status ) {
+
+			return false;
+
+		}
+
+
+		return $authenticate;
+
+	},
+	10,
+	2
+);
+
+
+/**
+ * 6. Bloquer toute tentative de connexion
+ * d'un compte encore en attente.
+ */
+add_filter(
+	'wp_authenticate_user',
+	function( $user, $password ) {
+
+		if ( is_wp_error( $user ) ) {
+
+			return $user;
+
+		}
+
+
+		$status =
+			get_user_meta(
+				$user->ID,
+				'deprat_account_status',
+				true
+			);
+
+
+		if ( 'pending' === $status ) {
+
+			return new WP_Error(
+
+				'deprat_account_pending',
+
+				'Votre demande de compte professionnel est actuellement en cours de validation par DEPRAT.'
+
+			);
+
+		}
+
+
+		return $user;
+
+	},
+	30,
+	2
+);
+
+
+/**
+ * 7. VALIDATION DU COMPTE
+ *
+ * Dans WordPress :
+ *
+ * Utilisateurs
+ * → ouvrir le client
+ * → Rôle
+ * → passer de
+ *
+ * "Compte pro en attente"
+ *
+ * à
+ *
+ * "Client"
+ *
+ *
+ * Cela valide automatiquement le compte.
+ */
+add_action(
+	'set_user_role',
+	function( $user_id, $new_role, $old_roles ) {
+
+
+		if (
+			'customer' === $new_role
+			&&
+			in_array(
+				'deprat_pending',
+				$old_roles,
+				true
+			)
+		) {
+
+
+			/**
+			 * Statut validé.
+			 */
+			update_user_meta(
+				$user_id,
+				'deprat_account_status',
+				'approved'
+			);
+
+
+			$user =
+				get_userdata(
+					$user_id
+				);
+
+
+			/**
+			 * Email de validation envoyé au client.
+			 */
+			if ( $user ) {
+
+                $first_name = (string) get_user_meta( $user_id, 'billing_first_name', true );
+                $approval_html  = '<p>Bonjour ' . esc_html( $first_name ? $first_name : $user->display_name ) . ',</p>';
+                $approval_html .= '<p>Bonne nouvelle ! Votre demande d’ouverture de compte professionnel DEPRAT ';
+                $approval_html .= 'a été <strong>validée par notre équipe</strong>.</p>';
+                $approval_html .= '<p>Vous pouvez maintenant vous connecter à votre espace professionnel, ';
+                $approval_html .= 'consulter notre catalogue et préparer vos demandes de devis.</p>';
+                $account_url = function_exists( 'wc_get_page_permalink' )
+                    ? wc_get_page_permalink( 'myaccount' )
+                    : wp_login_url();
+                $approval_html .= '<p style="margin:24px 0;"><a href="' . esc_url( $account_url ) . '" ';
+                $approval_html .= 'style="background:#0a3c8a;color:#ffffff;padding:13px 22px;display:inline-block;';
+                $approval_html .= 'text-decoration:none;font-weight:bold;">Accéder à mon espace professionnel</a></p>';
+
+                // Si aucun mot de passe n'a été choisi lors de l'inscription,
+                // fournir un lien sécurisé pour le définir au moment de la validation.
+                if ( 'yes' === get_user_meta( $user_id, 'deprat_generated_password', true ) ) {
+                    $reset_key = get_password_reset_key( $user );
+                    if ( ! is_wp_error( $reset_key ) ) {
+                        $reset_url = network_site_url(
+                            'wp-login.php?action=rp&key=' . rawurlencode( $reset_key ) .
+                            '&login=' . rawurlencode( $user->user_login ),
+                            'login'
+                        );
+                        $approval_html .= '<p><strong>Première connexion :</strong> ';
+                        $approval_html .= '<a href="' . esc_url( $reset_url ) . '" style="color:#0a3c8a;">';
+                        $approval_html .= 'définir votre mot de passe</a>.</p>';
+                    }
+                }
+                $approval_html .= '<p>Votre identifiant : <strong>' . esc_html( $user->user_login ) . '</strong></p>';
+
+                deprat_pro_send_client_email(
+                    $user->user_email,
+                    'DEPRAT – Votre compte professionnel est activé',
+                    'Votre compte professionnel est activé',
+                    $approval_html
+                );
+
+            }
+
+		}
+
+	},
+	10,
+	3
+);
+
+
+/**
+ * 8. Modifier certains textes du formulaire WooCommerce
+ * uniquement sur la page Mon compte.
+ */
+add_filter(
+	'gettext',
+	function( $translated, $text, $domain ) {
+
+		if (
+			'woocommerce' !== $domain
+			||
+			! function_exists( 'is_account_page' )
+			||
+			! is_account_page()
+			||
+			is_user_logged_in()
+		) {
+
+			return $translated;
+
+		}
+
+
+		if ( 'Register' === $text ) {
+
+			return 'Demander l’ouverture de mon compte';
+
+		}
+
+
+		return $translated;
+
+	},
+	20,
+	3
+);
