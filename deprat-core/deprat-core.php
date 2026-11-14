@@ -2,7 +2,7 @@
 /**
  * Plugin Name: DEPRAT Core
  * Description: Fonctionnalités du portail professionnel DEPRAT et de l’interface ADV.
- * Version: 0.1.0
+ * Version: 0.1.1
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -35,3 +35,13 @@ add_action( 'plugins_loaded', static function () {
         } )( __DIR__ . '/snippets/' . $file );
     }
 }, 1 );
+
+add_action( 'wp_head', static function () {
+    // Conserver le chargement en ligne dans l’en-tête public.
+    foreach ( array( '678-historique-client', '679-typographie' ) as $name ) {
+        $css = file_get_contents( __DIR__ . '/assets/css/' . $name . '.css' );
+        if ( false !== $css ) {
+            echo '<style id="deprat-core-' . esc_attr( $name ) . '">' . $css . '</style>' . "\n";
+        }
+    }
+}, 10 );

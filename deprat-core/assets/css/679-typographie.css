@@ -1,0 +1,53 @@
+/* ==========================================
+   DEPRAT - TYPOGRAPHIE GLOBALE
+   Police officielle : AGENDA
+   ========================================== */
+
+:root {
+    --deprat-font: "Agenda", "Agenda Std", Arial, sans-serif;
+}
+
+/* Texte général du site */
+body,
+body p,
+body li,
+body blockquote,
+body table,
+body th,
+body td,
+body label,
+body small {
+    font-family: var(--deprat-font) !important;
+}
+
+/* Titres */
+body h1,
+body h2,
+body h3,
+body h4,
+body h5,
+body h6 {
+    font-family: var(--deprat-font) !important;
+}
+
+/* Menus et navigation */
+body .main-header-menu a,
+body .ast-builder-menu a,
+body .woocommerce-MyAccount-navigation a {
+    font-family: var(--deprat-font) !important;
+}
+
+/* Formulaires et boutons */
+body button,
+body input,
+body select,
+body textarea,
+body .button,
+body .wp-block-button__link {
+    font-family: var(--deprat-font) !important;
+}
+
+/* Espace professionnel DEPRAT */
+body .deprat-historique-v7 {
+    font-family: var(--deprat-font) !important;
+}
