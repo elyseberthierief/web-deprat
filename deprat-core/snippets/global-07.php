@@ -83,7 +83,57 @@ add_shortcode('deprat_menu_pro', function () {
     $compte = wc_get_page_permalink('myaccount');
 
     if (!is_user_logged_in()) {
-        return '<a class="deprat-pro-connexion" href="' . esc_url($compte) . '">Connexion / Inscription</a>';
+        $prefixe = wp_unique_id( 'deprat-connexion-' );
+        $tentative = isset( $_POST['deprat_popup_login'], $_POST['login'] );
+        $identifiant = $tentative && isset( $_POST['username'] ) && is_string( $_POST['username'] )
+            ? sanitize_text_field( wp_unslash( $_POST['username'] ) )
+            : '';
+        $erreurs = $tentative && function_exists( 'wc_get_notices' ) ? wc_get_notices( 'error' ) : array();
+        $mot_de_passe_oublie = function_exists( 'wc_lostpassword_url' ) ? wc_lostpassword_url() : wp_lostpassword_url();
+
+        ob_start();
+        ?>
+        <div class="deprat-pro-auth">
+            <details class="deprat-login-details"<?php echo $tentative ? ' open' : ''; ?>>
+                <summary>Se connecter</summary>
+                <div class="deprat-login-panel" role="region" aria-label="Connexion à mon compte">
+                    <div class="deprat-login-entete">
+                        <h2>Se connecter</h2>
+                        <button type="button" class="deprat-login-fermer" data-deprat-login-close aria-label="Fermer">×</button>
+                    </div>
+                    <?php if ( $tentative ) : ?>
+                        <div class="deprat-login-erreurs" role="alert">
+                            <?php if ( $erreurs ) : ?>
+                                <?php foreach ( $erreurs as $erreur ) : ?>
+                                    <p><?php echo wp_kses_post( is_array( $erreur ) ? ( $erreur['notice'] ?? '' ) : $erreur ); ?></p>
+                                <?php endforeach; ?>
+                            <?php else : ?>
+                                <p>La connexion n’a pas abouti. Actualisez la page puis réessayez.</p>
+                            <?php endif; ?>
+                        </div>
+                    <?php endif; ?>
+                    <form method="post" action="<?php echo esc_url( $compte ); ?>" class="woocommerce-form woocommerce-form-login deprat-login-form">
+                        <?php do_action( 'woocommerce_login_form_start' ); ?>
+                        <label for="<?php echo esc_attr( $prefixe . 'identifiant' ); ?>">Identifiant ou e-mail <span aria-hidden="true">*</span></label>
+                        <input id="<?php echo esc_attr( $prefixe . 'identifiant' ); ?>" type="text" name="username" autocomplete="username" value="<?php echo esc_attr( $identifiant ); ?>" required>
+                        <label for="<?php echo esc_attr( $prefixe . 'mot-de-passe' ); ?>">Mot de passe <span aria-hidden="true">*</span></label>
+                        <input id="<?php echo esc_attr( $prefixe . 'mot-de-passe' ); ?>" type="password" name="password" autocomplete="current-password" required>
+                        <?php do_action( 'woocommerce_login_form' ); ?>
+                        <label class="deprat-login-souvenir"><input type="checkbox" name="rememberme" value="forever"> Se souvenir de moi</label>
+                        <input type="hidden" name="deprat_popup_login" value="1">
+                        <input type="hidden" name="redirect" value="<?php echo esc_url( $compte ); ?>">
+                        <?php wp_nonce_field( 'woocommerce-login', 'woocommerce-login-nonce' ); ?>
+                        <button type="submit" name="login" value="1" class="button deprat-login-submit">Se connecter</button>
+                        <a class="deprat-login-oublie" href="<?php echo esc_url( $mot_de_passe_oublie ); ?>">Mot de passe oublié ?</a>
+                        <?php do_action( 'woocommerce_login_form_end' ); ?>
+                    </form>
+                </div>
+            </details>
+            <a class="deprat-pro-inscription" href="<?php echo esc_url( $compte ); ?>">Inscription</a>
+        </div>
+        <?php
+        $GLOBALS['deprat_menu_connexion_visible'] = true;
+        return ob_get_clean();
     }
 
     $user_id = get_current_user_id();
@@ -107,6 +157,22 @@ add_shortcode('deprat_menu_pro', function () {
 
     return $html;
 });
+
+// Sur la page principale Mon compte, afficher seulement l'inscription.
+add_filter( 'wc_get_template', function ( $template, $nom ) {
+    if (
+        'myaccount/form-login.php' === $nom
+        && function_exists( 'is_account_page' )
+        && is_account_page()
+        && function_exists( 'is_wc_endpoint_url' )
+        && ! is_wc_endpoint_url()
+        && ! is_user_logged_in()
+        && 'yes' === get_option( 'woocommerce_enable_myaccount_registration' )
+    ) {
+        return dirname( __DIR__ ) . '/templates/form-inscription.php';
+    }
+    return $template;
+}, 10, 2 );
 
 /* =========================================================
    5. Simplifier les intitulés WooCommerce
@@ -470,6 +536,171 @@ add_action('wp_head', function () {
     font-weight:600;
 }
 
+/* Accès à l'espace professionnel dans l'en-tête. */
+.deprat-pro-auth {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 18px;
+    z-index: 10000;
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+.deprat-pro-auth .deprat-login-details > summary,
+.deprat-pro-auth .deprat-pro-inscription {
+    color: #075bb0;
+    font-weight: 700;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.deprat-pro-auth .deprat-login-details > summary {
+    display: block;
+    list-style: none;
+    cursor: pointer;
+}
+
+.deprat-pro-auth .deprat-login-details > summary::-webkit-details-marker {
+    display: none;
+}
+
+.deprat-pro-auth .deprat-pro-inscription {
+    padding-left: 18px;
+    border-left: 1px solid #d7e1ee;
+}
+
+.deprat-pro-auth .deprat-login-details > summary:hover,
+.deprat-pro-auth .deprat-pro-inscription:hover {
+    color: #123d78;
+    text-decoration: underline;
+}
+
+.deprat-pro-auth .deprat-login-panel {
+    position: absolute;
+    top: calc(100% + 14px);
+    right: 0;
+    width: min(370px, calc(100vw - 32px));
+    padding: 22px;
+    background: #fff;
+    border: 1px solid #d9e4f0;
+    border-radius: 12px;
+    box-shadow: 0 12px 32px rgba(17, 43, 76, .18);
+    color: #203653;
+    text-align: left;
+}
+
+.deprat-pro-auth .deprat-login-entete {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 17px;
+}
+
+.deprat-pro-auth .deprat-login-entete h2 {
+    margin: 0;
+    color: #123b79;
+    font-size: 21px;
+    line-height: 1.2;
+}
+
+.deprat-pro-auth .deprat-login-fermer {
+    border: 0;
+    background: transparent;
+    color: #5b6e86;
+    padding: 0 3px;
+    font-size: 26px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.deprat-pro-auth .deprat-login-form {
+    display: grid;
+    gap: 8px;
+    margin: 0;
+}
+
+.deprat-pro-auth .deprat-login-form > label {
+    display: block;
+    margin: 4px 0 0;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.deprat-pro-auth .deprat-login-form input[type="text"],
+.deprat-pro-auth .deprat-login-form input[type="password"] {
+    width: 100%;
+    min-width: 0;
+    min-height: 43px;
+    margin: 0;
+    padding: 9px 10px;
+    border: 1px solid #b9c9dd;
+    border-radius: 6px;
+    color: #203653;
+    background: #fff;
+}
+
+.deprat-pro-auth .deprat-login-form .deprat-login-souvenir {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 8px 0;
+    font-weight: 400;
+}
+
+.deprat-pro-auth .deprat-login-souvenir input {
+    margin: 0;
+}
+
+.deprat-pro-auth .deprat-login-submit {
+    width: 100%;
+    margin: 0;
+    padding: 11px 14px;
+    border: 0;
+    border-radius: 7px;
+    background: #075bb0;
+    color: #fff;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.deprat-pro-auth .deprat-login-oublie {
+    justify-self: start;
+    margin-top: 3px;
+    color: #075bb0;
+    font-size: 13px;
+    text-decoration: underline;
+}
+
+.deprat-pro-auth .deprat-login-erreurs {
+    margin-bottom: 12px;
+    padding: 10px 12px;
+    border-radius: 7px;
+    background: #fff1ef;
+    color: #9b2924;
+    font-size: 13px;
+}
+
+.deprat-pro-auth .deprat-login-erreurs p {
+    margin: 0;
+}
+
+.deprat-pro-auth :focus-visible {
+    outline: 3px solid #77a9e0;
+    outline-offset: 2px;
+}
+
+.deprat-inscription {
+    width: 100%;
+    max-width: 820px;
+    margin: 0 auto 40px;
+}
+
+.deprat-inscription .woocommerce-form-register {
+    width: 100%;
+}
+
 .deprat-pro-dashboard .woocommerce-MyAccount-content > p {
     display:none;
 }
@@ -547,3 +778,45 @@ add_action('wp_head', function () {
 </style>
 CSS;
 });
+
+// Fermer le panneau de connexion au clic extérieur ou avec Échap.
+add_action( 'wp_footer', function () {
+    if ( empty( $GLOBALS['deprat_menu_connexion_visible'] ) ) {
+        return;
+    }
+    ?>
+    <script>
+    (function () {
+        document.addEventListener('click', function (event) {
+            if (!(event.target instanceof Element)) return;
+            var fermer = event.target.closest('[data-deprat-login-close]');
+            if (fermer) {
+                var panneau = fermer.closest('.deprat-login-details');
+                if (panneau) {
+                    panneau.open = false;
+                    panneau.querySelector('summary').focus();
+                }
+                return;
+            }
+            document.querySelectorAll('.deprat-login-details[open]').forEach(function (panneau) {
+                if (!panneau.contains(event.target)) panneau.open = false;
+            });
+        });
+        document.addEventListener('keydown', function (event) {
+            if (event.key !== 'Escape') return;
+            document.querySelectorAll('.deprat-login-details[open]').forEach(function (panneau) {
+                var contenaitFocus = panneau.contains(document.activeElement);
+                panneau.open = false;
+                if (contenaitFocus) panneau.querySelector('summary').focus();
+            });
+        });
+        document.addEventListener('toggle', function (event) {
+            var panneau = event.target;
+            if (!(panneau instanceof Element) || !panneau.matches('.deprat-login-details') || !panneau.open) return;
+            var champ = panneau.querySelector('input[name="username"]');
+            if (champ) champ.focus();
+        }, true);
+    }());
+    </script>
+    <?php
+}, 25 );
