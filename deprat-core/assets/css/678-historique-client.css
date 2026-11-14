@@ -16,7 +16,7 @@ body .entry-content .deprat-historique-v7 {
 /* La page peut contenir le shortcode dans une balise code WordPress. */
 body .deprat-historique-v7,
 body .deprat-historique-v7 :is(h2, h3, p, span, strong, small, label, button, input, select, textarea, table, th, td, summary) {
-    font-family: Arial, sans-serif !important;
+    font-family: var(--deprat-font, "Agenda", "Agenda Std", Arial, sans-serif) !important;
 }
 
 .deprat-historique-v7 {
@@ -214,6 +214,13 @@ body .deprat-historique-v7 form.deprat-recherche-form {
 .deprat-historique-v7 .deprat-demandes-liste {
     display: grid;
     gap: 20px;
+}
+
+.deprat-historique-v7 .deprat-groupe-titre {
+    color: #102b55;
+    font-size: 18px;
+    font-weight: 700;
+    margin: 12px 0 0;
 }
 
 .deprat-historique-v7 .deprat-demande-repliee {

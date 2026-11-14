@@ -1217,27 +1217,55 @@ function deprat_html_historique() {
         $args['date_created'] = '>=' . $debut->format( 'Y-m-d' );
     }
 
+    // Les demandes actives précèdent les demandes facturées ou terminées,
+    // y compris lorsque les résultats occupent plusieurs pages.
+    $groupes_statuts = array(
+        array_values( array_intersect( $args['status'], array( 'dpr-recu', 'dpr-encours', 'dpr-envoye', 'dpr-modifie', 'dpr-accepte' ) ) ),
+        array_values( array_intersect( $args['status'], array( 'dpr-facture', 'dpr-termine' ) ) ),
+    );
+    $commandes = array();
+    $total = 0;
     if ( '' === $recherche ) {
-        $resultats = wc_get_orders( array_merge( $args, array( 'limit' => $par_page, 'page' => $page, 'paginate' => true ) ) );
-        $commandes = $resultats->orders;
-        $total = (int) $resultats->total;
-        $pages = (int) $resultats->max_num_pages;
-    } else {
-        // Recherche sur les produits, compatible avec les deux stockages de commandes.
-        $correspondances = array();
-        for ( $lot = 1; $lot <= 100; $lot++ ) {
-            $batch = wc_get_orders( array_merge( $args, array( 'limit' => 100, 'page' => $lot ) ) );
-            foreach ( $batch as $item ) {
-                if ( deprat_devis_est_au_client( $item ) && deprat_historique_correspond_v7( $item, $recherche ) ) {
-                    $correspondances[] = $item;
-                }
+        $a_sauter = ( $page - 1 ) * $par_page;
+        $places = $par_page;
+        foreach ( $groupes_statuts as $groupe ) {
+            if ( ! $groupe ) { continue; }
+            $args_groupe = array_merge( $args, array( 'status' => $groupe ) );
+            $resultats = wc_get_orders( array_merge( $args_groupe, array( 'limit' => 1, 'page' => 1, 'paginate' => true ) ) );
+            $nombre_groupe = (int) $resultats->total;
+            $total += $nombre_groupe;
+            if ( $a_sauter >= $nombre_groupe ) {
+                $a_sauter -= $nombre_groupe;
+                continue;
             }
-            if ( count( $batch ) < 100 ) { break; }
+            if ( $places > 0 ) {
+                $nombre_a_charger = min( $places, $nombre_groupe - $a_sauter );
+                $lot = wc_get_orders( array_merge( $args_groupe, array( 'limit' => $nombre_a_charger, 'offset' => $a_sauter ) ) );
+                $commandes = array_merge( $commandes, $lot );
+                $places -= count( $lot );
+            }
+            $a_sauter = 0;
+        }
+    } else {
+        // Les recherches parcourent les produits dans chaque groupe.
+        $correspondances = array();
+        foreach ( $groupes_statuts as $groupe ) {
+            if ( ! $groupe ) { continue; }
+            $args_groupe = array_merge( $args, array( 'status' => $groupe ) );
+            for ( $numero_lot = 1; ; $numero_lot++ ) {
+                $lot = wc_get_orders( array_merge( $args_groupe, array( 'limit' => 100, 'page' => $numero_lot ) ) );
+                foreach ( $lot as $item ) {
+                    if ( deprat_devis_est_au_client( $item ) && deprat_historique_correspond_v7( $item, $recherche ) ) {
+                        $correspondances[] = $item;
+                    }
+                }
+                if ( count( $lot ) < 100 ) { break; }
+            }
         }
         $total = count( $correspondances );
-        $pages = max( 1, (int) ceil( $total / $par_page ) );
         $commandes = array_slice( $correspondances, ( $page - 1 ) * $par_page, $par_page );
     }
+    $pages = (int) ceil( $total / $par_page );
 
     echo '<section class="deprat-historique deprat-historique-v7">';
     echo '<div class="deprat-historique-header"><h2>Mes demandes de devis</h2><p>Retrouvez vos devis, factures et anciennes demandes.</p></div>';
@@ -1272,10 +1300,15 @@ function deprat_html_historique() {
     }
     echo '<div class="deprat-demandes-liste">';
     $fenetres_details = array();
+    $titre_terminees_affiche = false;
     foreach ( $commandes as $commande ) {
         if ( ! deprat_devis_est_au_client( $commande ) ) { continue; }
         $id = $commande->get_id();
         $etat = $commande->get_status();
+        if ( ! $titre_terminees_affiche && in_array( $etat, array( 'dpr-facture', 'dpr-termine' ), true ) ) {
+            echo '<h3 class="deprat-groupe-titre">Demandes terminées</h3>';
+            $titre_terminees_affiche = true;
+        }
         $date = $commande->get_date_created();
         $date_affichee = $date ? wc_format_datetime( $date, 'd/m/Y' ) : '—';
         $commentaire = (string) $commande->get_meta( '_deprat_commentaire', true );
@@ -1540,6 +1573,18 @@ DEPRAT_V71_JS;
     echo str_replace( array( '__DEPRAT_SEARCH_NONCE__', '__DEPRAT_AJAX_URL__' ),
         array( $script_nonce, $script_ajax_url ), $script );
 }, 25 );
+
+// Retirer les balises de code autour du shortcode avant son exécution.
+add_filter( 'the_content', function ( $contenu ) {
+    if ( false === strpos( $contenu, '[deprat_mes_demandes]' ) ) {
+        return $contenu;
+    }
+    $motifs = array(
+        '~<p(?:\s[^>]*)?>\s*<code(?:\s[^>]*)?>\s*(\[deprat_mes_demandes\])\s*</code>\s*</p>~i',
+        '~<code(?:\s[^>]*)?>\s*(\[deprat_mes_demandes\])\s*</code>~i',
+    );
+    return preg_replace( $motifs, '$1', $contenu );
+}, 10 );
 
 // Utilisation dans une page WordPress autonome : [deprat_mes_demandes].
 add_shortcode( 'deprat_mes_demandes', 'deprat_html_historique' );
