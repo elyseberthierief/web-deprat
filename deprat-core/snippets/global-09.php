@@ -463,10 +463,10 @@ add_action( 'woocommerce_admin_order_data_after_order_details', function ( $comm
             echo '<p>La facture peut être ajoutée après acceptation du devis par le client.</p>';
         } else {
             echo '<input type="file" accept="application/pdf,.pdf" class="deprat-pdf-fichier" style="max-width:100%"> ';
-            echo '<button class="button deprat-pdf-bouton" type="button">' . ( $est_devis ? ( 'oui' === $commande->get_meta( '_deprat_revision_en_attente', true ) ? 'Enregistrer et envoyer le devis modifié' : 'Enregistrer et envoyer le devis' ) : 'Enregistrer la facture PDF' ) . '</button>';
-            echo '<p style="color:#64748b;font-size:12px">' . ( $est_devis
-                ? 'Attention : ce bouton enregistre le PDF ET le rend immédiatement disponible au client, qui reçoit sa notification. En cas d’ajustement, le nouveau devis remplace la version visible (ancienne version archivée).'
-                : 'Après téléversement, choisir « Envoyer la facture » puis mettre à jour la commande. La facture n’est pas envoyée par ce bouton.' ) . '</p>';
+            echo '<button class="button deprat-pdf-bouton" type="button">' . ( $est_devis ? ( 'oui' === $commande->get_meta( '_deprat_revision_en_attente', true ) ? 'Envoyer le devis modifié' : 'Envoyer le devis' ) : 'Enregistrer la facture PDF' ) . '</button>';
+            if ( ! $est_devis ) {
+                echo '<p style="color:#64748b;font-size:12px">Après téléversement, choisir « Envoyer la facture » puis mettre à jour la commande. La facture n’est pas envoyée par ce bouton.</p>';
+            }
             echo '<p class="deprat-pdf-resultat" role="status" aria-live="polite"></p>';
         }
         echo '</section>';
@@ -482,6 +482,7 @@ add_action( 'woocommerce_admin_order_data_after_order_details', function ( $comm
     if (!fichier.files.length) { resultat.textContent = 'Sélectionnez un PDF.'; return; }
     if (__TYPE__ === 'devis' && !window.confirm('Enregistrer ce devis et le transmettre maintenant au client ? Une notification e-mail sera déclenchée.')) return;
     bouton.disabled = true;
+    bloc.dispatchEvent(new CustomEvent('deprat-upload-start'));
     resultat.textContent = 'Enregistrement du document…';
     const donnees = new FormData();
     donnees.append('action','deprat_pdf_upload');
@@ -506,7 +507,10 @@ add_action( 'woocommerce_admin_order_data_after_order_details', function ( $comm
       fichier.value = '';
       if (retour.data.auto_sent) { window.setTimeout(function(){ window.location.reload(); }, 800); }
     } catch (e) { resultat.textContent='Erreur : '+e.message; }
-    finally { bouton.disabled = false; }
+    finally {
+      bouton.disabled = false;
+      bloc.dispatchEvent(new CustomEvent('deprat-upload-end'));
+    }
   });
 })();
 JS;

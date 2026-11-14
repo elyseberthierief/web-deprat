@@ -237,8 +237,8 @@ add_action( 'admin_footer', function () {
             <?php endif; ?>
             <div class="deprat-opui-field"><label for="order_status">État de traitement de la demande</label><div id="deprat-opui-status-slot"></div></div>
 
-            <div class="deprat-opui-step"><div class="deprat-opui-step-title"><span class="deprat-opui-num">1</span> Devis PDF</div><div id="deprat-opui-devis-slot"></div><p class="deprat-opui-hint">L’enregistrement du PDF transmet automatiquement le devis au client. Le bouton ci-dessous sert uniquement de secours.</p>
-              <button type="button" id="deprat-opui-send-quote" class="deprat-opui-btn deprat-opui-btn-blue" <?php disabled( in_array( $status, array( 'dpr-envoye', 'dpr-modifie', 'dpr-accepte', 'dpr-facture', 'dpr-termine' ), true ) ); ?>><?php echo deprat_opui_icon( 'send' ); ?> <?php echo in_array( $status, array( 'dpr-envoye', 'dpr-modifie', 'dpr-accepte', 'dpr-facture', 'dpr-termine' ), true ) ? 'Devis déjà transmis' : ( $adjustment ? 'Envoyer le devis modifié (secours)' : 'Envoyer le devis (secours)' ); ?></button>
+            <div class="deprat-opui-step"><div class="deprat-opui-step-title"><span class="deprat-opui-num">1</span> Devis PDF</div><div id="deprat-opui-devis-slot"></div>
+              <button type="button" id="deprat-opui-send-quote" class="deprat-opui-btn deprat-opui-btn-blue" <?php disabled( in_array( $status, array( 'dpr-envoye', 'dpr-modifie', 'dpr-accepte', 'dpr-facture', 'dpr-termine' ), true ) ); ?>><?php echo deprat_opui_icon( 'send' ); ?> <?php echo in_array( $status, array( 'dpr-envoye', 'dpr-modifie', 'dpr-accepte', 'dpr-facture', 'dpr-termine' ), true ) ? 'Devis déjà transmis' : ( $adjustment ? 'Envoyer le devis modifié' : 'Envoyer le devis' ); ?></button>
             </div>
             <div class="deprat-opui-step"><div class="deprat-opui-step-title"><span class="deprat-opui-num<?php echo $accepted ? '' : ' deprat-opui-num-grey'; ?>">2</span> Facture PDF</div><div id="deprat-opui-facture-slot"></div>
               <button type="button" id="deprat-opui-send-invoice" class="deprat-opui-btn deprat-opui-btn-blue" <?php disabled( ! $accepted ); ?>><?php echo deprat_opui_icon( 'send' ); ?> Envoyer la facture au client</button>
@@ -449,7 +449,22 @@ add_action( 'admin_footer', function () {
           save();
         }
         root.querySelector('.deprat-opui-save').addEventListener('click',save);
-        document.getElementById('deprat-opui-send-quote').addEventListener('click',()=>statusAction(data.revision_pending ? 'dpr-modifie' : 'dpr-envoye','devis'));
+        const sendQuote = document.getElementById('deprat-opui-send-quote');
+        const uploadQuote = quote.querySelector('.deprat-pdf-bouton');
+        if (uploadQuote) {
+          uploadQuote.hidden = true;
+          uploadQuote.style.display = 'none';
+          quote.addEventListener('deprat-upload-start', () => { sendQuote.disabled = true; });
+          quote.addEventListener('deprat-upload-end', () => { sendQuote.disabled = false; });
+        }
+        sendQuote.addEventListener('click', () => {
+          const input = quote.querySelector('.deprat-pdf-fichier');
+          if (input && input.files.length && uploadQuote) {
+            uploadQuote.click();
+            return;
+          }
+          statusAction(data.revision_pending ? 'dpr-modifie' : 'dpr-envoye', 'devis');
+        });
         document.getElementById('deprat-opui-send-invoice').addEventListener('click',()=>statusAction('dpr-facture','facture'));
         const finish = document.getElementById('deprat-opui-finish');
         if(finish)finish.addEventListener('click',()=>statusAction('dpr-termine',null));
