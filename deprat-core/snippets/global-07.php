@@ -590,6 +590,11 @@ add_action('wp_head', function () {
     text-align: left;
 }
 
+.deprat-pro-auth .deprat-login-panel,
+.deprat-pro-auth .deprat-login-panel * {
+    box-sizing: border-box;
+}
+
 .deprat-pro-auth .deprat-login-entete {
     display: flex;
     justify-content: space-between;
@@ -617,6 +622,8 @@ add_action('wp_head', function () {
 
 .deprat-pro-auth .deprat-login-form {
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    min-width: 0;
     gap: 8px;
     margin: 0;
 }
@@ -655,6 +662,9 @@ add_action('wp_head', function () {
 
 .deprat-pro-auth .deprat-login-submit {
     width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
     margin: 0;
     padding: 11px 14px;
     border: 0;
