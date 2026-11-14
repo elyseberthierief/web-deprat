@@ -237,7 +237,7 @@ add_action( 'admin_footer', function () {
             <div class="deprat-opui-step"><div class="deprat-opui-step-title"><span class="deprat-opui-num">1</span> Devis PDF</div><div id="deprat-opui-devis-slot"></div><p class="deprat-opui-hint">L’enregistrement du PDF transmet automatiquement le devis au client. Le bouton ci-dessous sert uniquement de secours.</p>
               <button type="button" id="deprat-opui-send-quote" class="deprat-opui-btn deprat-opui-btn-blue" <?php disabled( in_array( $status, array( 'dpr-envoye', 'dpr-modifie', 'dpr-accepte', 'dpr-facture', 'dpr-termine' ), true ) ); ?>><?php echo deprat_opui_icon( 'send' ); ?> <?php echo in_array( $status, array( 'dpr-envoye', 'dpr-modifie', 'dpr-accepte', 'dpr-facture', 'dpr-termine' ), true ) ? 'Devis déjà transmis' : ( $adjustment ? 'Envoyer le devis modifié (secours)' : 'Envoyer le devis (secours)' ); ?></button>
             </div>
-            <div class="deprat-opui-step"><div class="deprat-opui-step-title"><span class="deprat-opui-num deprat-opui-num-grey">2</span> Facture PDF</div><div id="deprat-opui-facture-slot"></div>
+            <div class="deprat-opui-step"><div class="deprat-opui-step-title"><span class="deprat-opui-num<?php echo $accepted ? '' : ' deprat-opui-num-grey'; ?>">2</span> Facture PDF</div><div id="deprat-opui-facture-slot"></div>
               <button type="button" id="deprat-opui-send-invoice" class="deprat-opui-btn deprat-opui-btn-blue" <?php disabled( ! $accepted ); ?>><?php echo deprat_opui_icon( 'send' ); ?> Envoyer la facture au client</button>
             </div>
             <?php if ( ! $accepted ) : ?>
