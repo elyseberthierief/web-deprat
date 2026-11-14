@@ -1258,11 +1258,11 @@ function deprat_html_historique() {
     foreach ( $statuts as $option ) {
         echo '<option value="' . esc_attr( $option ) . '"' . selected( $statut, $option, false ) . '>' . esc_html( deprat_statut_client_v7( $option ) ) . '</option>';
     }
-    echo '</select></div><div class="deprat-filtre"><label for="deprat-periode">Période :</label><select id="deprat-periode" name="deprat_periode"><option value="">Toutes les dates</option>';
+    echo '</select></div><div class="deprat-filtre deprat-filtre-periode"><label for="deprat-periode">Période :</label><span class="deprat-periode-champ"><span class="deprat-periode-icone" aria-hidden="true"></span><select id="deprat-periode" name="deprat_periode"><option value="">Toutes les dates</option>';
     foreach ( $periodes as $valeur => $libelle ) {
         echo '<option value="' . esc_attr( $valeur ) . '"' . selected( $periode, $valeur, false ) . '>' . esc_html( $libelle ) . '</option>';
     }
-    echo '</select></div></div></form>';
+    echo '</select></span></div></div></form>';
 
     echo '<div class="deprat-historique-resultats-v72" aria-live="polite">';
     echo '<p class="deprat-resultats-count">' . esc_html( $total ) . ' demande' . ( 1 === $total ? '' : 's' ) . '</p>';
@@ -1316,7 +1316,16 @@ function deprat_html_historique() {
         $pdf_facture = $commande->get_meta( '_deprat_facture_pdf_fichier', true );
         $accord = (string) $commande->get_meta( '_deprat_devis_accepte_le', true );
         $facture_date = (string) $commande->get_meta( '_deprat_facture_envoyee_le', true );
+        $facture_disponible = $pdf_facture && in_array( $etat, array( 'dpr-facture', 'dpr-termine' ), true );
 
+        if ( $facture_disponible ) {
+            echo '<details class="deprat-demande-repliee"><summary class="deprat-demande-resume">';
+            echo '<span class="deprat-resume-numero">Demande #' . esc_html( $commande->get_order_number() ) . '</span>';
+            echo '<span class="deprat-resume-date">' . esc_html( $date_affichee ) . '</span>';
+            echo '<span class="deprat-etat deprat-etat-dpr-facture">✓ Facture disponible</span>';
+            echo '<span class="deprat-resume-action"><span class="deprat-resume-ouvrir">Voir la demande</span><span class="deprat-resume-reduire">Réduire</span> <span class="deprat-resume-chevron" aria-hidden="true">⌄</span></span>';
+            echo '</summary>';
+        }
         echo '<article class="deprat-demande-card" aria-label="Demande numéro ' . esc_attr( $commande->get_order_number() ) . '">';
         echo '<div class="deprat-carte-colonne deprat-carte-demande"><h3>Demande</h3><div class="deprat-carte-identite">';
         echo '<strong class="deprat-numero">#' . esc_html( $commande->get_order_number() ) . '</strong>';
@@ -1372,7 +1381,7 @@ function deprat_html_historique() {
         echo '</div>';
 
         echo '<div class="deprat-carte-colonne deprat-carte-facture"><h3>Facture</h3>';
-        if ( $pdf_facture && in_array( $etat, array( 'dpr-facture', 'dpr-termine' ), true ) ) {
+        if ( $facture_disponible ) {
             echo '<span class="deprat-etat deprat-etat-dpr-facture">✓ Facture disponible</span>';
             echo '<p><a class="deprat-lien-document" href="' . esc_url( deprat_lien_document_v7( $commande, 'facture' ) ) . '" target="_blank" rel="noopener noreferrer">Consulter la facture</a></p>';
             if ( $facture_date ) { echo '<p class="deprat-texte-secondaire">Envoyée le ' . esc_html( deprat_date_utc_v7( $facture_date ) ) . '</p>'; }
@@ -1386,6 +1395,9 @@ function deprat_html_historique() {
         echo '<form method="post" action="' . esc_url( wc_get_cart_url() ) . '"><input type="hidden" name="deprat_refaire_demande" value="' . esc_attr( $id ) . '">';
         wp_nonce_field( 'deprat_refaire_' . $id, 'deprat_refaire_nonce' );
         echo '<button type="submit" class="deprat-refaire-icone" title="Refaire cette demande" aria-label="Refaire la demande numéro ' . esc_attr( $commande->get_order_number() ) . '">↻</button></form></div></article>';
+        if ( $facture_disponible ) {
+            echo '</details>';
+        }
 
         $detail = '<dialog id="' . esc_attr( $dialogue_id ) . '" class="deprat-dialogue-produits" aria-labelledby="' . esc_attr( $titre_id ) . '">';
         $detail .= '<div class="deprat-dialogue-entete"><h3 id="' . esc_attr( $titre_id ) . '">Détail de la demande #' . esc_html( $commande->get_order_number() ) . '</h3><button type="button" class="deprat-dialogue-fermer" data-deprat-close aria-label="Fermer la fenêtre">×</button></div>';
