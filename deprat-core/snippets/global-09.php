@@ -1184,23 +1184,46 @@ function deprat_html_historique() {
     if ( deprat_devis_est_au_client( $revision_erreur ) ) {
         echo '<div class="woocommerce-error">Précisez vos modifications dans le champ prévu (au moins 5 caractères).</div>';
     }
+
     $page = isset( $_GET['deprat_page'] ) ? max( 1, absint( $_GET['deprat_page'] ) ) : 1;
     $recherche = isset( $_GET['deprat_q'] ) ? trim( sanitize_text_field( wp_unslash( $_GET['deprat_q'] ) ) ) : '';
     $recherche = substr( $recherche, 0, 120 );
+    $statuts = array( 'dpr-recu', 'dpr-encours', 'dpr-envoye', 'dpr-modifie', 'dpr-accepte', 'dpr-facture', 'dpr-termine' );
+    $statut = isset( $_GET['deprat_statut'] ) ? sanitize_key( wp_unslash( $_GET['deprat_statut'] ) ) : '';
+    if ( ! in_array( $statut, $statuts, true ) ) { $statut = ''; }
+    $periodes = array(
+        '30j' => '30 derniers jours',
+        '3mois' => '3 derniers mois',
+        'annee' => 'Cette année',
+    );
+    $periode = isset( $_GET['deprat_periode'] ) ? sanitize_key( wp_unslash( $_GET['deprat_periode'] ) ) : '';
+    if ( ! isset( $periodes[ $periode ] ) ) { $periode = ''; }
     $par_page = 15;
     $args = array(
         'customer_id' => get_current_user_id(),
-        'status' => array( 'dpr-recu', 'dpr-encours', 'dpr-envoye', 'dpr-modifie', 'dpr-accepte', 'dpr-facture', 'dpr-termine' ),
-        'orderby' => 'date', 'order' => 'DESC',
+        'status' => $statut ? array( $statut ) : $statuts,
+        'orderby' => 'date',
+        'order' => 'DESC',
     );
+    if ( $periode ) {
+        $maintenant = current_datetime();
+        if ( '30j' === $periode ) {
+            $debut = $maintenant->modify( '-30 days' );
+        } elseif ( '3mois' === $periode ) {
+            $debut = $maintenant->modify( '-3 months' );
+        } else {
+            $debut = $maintenant->setDate( (int) $maintenant->format( 'Y' ), 1, 1 );
+        }
+        $args['date_created'] = '>=' . $debut->format( 'Y-m-d' );
+    }
+
     if ( '' === $recherche ) {
         $resultats = wc_get_orders( array_merge( $args, array( 'limit' => $par_page, 'page' => $page, 'paginate' => true ) ) );
         $commandes = $resultats->orders;
         $total = (int) $resultats->total;
         $pages = (int) $resultats->max_num_pages;
     } else {
-        // Recherche sur les lignes produit, compatible avec HPOS ET stockage classique.
-        // Parcours par lots pour ne pas demander toutes les commandes en une seule requête.
+        // Recherche sur les produits, compatible avec les deux stockages de commandes.
         $correspondances = array();
         for ( $lot = 1; $lot <= 100; $lot++ ) {
             $batch = wc_get_orders( array_merge( $args, array( 'limit' => 100, 'page' => $lot ) ) );
@@ -1215,109 +1238,112 @@ function deprat_html_historique() {
         $pages = max( 1, (int) ceil( $total / $par_page ) );
         $commandes = array_slice( $correspondances, ( $page - 1 ) * $par_page, $par_page );
     }
+
     echo '<section class="deprat-historique deprat-historique-v7">';
-    echo '<div class="deprat-historique-header"><div><h2>Mes demandes de devis</h2><p>Retrouvez vos devis, factures et anciennes demandes.</p></div></div>';
+    echo '<div class="deprat-historique-header"><h2>Mes demandes de devis</h2><p>Retrouvez vos devis, factures et anciennes demandes.</p></div>';
     echo '<form method="get" action="' . esc_url( deprat_lien_historique() ) . '" class="deprat-recherche-form" role="search">';
-    // Certains sites ont des permaliens du type /?page_id=665 : le GET remplace
-    // les paramètres de l'URL action, donc les recopier en champs cachés.
     $url_query = (string) wp_parse_url( deprat_lien_historique(), PHP_URL_QUERY );
     if ( $url_query ) {
         wp_parse_str( $url_query, $parametres_page );
         foreach ( $parametres_page as $nom_param => $valeur_param ) {
-            if ( is_scalar( $valeur_param ) && ! in_array( $nom_param, array( 'deprat_q', 'deprat_page' ), true ) ) {
+            if ( is_scalar( $valeur_param ) && ! in_array( $nom_param, array( 'deprat_q', 'deprat_page', 'deprat_statut', 'deprat_periode' ), true ) ) {
                 echo '<input type="hidden" name="' . esc_attr( $nom_param ) . '" value="' . esc_attr( $valeur_param ) . '">';
             }
         }
     }
-    echo '<label for="deprat-q">Rechercher dans mon historique</label>';
-    echo '<div class="deprat-recherche-champs"><input id="deprat-q" type="search" name="deprat_q" value="' . esc_attr( $recherche ) . '" placeholder="N° de demande, date, référence, désignation…">';
-    echo '<button type="submit" class="button alt">Rechercher</button>';
-    if ( '' !== $recherche ) { echo '<a class="button" href="' . esc_url( deprat_lien_historique() ) . '">Effacer</a>'; }
-    echo '</div></form>';
+    echo '<div class="deprat-recherche-champs"><label class="screen-reader-text" for="deprat-q">Rechercher dans mes demandes</label>';
+    echo '<input id="deprat-q" type="search" name="deprat_q" value="' . esc_attr( $recherche ) . '" placeholder="N° de demande, date, référence, désignation…">';
+    echo '<button type="submit" class="deprat-rechercher">Rechercher</button></div>';
+    echo '<div class="deprat-filtres"><label for="deprat-statut">Statut</label><select id="deprat-statut" name="deprat_statut"><option value="">Tous les statuts</option>';
+    foreach ( $statuts as $option ) {
+        echo '<option value="' . esc_attr( $option ) . '"' . selected( $statut, $option, false ) . '>' . esc_html( deprat_statut_client_v7( $option ) ) . '</option>';
+    }
+    echo '</select><label for="deprat-periode">Période</label><select id="deprat-periode" name="deprat_periode"><option value="">Toutes les dates</option>';
+    foreach ( $periodes as $valeur => $libelle ) {
+        echo '<option value="' . esc_attr( $valeur ) . '"' . selected( $periode, $valeur, false ) . '>' . esc_html( $libelle ) . '</option>';
+    }
+    echo '</select></div></form>';
+
     echo '<div class="deprat-historique-resultats-v72" aria-live="polite">';
-    echo '<p class="deprat-resultats-count">' . esc_html( $total . ' demande(s) ' . ( $recherche !== '' ? 'trouvée(s)' : 'enregistrée(s)' ) ) . '</p>';
+    echo '<p class="deprat-resultats-count">' . esc_html( $total ) . ' demande' . ( 1 === $total ? '' : 's' ) . '</p>';
     if ( ! $commandes ) {
-        echo '<p>Aucune demande correspondante. Essayez une autre référence, une date (JJ/MM/AAAA) ou un numéro de demande.</p></div></section>';
+        echo '<p class="deprat-aucun-resultat">Aucune demande ne correspond à votre recherche.</p></div></section>';
         return ob_get_clean();
     }
-    // Les fenetres <dialog> sont rendues apres le tableau (pas a l'interieur des lignes <tr>).
+    echo '<div class="deprat-demandes-liste">';
     $fenetres_details = array();
-    echo '<div class="deprat-historique-defilement"><table class="shop_table shop_table_responsive deprat-historique-table">';
-    echo '<thead><tr><th scope="col">Demande</th><th scope="col">Date</th><th scope="col">Produits</th><th scope="col">Statut</th><th scope="col">Documents / Suivi</th><th scope="col" class="deprat-entete-refaire"><span class="screen-reader-text">Refaire cette demande</span></th></tr></thead><tbody>';
     foreach ( $commandes as $commande ) {
         if ( ! deprat_devis_est_au_client( $commande ) ) { continue; }
         $id = $commande->get_id();
         $etat = $commande->get_status();
         $date = $commande->get_date_created();
-        echo '<tr><td data-title="Demande"><strong>#' . esc_html( $commande->get_order_number() ) . '</strong></td>';
-        echo '<td data-title="Date">' . esc_html( $date ? wc_format_datetime( $date, 'd/m/Y' ) : '—' ) . '</td>';
-        // Conserver les noms et les references historiques du panier meme si un produit a change depuis.
+        $date_affichee = $date ? wc_format_datetime( $date, 'd/m/Y' ) : '—';
+        $commentaire = (string) $commande->get_meta( '_deprat_commentaire', true );
         $lignes_produits = array();
+        $nombre_pieces = 0;
         foreach ( $commande->get_items( 'line_item' ) as $article ) {
             $reference = (string) $article->get_meta( '_deprat_reference', true );
             if ( ! $reference ) {
                 $produit = $article->get_product();
                 $reference = $produit && $produit->get_sku() ? (string) $produit->get_sku() : '';
             }
+            $details = array();
+            $conditionnement = '';
+            foreach ( $article->get_formatted_meta_data() as $meta ) {
+                $libelle_meta = wp_strip_all_tags( $meta->display_key );
+                $valeur_meta = wp_strip_all_tags( $meta->display_value );
+                if ( false !== strpos( deprat_recherche_normaliser_v7( $libelle_meta ), 'conditionnement' ) ) {
+                    $conditionnement = $valeur_meta;
+                } else {
+                    $details[] = $libelle_meta . ' : ' . $valeur_meta;
+                }
+            }
+            $quantite = $article->get_quantity();
+            $nombre_pieces += $quantite;
             $lignes_produits[] = array(
-                'reference'   => $reference,
+                'reference' => $reference,
                 'designation' => (string) $article->get_name(),
-                'quantite'    => (int) $article->get_quantity(),
+                'quantite' => $quantite,
+                'conditionnement' => $conditionnement,
+                'details' => implode( ' · ', $details ),
             );
         }
-        $nb_lignes  = count( $lignes_produits );
-        $nb_cachees = max( 0, $nb_lignes - 4 );
+        $nb_lignes = count( $lignes_produits );
+        $nb_cachees = max( 0, $nb_lignes - 3 );
         $dialogue_id = 'deprat-details-' . $id;
-        $titre_id    = 'deprat-details-titre-' . $id;
-        $commentaire = (string) $commande->get_meta( '_deprat_commentaire', true );
-        echo '<td data-title="Produits" class="deprat-cellule-produits">';
-        if ( $nb_lignes ) {
-            echo '<div class="deprat-mini-table-wrap"><table class="deprat-mini-produits" aria-label="Apercu des produits de la demande ' . esc_attr( $commande->get_order_number() ) . '">';
-            echo '<thead><tr><th scope="col">Réf.</th><th scope="col">Désignation</th><th scope="col">Qté</th></tr></thead><tbody>';
-            foreach ( array_slice( $lignes_produits, 0, 4 ) as $ligne ) {
-                echo '<tr><td class="deprat-mini-ref">' . ( $ligne['reference'] !== '' ? esc_html( $ligne['reference'] ) : '<span class="deprat-sans-ref">—</span>' ) . '</td>';
-                echo '<td class="deprat-mini-nom">' . esc_html( $ligne['designation'] ) . '</td>';
-                echo '<td class="deprat-mini-qte">' . esc_html( $ligne['quantite'] ) . '</td></tr>';
-            }
-            echo '</tbody></table></div>';
-            if ( $nb_cachees > 0 ) {
-                echo '<span class="deprat-produits-suite">+ ' . esc_html( $nb_cachees ) . ' autre' . ( $nb_cachees > 1 ? 's' : '' ) . ' référence' . ( $nb_cachees > 1 ? 's' : '' ) . '</span>';
-            }
-            echo '<button type="button" class="deprat-ouvrir-details" data-deprat-open="' . esc_attr( $dialogue_id ) . '" aria-haspopup="dialog" aria-controls="' . esc_attr( $dialogue_id ) . '"><span aria-hidden="true">▤</span> Voir le détail <span aria-hidden="true">↗</span></button>';
-        } else {
-            echo '<span class="deprat-sans-ref">Aucun produit enregistré</span>';
-        }
-        if ( '' !== $commentaire ) {
-            echo '<p class="deprat-commentaire-extrait"><strong>Commentaire :</strong> ' . esc_html( wp_html_excerpt( preg_replace( '/\s+/', ' ', $commentaire ), 72, '…' ) ) . '</p>';
-        }
-
-        // Construire une boite modale par commande ; l'ouvrir seulement au clic (pas de chargement distant).
-        $detail = '<dialog id="' . esc_attr( $dialogue_id ) . '" class="deprat-dialogue-produits" aria-labelledby="' . esc_attr( $titre_id ) . '">';
-        $detail .= '<div class="deprat-dialogue-entete"><div><span class="deprat-dialogue-surtitre">DEPRAT · Historique professionnel</span>';
-        $detail .= '<h3 id="' . esc_attr( $titre_id ) . '">Détail de la demande #' . esc_html( $commande->get_order_number() ) . '</h3>';
-        $detail .= '<p>' . esc_html( $nb_lignes . ' référence' . ( $nb_lignes > 1 ? 's' : '' ) ) . ' dans cette demande</p></div>';
-        $detail .= '<button type="button" class="deprat-dialogue-fermer" data-deprat-close aria-label="Fermer la fenêtre">&times;</button></div>';
-        $detail .= '<div class="deprat-dialogue-interieur"><div class="deprat-dialogue-table-wrap"><table class="deprat-dialogue-table">';
-        $detail .= '<thead><tr><th scope="col">Référence</th><th scope="col">Désignation</th><th scope="col">Quantité</th></tr></thead><tbody>';
-        foreach ( $lignes_produits as $ligne ) {
-            $detail .= '<tr><td>' . ( $ligne['reference'] !== '' ? esc_html( $ligne['reference'] ) : '<span class="deprat-sans-ref">Non renseignée</span>' ) . '</td>';
-            $detail .= '<td>' . esc_html( $ligne['designation'] ) . '</td>';
-            $detail .= '<td class="deprat-dialogue-qte">' . esc_html( $ligne['quantite'] ) . '</td></tr>';
-        }
-        $detail .= '</tbody></table></div>';
-        if ( '' !== $commentaire ) {
-            $detail .= '<div class="deprat-dialogue-commentaire"><strong>Commentaire du client</strong><p>' . nl2br( esc_html( $commentaire ) ) . '</p></div>';
-        }
-        $detail .= '</div><div class="deprat-dialogue-pied"><button type="button" class="deprat-dialogue-bouton-fermer" data-deprat-close>Fermer</button></div></dialog>';
-        $fenetres_details[] = $detail;
-        echo '</td><td data-title="Statut"><span class="deprat-etat deprat-etat-' . esc_attr( $etat ) . '">' . esc_html( deprat_statut_client_v7( $etat ) ) . '</span></td>';
-        echo '<td data-title="Documents / Suivi" class="deprat-docs-v7">';
+        $titre_id = 'deprat-details-titre-' . $id;
         $pdf_devis = $commande->get_meta( '_deprat_pdf_fichier', true );
         $pdf_facture = $commande->get_meta( '_deprat_facture_pdf_fichier', true );
         $accord = (string) $commande->get_meta( '_deprat_devis_accepte_le', true );
         $facture_date = (string) $commande->get_meta( '_deprat_facture_envoyee_le', true );
+
+        echo '<article class="deprat-demande-card" aria-label="Demande numéro ' . esc_attr( $commande->get_order_number() ) . '">';
+        echo '<div class="deprat-carte-colonne deprat-carte-demande"><h3>Demande</h3><div class="deprat-carte-identite">';
+        echo '<strong class="deprat-numero">#' . esc_html( $commande->get_order_number() ) . '</strong>';
+        echo '<span>' . esc_html( $date_affichee ) . '</span><span><strong>' . esc_html( $nb_lignes ) . ' référence' . ( 1 === $nb_lignes ? '' : 's' ) . '</strong><br>' . 'Quantité totale : ' . esc_html( $nombre_pieces ) . '</span></div></div>';
+
+        echo '<div class="deprat-carte-colonne deprat-carte-produits"><h3>Produits</h3>';
+        if ( $nb_lignes ) {
+            echo '<div class="deprat-mini-table-wrap"><table class="deprat-mini-produits"><thead><tr><th>Réf.</th><th>Désignation</th><th>Qté</th></tr></thead><tbody>';
+            foreach ( array_slice( $lignes_produits, 0, 3 ) as $ligne ) {
+                echo '<tr><td>' . esc_html( $ligne['reference'] ?: '—' ) . '</td><td>' . esc_html( $ligne['designation'] ) . '</td><td>' . esc_html( $ligne['quantite'] ) . '</td></tr>';
+            }
+            echo '</tbody></table></div>';
+            if ( $nb_cachees ) {
+                echo '<p class="deprat-produits-suite">+ ' . esc_html( $nb_cachees ) . ' autre' . ( 1 === $nb_cachees ? '' : 's' ) . ' référence' . ( 1 === $nb_cachees ? '' : 's' ) . '</p>';
+            }
+        } else {
+            echo '<p class="deprat-texte-secondaire">Aucun produit enregistré</p>';
+        }
+        echo '<button type="button" class="deprat-ouvrir-details" data-deprat-open="' . esc_attr( $dialogue_id ) . '" aria-haspopup="dialog" aria-controls="' . esc_attr( $dialogue_id ) . '">Plus de détails <span aria-hidden="true">›</span></button></div>';
+
+        echo '<div class="deprat-carte-colonne deprat-carte-commentaire"><h3>Commentaire</h3>';
+        echo '<div class="deprat-commentaire-carte">' . ( '' !== $commentaire ? nl2br( esc_html( $commentaire ) ) : '<span class="deprat-texte-secondaire">Aucun commentaire</span>' ) . '</div></div>';
+
+        echo '<div class="deprat-carte-colonne deprat-carte-devis"><h3>Devis</h3>';
+        echo '<span class="deprat-etat deprat-etat-' . esc_attr( $etat ) . '">' . esc_html( deprat_statut_client_v7( $etat ) ) . '</span>';
         if ( $pdf_devis && in_array( $etat, array( 'dpr-envoye', 'dpr-modifie', 'dpr-accepte', 'dpr-facture', 'dpr-termine' ), true ) ) {
-            echo '<p><a class="deprat-lien-document deprat-lien-devis" href="' . esc_url( deprat_lien_document_v7( $commande, 'devis' ) ) . '" target="_blank" rel="noopener noreferrer"><span aria-hidden="true">▤</span> Consulter le devis</a></p>';
+            echo '<p><a class="deprat-lien-document" href="' . esc_url( deprat_lien_document_v7( $commande, 'devis' ) ) . '" target="_blank" rel="noopener noreferrer">Consulter le devis</a></p>';
         }
         if ( in_array( $etat, array( 'dpr-envoye', 'dpr-modifie' ), true ) && $pdf_devis && ! $accord ) {
             $version = (string) $pdf_devis;
@@ -1328,46 +1354,59 @@ function deprat_html_historique() {
             echo '<input type="hidden" name="deprat_version" value="' . esc_attr( $version ) . '">';
             wp_nonce_field( 'deprat_accepter_devis_' . $id . '_' . $version, 'deprat_nonce_accord' );
             echo '<label class="deprat-accord-label"><input type="checkbox" name="deprat_accord" value="oui" required> J’ai consulté le devis PDF et je confirme mon accord.</label>';
-            echo '<button type="submit" class="button deprat-btn-valider-v73" onclick="return confirm(\'Confirmer définitivement votre acceptation du devis ?\');">✓ Accepter le devis</button>';
-            echo '</form>';
-            echo '<details class="deprat-revision-client"><summary>✎ Demander un ajustement</summary>'; 
+            echo '<button type="submit" class="deprat-btn-valider-v73" onclick="return confirm(\'Confirmer définitivement votre acceptation du devis ?\');">✓ Accepter le devis</button></form>';
+            echo '<details class="deprat-revision-client"><summary>Demander un ajustement</summary>';
             echo '<form method="post" action="' . esc_url( deprat_lien_historique() ) . '" class="deprat-revision-form">';
             echo '<input type="hidden" name="deprat_demander_modification" value="' . esc_attr( $id ) . '">';
             echo '<input type="hidden" name="deprat_version" value="' . esc_attr( $version ) . '">';
             wp_nonce_field( 'deprat_demander_modification_' . $id . '_' . $version, 'deprat_revision_nonce' );
             echo '<label for="deprat-revision-texte-' . esc_attr( $id ) . '">Quels ajustements souhaitez-vous ?</label>';
             echo '<textarea id="deprat-revision-texte-' . esc_attr( $id ) . '" rows="3" maxlength="2000" minlength="5" name="deprat_ajustements" required placeholder="Précisez les références ou les quantités à modifier…"></textarea>';
-            echo '<button type="submit" class="button deprat-revision-envoyer" onclick="return confirm(\'Envoyer votre demande de modification au service ADV ? Le devis actuel ne pourra plus être accepté.\');">Envoyer mes ajustements</button>';
-            echo '</form></details>';
-            echo '</div>';
+            echo '<button type="submit" class="deprat-revision-envoyer" onclick="return confirm(\'Envoyer votre demande de modification au service ADV ? Le devis actuel ne pourra plus être accepté.\');">Envoyer mes ajustements</button></form></details></div>';
         }
         if ( $accord ) {
             echo '<p class="deprat-accord-ok">✓ Devis accepté<br><small>Le ' . esc_html( deprat_date_utc_v7( $accord ) ) . '</small></p>';
-        }
-        if ( $pdf_facture && in_array( $etat, array( 'dpr-facture', 'dpr-termine' ), true ) ) {
-            echo '<p><a class="deprat-lien-document deprat-lien-facture" href="' . esc_url( deprat_lien_document_v7( $commande, 'facture' ) ) . '" target="_blank" rel="noopener noreferrer"><span aria-hidden="true">▤</span> Consulter la facture</a></p>';
-            echo '<p class="deprat-facture-date">Facture envoyée le ' . esc_html( deprat_date_utc_v7( $facture_date ) ) . '</p>';
-            echo '<p class="deprat-paiement-v7">' . esc_html( deprat_mention_paiement_v7() ) . '</p>';
         } elseif ( ! $pdf_devis ) {
-            echo '<span class="deprat-attente-pdf">En attente du devis</span>';
+            echo '<p class="deprat-texte-secondaire">En attente du devis</p>';
         }
-        echo '</td><td data-title="Nouvelle demande">';
-        echo '<form method="post" action="' . esc_url( wc_get_cart_url() ) . '">';
-        echo '<input type="hidden" name="deprat_refaire_demande" value="' . esc_attr( $id ) . '">';
+        echo '</div>';
+
+        echo '<div class="deprat-carte-colonne deprat-carte-facture"><h3>Facture</h3>';
+        if ( $pdf_facture && in_array( $etat, array( 'dpr-facture', 'dpr-termine' ), true ) ) {
+            echo '<span class="deprat-etat deprat-etat-dpr-facture">✓ Facture disponible</span>';
+            echo '<p><a class="deprat-lien-document" href="' . esc_url( deprat_lien_document_v7( $commande, 'facture' ) ) . '" target="_blank" rel="noopener noreferrer">Consulter la facture</a></p>';
+            if ( $facture_date ) { echo '<p class="deprat-texte-secondaire">Envoyée le ' . esc_html( deprat_date_utc_v7( $facture_date ) ) . '</p>'; }
+            echo '<p class="deprat-paiement-v7">' . esc_html( deprat_mention_paiement_v7() ) . '</p>';
+        } else {
+            echo '<p class="deprat-texte-secondaire">' . ( $accord ? 'Facture en préparation' : 'Disponible après validation du devis' ) . '</p>';
+        }
+        echo '</div>';
+
+        echo '<div class="deprat-carte-colonne deprat-carte-refaire"><h3>Refaire</h3>';
+        echo '<form method="post" action="' . esc_url( wc_get_cart_url() ) . '"><input type="hidden" name="deprat_refaire_demande" value="' . esc_attr( $id ) . '">';
         wp_nonce_field( 'deprat_refaire_' . $id, 'deprat_refaire_nonce' );
-        echo '<button type="submit" class="button deprat-refaire-icone" title="Refaire cette demande" aria-label="Refaire cette demande">';
-        echo '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M3 11a9 9 0 1 1 2.7 6.4"/><path d="M3 4v7h7"/></svg>';
-        echo '<span class="screen-reader-text">Refaire cette demande</span></button></form>';
-        echo '</td></tr>';
+        echo '<button type="submit" class="deprat-refaire-icone" title="Refaire cette demande" aria-label="Refaire la demande numéro ' . esc_attr( $commande->get_order_number() ) . '">↻</button></form></div></article>';
+
+        $detail = '<dialog id="' . esc_attr( $dialogue_id ) . '" class="deprat-dialogue-produits" aria-labelledby="' . esc_attr( $titre_id ) . '">';
+        $detail .= '<div class="deprat-dialogue-entete"><h3 id="' . esc_attr( $titre_id ) . '">Détail de la demande #' . esc_html( $commande->get_order_number() ) . '</h3><button type="button" class="deprat-dialogue-fermer" data-deprat-close aria-label="Fermer la fenêtre">×</button></div>';
+        $detail .= '<div class="deprat-dialogue-interieur"><div class="deprat-dialogue-meta"><span>' . esc_html( $date_affichee ) . '</span><span>' . esc_html( $nb_lignes ) . ' référence' . ( 1 === $nb_lignes ? '' : 's' ) . ' · ' . 'Quantité totale : ' . esc_html( $nombre_pieces ) . '</span></div>';
+        if ( '' !== $commentaire ) {
+            $detail .= '<p class="deprat-dialogue-commentaire"><strong>Commentaire</strong> ' . nl2br( esc_html( $commentaire ) ) . '</p>';
+        }
+        $detail .= '<div class="deprat-dialogue-table-wrap"><table class="deprat-dialogue-table"><thead><tr><th>Réf.</th><th>Désignation</th><th>Qté</th><th>Conditionnement</th><th>Détails</th></tr></thead><tbody>';
+        foreach ( $lignes_produits as $ligne ) {
+            $detail .= '<tr><td>' . esc_html( $ligne['reference'] ?: '—' ) . '</td><td>' . esc_html( $ligne['designation'] ) . '</td><td>' . esc_html( $ligne['quantite'] ) . '</td><td>' . esc_html( $ligne['conditionnement'] ?: '—' ) . '</td><td>' . esc_html( $ligne['details'] ?: '—' ) . '</td></tr>';
+        }
+        $detail .= '</tbody></table></div></div><div class="deprat-dialogue-pied"><button type="button" class="deprat-dialogue-bouton-fermer" data-deprat-close>Fermer</button></div></dialog>';
+        $fenetres_details[] = $detail;
     }
-    echo '</tbody></table></div>';
-    // Un <dialog> est place a l'exterieur du tableau et peut defiler sur les demandes volumineuses.
-    foreach ( $fenetres_details as $fenetre ) { echo $fenetre; } // Contenu echappe lors de sa construction.
+    echo '</div>';
+    foreach ( $fenetres_details as $fenetre ) { echo $fenetre; }
     if ( $pages > 1 ) {
         echo '<nav aria-label="Pages des demandes" class="deprat-pages">';
         for ( $i = 1; $i <= $pages; $i++ ) {
-            $url = add_query_arg( array( 'deprat_page' => $i, 'deprat_q' => $recherche ), deprat_lien_historique() );
-            echo '<a class="' . ( $i === $page ? 'deprat-page-active' : '' ) . '" href="' . esc_url( $url ) . '">' . esc_html( $i ) . '</a> ';
+            $url = add_query_arg( array( 'deprat_page' => $i, 'deprat_q' => $recherche, 'deprat_statut' => $statut, 'deprat_periode' => $periode ), deprat_lien_historique() );
+            echo '<a class="' . ( $i === $page ? 'deprat-page-active' : '' ) . '" href="' . esc_url( $url ) . '"' . ( $i === $page ? ' aria-current="page"' : '' ) . '>' . esc_html( $i ) . '</a>';
         }
         echo '</nav>';
     }
@@ -1382,54 +1421,10 @@ add_action( 'wp_ajax_deprat_recherche_historique_v72', function () {
     }
     $_GET['deprat_q'] = isset( $_POST['q'] ) ? sanitize_text_field( wp_unslash( $_POST['q'] ) ) : '';
     $_GET['deprat_page'] = 1;
+    $_GET['deprat_statut'] = isset( $_POST['statut'] ) ? sanitize_key( wp_unslash( $_POST['statut'] ) ) : '';
+    $_GET['deprat_periode'] = isset( $_POST['periode'] ) ? sanitize_key( wp_unslash( $_POST['periode'] ) ) : '';
     $html = deprat_html_historique();
     wp_send_json_success( array( 'html' => $html ) );
-} );
-
-add_action( 'wp_head', function () {
-    echo '<style id="deprat-historique-v7">
-    .deprat-historique-v7{margin:24px 0;color:#243347}.deprat-historique-header h2{margin:0 0 5px;color:#123b79}
-    .deprat-historique-header p{color:#62758c;margin:0 0 20px}
-    .deprat-recherche-form{background:#f7f9fc;border:1px solid #dce5f0;border-radius:9px;padding:17px 20px;margin:0 0 12px}
-    .deprat-recherche-form label{display:block;font-weight:700;margin:0 0 9px;color:#123b79}
-    .deprat-recherche-champs{display:flex;gap:9px;flex-wrap:wrap;align-items:center}
-    .deprat-recherche-champs input{flex:1;min-width:180px;min-height:41px;border:1px solid #cbd5e1;border-radius:5px;padding:9px 12px}
-    .deprat-resultats-count{color:#64748b;font-size:13px;margin:9px 0 16px}
-    .deprat-historique-defilement{overflow-x:auto}.deprat-historique-table{border-collapse:collapse;width:100%}
-    .deprat-historique-table th{color:#123b79;background:#eaf0f8;padding:14px 11px}
-    .deprat-historique-table td{vertical-align:top;padding:16px 11px;min-width:95px}
-    .deprat-historique-table td:nth-child(3){min-width:190px}.deprat-historique-table td:nth-child(5){min-width:210px}
-    .deprat-historique-table .button{white-space:normal;text-align:center;font-size:12px;margin:0}
-    .deprat-etat{display:inline-block;background:#edf2f9;color:#24466e;border-radius:15px;padding:5px 9px;font-size:12px;font-weight:700;line-height:1.4}
-    .deprat-etat-dpr-envoye,.deprat-etat-dpr-modifie{background:#e5f0ff;color:#125ea8}.deprat-etat-dpr-accepte,.deprat-etat-dpr-facture,.deprat-etat-dpr-termine{background:#e3f4e8;color:#22743b}
-    .deprat-docs-v7 p{margin:6px 0}.deprat-commentaire,.deprat-paiement-v7{font-size:12px;color:#596b82}
-    .deprat-paiement-v7{background:#f6f9ff;border-left:3px solid #ad963f;padding:10px;margin-top:8px!important}
-    .deprat-accord-ok{font-size:12px;font-weight:700;color:#24703c;margin-top:12px!important}
-    .deprat-facture-date{font-size:12px;color:#64748b}
-    .deprat-form-acceptation{margin-top:12px}.deprat-accord-label{display:block;font-size:12px;margin-bottom:10px}
-    .deprat-pages{display:flex;gap:7px;margin:20px 0}.deprat-pages a{display:inline-block;padding:6px 11px;border:1px solid #dbe5f0;border-radius:5px}
-    .deprat-pages .deprat-page-active{background:#123b79;color:#fff}
-    @media(max-width:768px){.deprat-historique-table td{min-width:0}.deprat-historique-table td:nth-child(3),.deprat-historique-table td:nth-child(5){min-width:0}}
-    /* Fonctionnement minimum du composant V7.1, meme sans notre CSS design additionnel. */
-    .deprat-mini-produits{width:100%;border-collapse:collapse;font-size:12px}.deprat-mini-produits th,.deprat-mini-produits td{padding:6px!important;text-align:left!important;border-bottom:1px solid #e9edf4}
-    .deprat-mini-produits th:last-child,.deprat-mini-produits td:last-child{text-align:center!important;white-space:nowrap}
-    .deprat-ouvrir-details{border:0;background:transparent;color:#0b63bb;cursor:pointer;padding:9px 0;font-size:13px;text-decoration:underline}
-    .deprat-refaire-icone{width:40px;height:40px;min-width:40px;min-height:40px;display:inline-flex!important;align-items:center;justify-content:center;padding:0!important;border-radius:50%!important}
-    .deprat-dialogue-produits{width:min(760px,calc(100% - 28px));max-height:min(82vh,850px);padding:0;border:1px solid #dce5ee;border-radius:13px;box-shadow:0 22px 65px rgba(14,37,69,.27);color:#25364a}
-    .deprat-dialogue-produits::backdrop{background:rgba(15,30,53,.55)}
-    .deprat-dialogue-entete,.deprat-dialogue-pied{padding:20px 25px;display:flex;justify-content:space-between;align-items:flex-start;gap:15px}
-    .deprat-dialogue-entete{border-bottom:1px solid #e7edf4}.deprat-dialogue-entete h3{margin:3px 0}.deprat-dialogue-entete p{margin:2px 0 0}
-    .deprat-dialogue-fermer{background:transparent;border:0;font-size:28px;cursor:pointer}.deprat-dialogue-interieur{padding:22px 25px;overflow:auto;max-height:56vh}
-    .deprat-dialogue-table{width:100%;border-collapse:collapse}.deprat-dialogue-table th,.deprat-dialogue-table td{padding:10px;border-bottom:1px solid #edf0f5;text-align:left}
-    .deprat-dialogue-pied{border-top:1px solid #e7edf4;justify-content:flex-end}
-    .deprat-dialogue-bouton-fermer{background:#0d5dad;color:#fff;border:0;border-radius:7px;padding:9px 18px;cursor:pointer}
-    .deprat-revision-client{margin:12px 0 8px;padding:11px 13px;border:1px solid #dce5f0;border-radius:8px;background:#fbfdff}
-    .deprat-revision-client summary{cursor:pointer;font-size:13px;color:#134e91;font-weight:650}
-    .deprat-revision-form{display:grid;gap:8px;margin-top:12px}
-    .deprat-revision-form label{font-size:13px;font-weight:600}
-    .deprat-revision-form textarea{resize:vertical;min-height:88px;width:100%;border:1px solid #cbd5e1;border-radius:7px;padding:9px}
-    .deprat-recherche-en-cours .deprat-resultats-count{opacity:.5}
-    </style>';
 } );
 
 // Fenetres modales natives (clavier/Echap et verrouillage du focus pris en charge par <dialog>).
@@ -1486,6 +1481,10 @@ add_action( 'wp_footer', function () {
       params.append('action', 'deprat_recherche_historique_v72');
       params.append('nonce', __DEPRAT_SEARCH_NONCE__);
       params.append('q', valeur);
+      var statut = racine.querySelector('#deprat-statut');
+      var periode = racine.querySelector('#deprat-periode');
+      params.append('statut', statut ? statut.value : '');
+      params.append('periode', periode ? periode.value : '');
       fetch(__DEPRAT_AJAX_URL__, {method:'POST', credentials:'same-origin', body:params})
         .then(function(rep){ if(!rep.ok) throw new Error('Erreur de connexion.'); return rep.json(); })
         .then(function(data){
@@ -1497,12 +1496,21 @@ add_action( 'wp_footer', function () {
           var paramsUrl = new URL(window.location.href);
           if (valeur) paramsUrl.searchParams.set('deprat_q', valeur);
           else paramsUrl.searchParams.delete('deprat_q');
+          if (statut && statut.value) paramsUrl.searchParams.set('deprat_statut', statut.value);
+          else paramsUrl.searchParams.delete('deprat_statut');
+          if (periode && periode.value) paramsUrl.searchParams.set('deprat_periode', periode.value);
+          else paramsUrl.searchParams.delete('deprat_periode');
           paramsUrl.searchParams.delete('deprat_page');
           history.replaceState(null, '', paramsUrl.toString());
         })
         .catch(function(){ /* Le bouton Rechercher fournit le fonctionnement de secours. */ })
         .finally(function(){ if (seq === rechercheSequence) racine.classList.remove('deprat-recherche-en-cours'); });
     }, 320);
+  });
+  document.addEventListener('change', function (event) {
+    if (!(event.target instanceof Element) || !event.target.matches('.deprat-historique-v7 select')) return;
+    var form = event.target.closest('form');
+    if (form && typeof form.requestSubmit === 'function') form.requestSubmit();
   });
   // Clic sur le fond sombre : ferme le dialogue (Echap est gere par le navigateur).
   document.addEventListener('click', function (event) {

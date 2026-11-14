@@ -1,171 +1,503 @@
-/* ==========================================
-   CORRECTIONS HISTORIQUE CLIENT DEPRAT
-   - Voir le détail visible
-   - icône refaire plus jolie
-   ========================================== */
-
-/* Chaque demande mieux séparée */
-.deprat-historique-v7 tbody tr,
-.deprat-demand-card {
-    position: relative;
+/* Historique des demandes de devis */
+.deprat-historique-v7 {
+    container-type: inline-size;
+    --deprat-bleu: #0756a9;
+    --deprat-marine: #102b55;
+    --deprat-bordure: #d5e1ee;
+    color: var(--deprat-marine);
+    margin: 28px 0;
 }
 
-.deprat-historique-v7 tbody tr td,
-.deprat-demand-card {
+.deprat-historique-v7 * {
+    box-sizing: border-box;
+}
+
+.deprat-historique-v7 .deprat-historique-header {
+    border-left: 5px solid #e1ad39;
+    padding-left: 20px;
+    margin-bottom: 26px;
+}
+
+.deprat-historique-v7 .deprat-historique-header h2 {
+    color: #0a2755;
+    font-size: clamp(27px, 3vw, 38px);
+    line-height: 1.14;
+    margin: 0 0 7px;
+}
+
+.deprat-historique-v7 .deprat-historique-header p {
+    color: #5c708b;
+    font-size: 16px;
+    margin: 0;
+}
+
+.deprat-historique-v7 .deprat-recherche-form {
+    display: flex;
+    align-items: end;
+    flex-wrap: wrap;
+    gap: 15px 22px;
+    padding: 0 0 20px;
+    border-bottom: 1px solid var(--deprat-bordure);
+}
+
+.deprat-historique-v7 .deprat-recherche-champs {
+    display: flex;
+    gap: 10px;
+    flex: 1 1 430px;
+}
+
+.deprat-historique-v7 .deprat-recherche-champs input,
+.deprat-historique-v7 .deprat-filtres select {
+    height: 46px;
+    min-width: 0;
+    border: 1px solid #b8cae0;
+    border-radius: 8px;
     background: #fff;
+    color: #18365d;
+    padding: 9px 12px;
+    font-size: 14px;
 }
 
-.deprat-historique-v7 tbody tr {
-    box-shadow: inset 4px 0 0 #2d6fbb;
+.deprat-historique-v7 .deprat-recherche-champs input {
+    flex: 1;
+    width: 100%;
 }
 
-/* ------------------------------------------
-   VOIR LE DETAIL
-   ------------------------------------------ */
-
-/* on force le lien/bouton à être visible */
-.deprat-historique-v7 .deprat-detail-link,
-.deprat-historique-v7 .deprat-voir-detail,
-.deprat-historique-v7 a.deprat-detail-link,
-.deprat-historique-v7 a.deprat-voir-detail,
-.deprat-historique-v7 .deprat-btn-detail {
-    display: inline-flex !important;
+.deprat-historique-v7 .deprat-filtres {
+    display: flex;
     align-items: center;
+    flex-wrap: wrap;
     gap: 8px;
-    padding: 0 !important;
-    min-height: auto !important;
-    border: none !important;
-    background: transparent !important;
-    color: #1f67b4 !important;
-    font-size: 15px;
+}
+
+.deprat-historique-v7 .deprat-filtres label {
     font-weight: 700;
-    text-decoration: none !important;
-    box-shadow: none !important;
-    border-radius: 0 !important;
+    font-size: 14px;
+}
+
+.deprat-historique-v7 .deprat-filtres label:not(:first-child) {
+    margin-left: 12px;
+}
+
+.deprat-historique-v7 .deprat-rechercher,
+.deprat-historique-v7 .deprat-dialogue-bouton-fermer {
+    background: #0756a9;
+    border: 1px solid #0756a9;
+    border-radius: 8px;
+    color: #fff;
+    font-weight: 700;
+    padding: 10px 19px;
     cursor: pointer;
 }
 
-/* petite icône avant le texte */
-.deprat-historique-v7 .deprat-detail-link::before,
-.deprat-historique-v7 .deprat-voir-detail::before,
-.deprat-historique-v7 .deprat-btn-detail::before {
-    content: "▣";
-    font-size: 14px;
-    line-height: 1;
-    color: #1f67b4;
-    display: inline-block;
-}
-
-/* hover plus propre */
-.deprat-historique-v7 .deprat-detail-link:hover,
-.deprat-historique-v7 .deprat-voir-detail:hover,
-.deprat-historique-v7 .deprat-btn-detail:hover {
-    color: #144f8e !important;
-    text-decoration: underline !important;
-}
-
-.deprat-historique-v7 .deprat-detail-link:hover::before,
-.deprat-historique-v7 .deprat-voir-detail:hover::before,
-.deprat-historique-v7 .deprat-btn-detail:hover::before {
-    color: #144f8e;
-}
-
-/* si le bouton est dans un bloc produits */
-.deprat-historique-v7 .deprat-produits-actions {
-    margin-top: 14px;
-}
-
-/* ------------------------------------------
-   ICONE REFAIRE LA DEMANDE
-   ------------------------------------------ */
-
-.deprat-historique-v7 .deprat-btn-refaire,
-.deprat-historique-v7 .deprat-reorder a,
-.deprat-historique-v7 a[title*="Refaire"],
-.deprat-historique-v7 a[aria-label*="Refaire"] {
-    width: 46px !important;
-    height: 46px !important;
-    min-width: 46px !important;
-    min-height: 46px !important;
-    padding: 0 !important;
-    border-radius: 50% !important;
-    border: 1px solid #c8d8ea !important;
-    background: #f4f8fc !important;
-    color: #1f67b4 !important;
-    display: inline-flex !important;
-    align-items: center;
-    justify-content: center;
-    font-size: 0 !important; /* masque le texte si présent */
-    box-shadow: none !important;
-    position: relative;
-    text-decoration: none !important;
-}
-
-/* nouvelle icône plus propre */
-.deprat-historique-v7 .deprat-btn-refaire::before,
-.deprat-historique-v7 .deprat-reorder a::before,
-.deprat-historique-v7 a[title*="Refaire"]::before,
-.deprat-historique-v7 a[aria-label*="Refaire"]::before {
-    content: "↺";
-    font-size: 24px;
-    line-height: 1;
-    font-weight: 700;
-    color: #1f67b4;
-}
-
-/* hover */
-.deprat-historique-v7 .deprat-btn-refaire:hover,
-.deprat-historique-v7 .deprat-reorder a:hover,
-.deprat-historique-v7 a[title*="Refaire"]:hover,
-.deprat-historique-v7 a[aria-label*="Refaire"]:hover {
-    background: #1f67b4 !important;
-    border-color: #1f67b4 !important;
-    transform: translateY(-1px);
-}
-
-.deprat-historique-v7 .deprat-btn-refaire:hover::before,
-.deprat-historique-v7 .deprat-reorder a:hover::before,
-.deprat-historique-v7 a[title*="Refaire"]:hover::before,
-.deprat-historique-v7 a[aria-label*="Refaire"]:hover::before {
-    color: #fff;
-}
-
-/* Tooltip */
-.deprat-historique-v7 .deprat-btn-refaire:hover::after,
-.deprat-historique-v7 .deprat-reorder a:hover::after,
-.deprat-historique-v7 a[title*="Refaire"]:hover::after,
-.deprat-historique-v7 a[aria-label*="Refaire"]:hover::after {
-    content: "Refaire cette demande";
-    position: absolute;
-    bottom: 54px;
-    right: 50%;
-    transform: translateX(50%);
-    background: #173b6b;
-    color: #fff;
+.deprat-historique-v7 .deprat-resultats-count {
+    margin: 12px 0;
+    color: #71839a;
     font-size: 13px;
-    font-weight: 600;
-    padding: 7px 10px;
+}
+
+.deprat-historique-v7 .deprat-demandes-liste {
+    display: grid;
+    gap: 20px;
+}
+
+.deprat-historique-v7 .deprat-demande-card {
+    display: grid;
+    grid-template-columns: minmax(140px, .9fr) minmax(230px, 1.65fr) minmax(150px, 1fr) minmax(200px, 1.3fr) minmax(160px, 1.05fr) 75px;
+    gap: 0;
+    background: #fff;
+    border: 1px solid var(--deprat-bordure);
+    border-left: 5px solid #0863bd;
+    border-radius: 12px;
+    box-shadow: 0 6px 18px rgba(31, 61, 101, .08);
+    overflow: hidden;
+    padding: 15px 0;
+}
+
+.deprat-historique-v7 .deprat-carte-colonne {
+    min-width: 0;
+    padding: 0 14px;
+    border-right: 1px solid #e1e9f2;
+}
+
+.deprat-historique-v7 .deprat-carte-colonne:last-child {
+    border: 0;
+}
+
+.deprat-historique-v7 .deprat-carte-colonne h3 {
+    color: #132c54;
+    font-size: 15px;
+    line-height: 1.3;
+    margin: 0 0 12px;
+    font-weight: 700;
+}
+
+.deprat-historique-v7 .deprat-carte-identite {
+    display: grid;
+    gap: 12px;
+    padding: 14px;
+    min-height: 155px;
+    border-radius: 9px;
+    background: #edf5fc;
+    font-size: 13px;
+}
+
+.deprat-historique-v7 .deprat-numero {
+    display: block;
+    color: #062d66;
+    font-size: 26px;
+    line-height: 1;
+}
+
+.deprat-historique-v7 .deprat-mini-table-wrap,
+.deprat-historique-v7 .deprat-dialogue-table-wrap {
+    overflow-x: auto;
+}
+
+.deprat-historique-v7 table.deprat-mini-produits,
+.deprat-historique-v7 table.deprat-dialogue-table {
+    width: 100%;
+    border-collapse: collapse;
+    border: 0;
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.35;
+}
+
+.deprat-historique-v7 table.deprat-mini-produits th,
+.deprat-historique-v7 table.deprat-dialogue-table th {
+    background: #e5f0fc;
+    color: #15345c;
+    font-weight: 700;
+    text-align: left;
+    border: 0;
+    padding: 7px 8px;
+}
+
+.deprat-historique-v7 table.deprat-mini-produits td,
+.deprat-historique-v7 table.deprat-dialogue-table td {
+    color: #203552;
+    background: transparent;
+    text-align: left;
+    padding: 7px 8px;
+    border: 0;
+    border-bottom: 1px solid #e4e9f1;
+    overflow-wrap: anywhere;
+}
+
+.deprat-historique-v7 table.deprat-mini-produits th:last-child,
+.deprat-historique-v7 table.deprat-mini-produits td:last-child {
+    text-align: center;
+}
+
+.deprat-historique-v7 .deprat-produits-suite,
+.deprat-historique-v7 .deprat-texte-secondaire {
+    color: #607590;
+    font-size: 13px;
+    margin: 10px 0;
+}
+
+.deprat-historique-v7 .deprat-ouvrir-details {
+    margin-top: 12px;
+    padding: 7px 13px;
+    color: #0756a9;
+    background: #fff;
+    border: 1px solid #8fb9e8;
+    border-radius: 7px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.deprat-historique-v7 .deprat-ouvrir-details span {
+    margin-left: 8px;
+    font-size: 17px;
+    line-height: 0;
+}
+
+.deprat-historique-v7 .deprat-commentaire-carte {
+    min-height: 90px;
+    padding: 10px;
+    border: 1px solid #e2e8f1;
     border-radius: 8px;
-    white-space: nowrap;
-    z-index: 20;
-    box-shadow: 0 8px 18px rgba(0,0,0,0.12);
+    background: #f9fbfd;
+    font-size: 13px;
+    overflow-wrap: anywhere;
 }
 
-/* ------------------------------------------
-   POPUP DÉTAIL si déjà présente
-   ------------------------------------------ */
-
-.deprat-detail-modal,
-.deprat-popup-detail,
-.deprat-modal-detail {
-    z-index: 99999 !important;
+.deprat-historique-v7 .deprat-carte-colonne p {
+    margin: 9px 0;
+    font-size: 13px;
 }
 
-.deprat-detail-modal .modal-content,
-.deprat-popup-detail .modal-content,
-.deprat-modal-detail .modal-content {
-    border-radius: 18px !important;
-    border: 1px solid #dce6f2;
-    box-shadow: 0 20px 50px rgba(16, 35, 61, 0.18);
-    padding: 24px;
+.deprat-historique-v7 .deprat-etat {
+    display: inline-block;
+    border-radius: 20px;
+    padding: 5px 10px;
+    background: #edf2f9;
+    color: #36577e;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.4;
+}
+
+.deprat-historique-v7 .deprat-etat-dpr-envoye,
+.deprat-historique-v7 .deprat-etat-dpr-modifie {
+    background: #deedff;
+    color: #0756a9;
+}
+
+.deprat-historique-v7 .deprat-etat-dpr-accepte,
+.deprat-historique-v7 .deprat-etat-dpr-facture,
+.deprat-historique-v7 .deprat-etat-dpr-termine {
+    background: #e4f5e7;
+    color: #23753b;
+}
+
+.deprat-historique-v7 .deprat-lien-document {
+    color: #0756a9;
+    font-weight: 700;
+    text-decoration: underline;
+    overflow-wrap: anywhere;
+}
+
+.deprat-historique-v7 .deprat-form-acceptation {
+    margin-top: 12px;
+}
+
+.deprat-historique-v7 .deprat-accord-label {
+    display: block;
+    margin-bottom: 9px;
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+.deprat-historique-v7 .deprat-btn-valider-v73,
+.deprat-historique-v7 .deprat-revision-envoyer {
+    width: 100%;
+    padding: 9px 12px;
+    color: white;
+    background: #218438;
+    border: 0;
+    border-radius: 7px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.deprat-historique-v7 .deprat-revision-client {
+    margin-top: 9px;
+}
+
+.deprat-historique-v7 .deprat-revision-client summary {
+    padding: 8px 10px;
+    color: #ac510b;
+    border: 1px solid #e99454;
+    border-radius: 7px;
+    font-size: 13px;
+    font-weight: 700;
+    text-align: center;
+    cursor: pointer;
+    list-style: none;
+}
+
+.deprat-historique-v7 .deprat-revision-client summary::-webkit-details-marker {
+    display: none;
+}
+
+.deprat-historique-v7 .deprat-revision-form {
+    display: grid;
+    gap: 8px;
+    margin-top: 12px;
+    font-size: 13px;
+}
+
+.deprat-historique-v7 .deprat-revision-form textarea {
+    min-height: 85px;
+    width: 100%;
+    padding: 9px;
+    border: 1px solid #b8cae0;
+    border-radius: 7px;
+}
+
+.deprat-historique-v7 .deprat-revision-envoyer {
+    background: #b65d15;
+}
+
+.deprat-historique-v7 .deprat-accord-ok {
+    color: #23753b;
+    font-weight: 700;
+}
+
+.deprat-historique-v7 .deprat-paiement-v7 {
+    padding: 10px;
+    border-radius: 8px;
+    background: #eff6fd;
+    color: #385578;
+}
+
+.deprat-historique-v7 .deprat-carte-refaire {
+    text-align: center;
+}
+
+.deprat-historique-v7 .deprat-refaire-icone {
+    width: 42px;
+    height: 42px;
+    padding: 0;
+    color: #0756a9;
+    background: #fff;
+    border: 1px solid #8fb9e8;
+    border-radius: 9px;
+    font-size: 25px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.deprat-historique-v7 .deprat-dialogue-produits {
+    width: min(820px, calc(100vw - 30px));
+    max-height: min(85vh, 900px);
+    padding: 0;
+    border: 1px solid #d2dfed;
+    border-radius: 14px;
+    background: #fff;
+    color: #173356;
+    box-shadow: 0 18px 50px rgba(18, 43, 78, .25);
+}
+
+.deprat-historique-v7 .deprat-dialogue-produits::backdrop {
+    background: rgba(17, 39, 68, .42);
+}
+
+.deprat-historique-v7 .deprat-dialogue-entete {
+    display: flex;
+    align-items: start;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 22px 25px 0;
+}
+
+.deprat-historique-v7 .deprat-dialogue-entete h3 {
+    color: #0a2755;
+    font-size: 23px;
+    line-height: 1.25;
+    margin: 0;
+}
+
+.deprat-historique-v7 .deprat-dialogue-fermer {
+    background: transparent;
+    border: 0;
+    color: #566b86;
+    font-size: 27px;
+    line-height: 1;
+    padding: 0;
+    cursor: pointer;
+}
+
+.deprat-historique-v7 .deprat-dialogue-interieur {
+    padding: 18px 25px;
+}
+
+.deprat-historique-v7 .deprat-dialogue-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 22px;
+    color: #4a6281;
+    font-size: 13px;
+    margin-bottom: 16px;
+}
+
+.deprat-historique-v7 .deprat-dialogue-commentaire {
+    margin: 0 0 16px;
+    color: #4a6281;
+    font-size: 13px;
+    overflow-wrap: anywhere;
+}
+
+.deprat-historique-v7 .deprat-dialogue-pied {
+    display: flex;
+    justify-content: flex-end;
+    padding: 0 25px 22px;
+}
+
+.deprat-historique-v7 .deprat-pages {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 20px;
+}
+
+.deprat-historique-v7 .deprat-pages a {
+    padding: 7px 12px;
+    border: 1px solid #cad9ea;
+    border-radius: 7px;
+    color: #0756a9;
+}
+
+.deprat-historique-v7 .deprat-pages a.deprat-page-active {
+    color: #fff;
+    background: #0756a9;
+}
+
+.deprat-historique-v7.deprat-recherche-en-cours .deprat-historique-resultats-v72 {
+    opacity: .7;
+}
+
+@container (max-width: 1150px) {
+    .deprat-historique-v7 .deprat-demande-card {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        row-gap: 22px;
+    }
+
+    .deprat-historique-v7 .deprat-carte-colonne:nth-child(3) {
+        border-right: 0;
+    }
+}
+
+@container (max-width: 680px) {
+    .deprat-historique-v7 .deprat-recherche-champs {
+        flex-basis: 100%;
+    }
+
+    .deprat-historique-v7 .deprat-filtres {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr);
+        width: 100%;
+    }
+
+    .deprat-historique-v7 .deprat-filtres label:not(:first-child) {
+        margin-left: 0;
+    }
+
+    .deprat-historique-v7 .deprat-demande-card {
+        grid-template-columns: 1fr;
+        padding: 0;
+    }
+
+    .deprat-historique-v7 .deprat-carte-colonne,
+    .deprat-historique-v7 .deprat-carte-colonne:nth-child(3) {
+        padding: 14px;
+        border: 0;
+        border-bottom: 1px solid #e1e9f2;
+    }
+
+    .deprat-historique-v7 .deprat-carte-colonne:last-child {
+        border-bottom: 0;
+        text-align: left;
+    }
+
+    .deprat-historique-v7 .deprat-carte-identite {
+        min-height: 0;
+        grid-template-columns: repeat(3, 1fr);
+        align-items: center;
+    }
+
+    .deprat-historique-v7 .deprat-dialogue-entete,
+    .deprat-historique-v7 .deprat-dialogue-interieur {
+        padding-left: 16px;
+        padding-right: 16px;
+    }
+
+    .deprat-historique-v7 table.deprat-dialogue-table {
+        min-width: 540px;
+    }
 }
