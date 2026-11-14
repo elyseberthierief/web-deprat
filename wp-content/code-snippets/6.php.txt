@@ -1,0 +1,89 @@
+/**
+ * DEPRAT - Validation rapide des comptes professionnels.
+ * Complète le système d'inscription existant.
+ */
+
+// Ajoute un lien sous chaque utilisateur en attente.
+add_filter('user_row_actions', function ($actions, $user) {
+
+    if (
+        !in_array('deprat_pending', (array) $user->roles, true)
+        || !current_user_can('promote_user', $user->ID)
+    ) {
+        return $actions;
+    }
+
+    $url = wp_nonce_url(
+        add_query_arg(
+            array(
+                'action'  => 'deprat_valider_compte',
+                'user_id' => $user->ID,
+            ),
+            admin_url('admin-post.php')
+        ),
+        'deprat_valider_' . $user->ID
+    );
+
+    $actions['deprat_valider'] =
+        '<a href="' . esc_url($url) .
+        '" style="color:#16803c;font-weight:600;">' .
+        '✓ Valider le compte</a>';
+
+    return $actions;
+
+}, 10, 2);
+
+
+// Exécute la validation après clic.
+add_action('admin_post_deprat_valider_compte', function () {
+
+    $user_id = isset($_GET['user_id'])
+        ? absint($_GET['user_id'])
+        : 0;
+
+    if (
+        !$user_id
+        || !current_user_can('promote_user', $user_id)
+    ) {
+        wp_die('Action non autorisée.');
+    }
+
+    check_admin_referer('deprat_valider_' . $user_id);
+
+    $user = get_userdata($user_id);
+
+    if (
+        !$user
+        || !in_array('deprat_pending', (array) $user->roles, true)
+    ) {
+        wp_die('Ce compte n’est pas en attente de validation.');
+    }
+
+    // Active le compte avec le rôle WooCommerce Client.
+    $user->set_role('customer');
+
+    // Le système existant gère le statut et l'e-mail client.
+    wp_safe_redirect(
+        add_query_arg(
+            'deprat_validation',
+            'ok',
+            admin_url('users.php')
+        )
+    );
+    exit;
+});
+
+
+// Affiche une confirmation dans l'administration.
+add_action('admin_notices', function () {
+
+    if (
+        current_user_can('promote_users')
+        && isset($_GET['deprat_validation'])
+        && $_GET['deprat_validation'] === 'ok'
+    ) {
+        echo '<div class="notice notice-success is-dismissible">';
+        echo '<p>Le compte professionnel a été validé.</p>';
+        echo '</div>';
+    }
+});

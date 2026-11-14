@@ -1,0 +1,23 @@
+[
+  {
+    "id": 3,
+    "taxonomie": "nav_menu",
+    "nom": "Menu principal",
+    "slug": "menu-principal",
+    "parent": 0
+  },
+  {
+    "id": 22,
+    "taxonomie": "product_cat",
+    "nom": "Non classé",
+    "slug": "non-classe",
+    "parent": 0
+  },
+  {
+    "id": 23,
+    "taxonomie": "nav_menu",
+    "nom": "Compte",
+    "slug": "compte",
+    "parent": 0
+  }
+]

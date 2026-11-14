@@ -1,0 +1,27 @@
+{
+  "themes": {
+    "astra": "4.14.1",
+    "twentytwentyfive": "1.5",
+    "twentytwentyfour": "1.5",
+    "twentytwentythree": "1.6"
+  },
+  "plugins": {
+    "akismet": "5.7.2",
+    "all-in-one-wp-migration": "7.113",
+    "code-snippets": "4.0.0",
+    "contact-form-7": "6.2.4.1",
+    "custom-css-js": "3.55",
+    "duplicator": "5.1.1",
+    "earnestlabs-quote-catalog-for-woocommerce": "1.18.0",
+    "elementor": "4.3.6",
+    "flamingo": "2.6.4",
+    "fluent-smtp": "2.4.1",
+    "wmgrs-registration-form-account-approval-for-woocommerce": "1.0.0",
+    "woocommerce": "11.2.1",
+    "wordpress-importer": "0.9.6",
+    "wp-mail-logging": "1.17.1",
+    "wp-mail-smtp": "4.10.3",
+    "wpforms-lite": "2.0.3.1",
+    "wppusher": "3.0.20"
+  }
+}

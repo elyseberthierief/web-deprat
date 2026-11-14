@@ -1,0 +1,249 @@
+/**
+ * DEPRAT — Accueil WordPress : demandes récentes + comptes pro à valider.
+ * Nouveau snippet PHP indépendant : ne remplace ni la V7.3 ni l'inscription pro V2.
+ * Code Snippets > PHP > exécution uniquement dans l'administration.
+ * Coller SANS la balise <?php.
+ *
+ * IMPORTANT : le bouton Valider déclenche le hook set_user_role du snippet
+ * DEPRAT – Demande d'ouverture de compte professionnel V2, responsable
+ * de l'e-mail d'activation. Garder ce snippet V2 actif.
+ */
+
+if ( ! function_exists( 'deprat_accueil_adv_statut' ) ) {
+    function deprat_accueil_adv_statut( $status ) {
+        $labels = array(
+            'dpr-recu'    => 'Nouvelle demande',
+            'dpr-encours' => 'Devis en traitement',
+            'dpr-envoye'  => 'Devis à valider',
+            'dpr-accepte' => 'Devis accepté',
+            'dpr-facture' => 'Facture disponible',
+            'dpr-termine' => 'Terminée',
+        );
+        return isset( $labels[ $status ] ) ? $labels[ $status ] : wc_get_order_status_name( $status );
+    }
+}
+
+/** 1. Les deux widgets sur Tableau de bord > Accueil. */
+add_action( 'wp_dashboard_setup', function () {
+    if ( current_user_can( 'manage_woocommerce' ) && function_exists( 'wc_get_orders' ) ) {
+        wp_add_dashboard_widget(
+            'deprat_accueil_demandes',
+            'DEPRAT · Dernières demandes et commandes',
+            'deprat_accueil_afficher_demandes'
+        );
+    }
+
+    // Seuls les administrateurs autorisés à promouvoir des utilisateurs
+    // voient le bouton de validation des comptes professionnels.
+    if ( current_user_can( 'promote_users' ) && current_user_can( 'list_users' ) ) {
+        wp_add_dashboard_widget(
+            'deprat_accueil_comptes',
+            'DEPRAT · Comptes professionnels à valider',
+            'deprat_accueil_afficher_comptes'
+        );
+    }
+}, 30 );
+
+/** 2. Dernières demandes : WooCommerce CRUD, compatible HPOS et stockage classique. */
+function deprat_accueil_afficher_demandes() {
+    if ( ! current_user_can( 'manage_woocommerce' ) || ! function_exists( 'wc_get_orders' ) ) {
+        echo '<p>Accès non autorisé.</p>';
+        return;
+    }
+
+    // On limite le volume demandé à WooCommerce pour préserver la rapidité.
+    // Dans une boutique DEPRAT dédiée, cela couvre largement les derniers dossiers.
+    $commandes = wc_get_orders( array(
+        'type'    => 'shop_order',
+        'limit'   => 80,
+        'orderby' => 'date',
+        'order'   => 'DESC',
+        'status'  => array( 'dpr-recu', 'dpr-encours', 'dpr-envoye', 'dpr-accepte', 'dpr-facture', 'dpr-termine' ),
+    ) );
+
+    $trouvees = array();
+    foreach ( $commandes as $commande ) {
+        if ( ! $commande instanceof WC_Order ) { continue; }
+        if ( 'oui' !== $commande->get_meta( '_deprat_demande', true ) ) { continue; }
+        $trouvees[] = $commande;
+        if ( count( $trouvees ) >= 8 ) { break; }
+    }
+
+    echo '<div class="deprat-home-help">Accès rapide aux dossiers du service ADV. Les états sont actualisés lors du chargement de la page.</div>';
+    if ( empty( $trouvees ) ) {
+        echo '<div class="deprat-home-empty">Aucune demande DEPRAT récente.</div>';
+        return;
+    }
+
+    echo '<div class="deprat-home-scroll"><table class="deprat-home-table"><thead><tr><th>Demande</th><th>Client / Société</th><th>Date</th><th>État</th><th></th></tr></thead><tbody>';
+    foreach ( $trouvees as $commande ) {
+        $etat = $commande->get_status();
+        $societe = trim( (string) $commande->get_billing_company() );
+        $contact = trim( (string) $commande->get_formatted_billing_full_name() );
+        if ( '' === $societe ) { $societe = $contact ?: $commande->get_billing_email(); }
+        $date = $commande->get_date_created();
+        $date_affichee = $date ? wp_date( 'd/m/Y', $date->getTimestamp() ) : '—';
+        $url = $commande->get_edit_order_url();
+
+        echo '<tr>';
+        echo '<td class="deprat-home-reference"><a href="' . esc_url( $url ) . '">#' . esc_html( $commande->get_order_number() ) . '</a></td>';
+        echo '<td><strong>' . esc_html( $societe ) . '</strong>';
+        if ( $contact && $contact !== $societe ) {
+            echo '<span class="deprat-home-muted">' . esc_html( $contact ) . '</span>';
+        }
+        echo '</td>';
+        echo '<td class="deprat-home-date">' . esc_html( $date_affichee ) . '</td>';
+        echo '<td><span class="deprat-home-etat deprat-home-etat-' . esc_attr( sanitize_html_class( $etat ) ) . '">' . esc_html( deprat_accueil_adv_statut( $etat ) ) . '</span></td>';
+        echo '<td><a class="deprat-home-action" href="' . esc_url( $url ) . '" aria-label="Ouvrir la demande ' . esc_attr( $commande->get_order_number() ) . '">Ouvrir</a></td>';
+        echo '</tr>';
+    }
+    echo '</tbody></table></div>';
+    echo '<p class="deprat-home-footer"><a href="' . esc_url( admin_url( 'admin.php?page=wc-orders' ) ) . '">Voir toutes les commandes WooCommerce →</a></p>';
+}
+
+/** 3. Comptes pro en attente. */
+function deprat_accueil_afficher_comptes() {
+    if ( ! current_user_can( 'promote_users' ) || ! current_user_can( 'list_users' ) ) {
+        echo '<p>Accès non autorisé.</p>';
+        return;
+    }
+
+    $recherche = new WP_User_Query( array(
+        'role'        => 'deprat_pending',
+        'meta_key'    => 'deprat_account_status',
+        'meta_value'  => 'pending',
+        'number'      => 8,
+        'orderby'     => 'registered',
+        'order'       => 'DESC',
+        'count_total' => true,
+    ) );
+    $utilisateurs = $recherche->get_results();
+    $total = (int) $recherche->get_total();
+
+    if ( isset( $_GET['deprat_compte_valide'] ) && '1' === sanitize_text_field( wp_unslash( $_GET['deprat_compte_valide'] ) ) ) {
+        echo '<div class="notice notice-success inline"><p><strong>Compte professionnel activé.</strong> L’e-mail d’activation a été demandé au système d’envoi.</p></div>';
+    }
+
+    echo '<p class="deprat-home-help">' . esc_html( $total ) . ' compte(s) en attente. Vérifie les informations de l’entreprise et le SIRET avant de valider.</p>';
+    if ( ! $utilisateurs ) {
+        echo '<div class="deprat-home-empty">✓ Aucun compte professionnel en attente.</div>';
+        return;
+    }
+
+    echo '<div class="deprat-home-scroll"><table class="deprat-home-table deprat-home-table-users"><thead><tr><th>Société / Contact</th><th>SIRET</th><th>Demande</th><th>Action</th></tr></thead><tbody>';
+    foreach ( $utilisateurs as $utilisateur ) {
+        if ( ! $utilisateur instanceof WP_User ) { continue; }
+        $id = (int) $utilisateur->ID;
+        $societe = (string) get_user_meta( $id, 'billing_company', true );
+        $siret   = (string) get_user_meta( $id, 'deprat_siret', true );
+        $contact = trim( (string) get_user_meta( $id, 'billing_first_name', true ) . ' ' . (string) get_user_meta( $id, 'billing_last_name', true ) );
+        $date    = strtotime( (string) $utilisateur->user_registered );
+        $lien    = get_edit_user_link( $id );
+        $peut_valider = current_user_can( 'edit_user', $id );
+
+        echo '<tr>';
+        echo '<td><strong>' . esc_html( $societe ?: 'Société non renseignée' ) . '</strong>';
+        if ( $contact ) { echo '<span class="deprat-home-muted">' . esc_html( $contact ) . '</span>'; }
+        echo '<span class="deprat-home-muted">' . esc_html( $utilisateur->user_email ) . '</span></td>';
+        echo '<td><span class="deprat-home-siret">' . esc_html( $siret ?: '—' ) . '</span></td>';
+        echo '<td class="deprat-home-date">' . esc_html( $date ? wp_date( 'd/m/Y', $date ) : '—' ) . '</td>';
+        echo '<td class="deprat-home-validate-cell">';
+        if ( $lien ) {
+            echo '<a class="deprat-home-details" href="' . esc_url( $lien ) . '">Examiner</a>';
+        }
+        if ( $peut_valider ) {
+            echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" class="deprat-home-validate-form" onsubmit="return confirm(\'Confirmer la validation de ce compte professionnel ? Un e-mail d’activation sera envoyé.\');">';
+            echo '<input type="hidden" name="action" value="deprat_accueil_valider_compte">';
+            echo '<input type="hidden" name="deprat_user_id" value="' . esc_attr( (string) $id ) . '">';
+            wp_nonce_field( 'deprat_accueil_valider_' . $id, 'deprat_accueil_nonce' );
+            echo '<button type="submit" class="button button-primary deprat-home-validate-btn">Valider</button>';
+            echo '</form>';
+        }
+        echo '</td></tr>';
+    }
+    echo '</tbody></table></div>';
+    echo '<p class="deprat-home-footer"><a href="' . esc_url( admin_url( 'users.php?role=deprat_pending' ) ) . '">Afficher les comptes en attente →</a></p>';
+}
+
+/** 4. Validation sécurisée d'un compte depuis l'accueil WordPress. */
+add_action( 'admin_post_deprat_accueil_valider_compte', function () {
+    if ( 'POST' !== ( $_SERVER['REQUEST_METHOD'] ?? '' ) ) {
+        wp_die( 'Méthode non autorisée.', 'DEPRAT', array( 'response' => 405 ) );
+    }
+    if ( ! current_user_can( 'promote_users' ) || ! current_user_can( 'list_users' ) ) {
+        wp_die( 'Permissions insuffisantes.', 'DEPRAT', array( 'response' => 403 ) );
+    }
+
+    $id = isset( $_POST['deprat_user_id'] ) ? absint( $_POST['deprat_user_id'] ) : 0;
+    if ( ! $id ) {
+        wp_die( 'Compte introuvable.', 'DEPRAT', array( 'response' => 400 ) );
+    }
+    check_admin_referer( 'deprat_accueil_valider_' . $id, 'deprat_accueil_nonce' );
+
+    if ( ! current_user_can( 'edit_user', $id ) ) {
+        wp_die( 'Vous ne pouvez pas modifier ce compte.', 'DEPRAT', array( 'response' => 403 ) );
+    }
+    $utilisateur = get_userdata( $id );
+    if ( ! $utilisateur instanceof WP_User
+        || ! in_array( 'deprat_pending', (array) $utilisateur->roles, true )
+        || 'pending' !== get_user_meta( $id, 'deprat_account_status', true ) ) {
+        wp_die( 'Ce compte n’est plus en attente de validation.', 'DEPRAT', array( 'response' => 409 ) );
+    }
+
+    // On refuse la validation si le snippet d'inscription pro n'est pas actif :
+    // son hook set_user_role gère le statut et l'e-mail d'activation.
+    if ( ! function_exists( 'deprat_pro_send_client_email' ) ) {
+        wp_die( 'Le snippet « Inscription professionnelle DEPRAT » doit être actif pour valider et notifier ce compte.', 'DEPRAT', array( 'response' => 409 ) );
+    }
+
+    // IMPORTANT : déclenche set_user_role du snippet V2, qui passe le méta
+    // deprat_account_status en approved et envoie le mail HTML d'activation.
+    $utilisateur->set_role( 'customer' );
+    update_user_meta( $id, 'deprat_dashboard_approved_by', get_current_user_id() );
+    update_user_meta( $id, 'deprat_dashboard_approved_at', gmdate( 'Y-m-d H:i:s' ) );
+
+    wp_safe_redirect( add_query_arg( 'deprat_compte_valide', '1', admin_url( 'index.php' ) ) );
+    exit;
+} );
+
+/** 5. Design uniquement sur le Tableau de bord WordPress. */
+add_action( 'admin_head-index.php', function () {
+    if ( ! current_user_can( 'manage_woocommerce' ) && ! current_user_can( 'promote_users' ) ) { return; }
+    ?>
+    <style id="deprat-accueil-dashboard-css">
+    #deprat_accueil_demandes,#deprat_accueil_comptes{border:1px solid #dbe5f0;box-shadow:0 3px 15px rgba(25,54,87,.045);border-radius:10px;overflow:hidden}
+    #deprat_accueil_demandes .postbox-header,#deprat_accueil_comptes .postbox-header{background:#f5f8fd;border-bottom:1px solid #e2eaf2}
+    #deprat_accueil_demandes .hndle,#deprat_accueil_comptes .hndle{color:#143d78;font-size:15px;font-weight:700}
+    #deprat_accueil_demandes .inside,#deprat_accueil_comptes .inside{margin:0;padding:0}
+    .deprat-home-help{padding:13px 16px;font-size:12px;color:#61748c;background:#fff}
+    .deprat-home-empty{margin:0 15px 15px;padding:18px;border:1px dashed #d4e0ec;border-radius:9px;background:#fafcfe;color:#477355;font-weight:600}
+    .deprat-home-scroll{max-width:100%;overflow-x:auto}
+    .deprat-home-table{width:100%;border-collapse:collapse;min-width:530px;font-size:13px}
+    .deprat-home-table thead{background:#f6f9fd}
+    .deprat-home-table th{text-align:left;padding:11px 13px;font-weight:700;font-size:11px;color:#67809b;text-transform:uppercase;letter-spacing:.3px;border-top:1px solid #edf1f7;border-bottom:1px solid #edf1f7}
+    .deprat-home-table td{padding:13px;border-bottom:1px solid #edf1f6;vertical-align:middle;color:#27405d}
+    .deprat-home-table tbody tr:hover{background:#f9fbfd}
+    .deprat-home-table tbody tr:last-child td{border-bottom:0}
+    .deprat-home-table td strong{font-size:13px;line-height:1.3;color:#173d70}
+    .deprat-home-reference a{font-weight:800;text-decoration:none;color:#165da9;font-size:14px}
+    .deprat-home-muted{display:block;color:#71829a;font-size:11px;margin-top:3px;overflow-wrap:anywhere}
+    .deprat-home-date{white-space:nowrap;font-size:12px;color:#6a7990}
+    .deprat-home-etat{display:inline-flex;align-items:center;white-space:nowrap;padding:5px 9px;border-radius:30px;font-size:11px;font-weight:700;background:#eaf1fb;color:#21568b}
+    .deprat-home-etat-dpr-recu{background:#eaf2fb;color:#225b9e}
+    .deprat-home-etat-dpr-encours{background:#fff4dd;color:#94620a}
+    .deprat-home-etat-dpr-envoye{background:#fef1d9;color:#92611a}
+    .deprat-home-etat-dpr-accepte{background:#e9f7ec;color:#277742}
+    .deprat-home-etat-dpr-facture{background:#f0eafa;color:#6c4c9d}
+    .deprat-home-etat-dpr-termine{background:#edf1f4;color:#556b7a}
+    .deprat-home-action,.deprat-home-details{text-decoration:none;font-size:12px;font-weight:700;color:#165da9}
+    .deprat-home-siret{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:12px}
+    .deprat-home-validate-cell{white-space:nowrap}
+    .deprat-home-validate-form{display:inline-block;margin-left:8px}
+    .deprat-home-validate-form .deprat-home-validate-btn{background:#147a4b;border-color:#147a4b;border-radius:6px;padding:2px 10px;min-height:28px;line-height:1.6;font-weight:700}
+    .deprat-home-validate-form .deprat-home-validate-btn:hover{background:#0d603a;border-color:#0d603a}
+    .deprat-home-footer{margin:0;padding:12px 16px;background:#fafbfd;border-top:1px solid #e8eef5}
+    .deprat-home-footer a{font-size:12px;text-decoration:none;font-weight:700}
+    @media(max-width:782px){.deprat-home-table{min-width:540px}.deprat-home-table td{padding:12px 10px}}
+    </style>
+    <?php
+} );

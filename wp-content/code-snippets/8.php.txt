@@ -1,0 +1,17 @@
+add_filter('woocommerce_get_price_html', function($price, $product) {
+    if (is_admin()) {
+        return $price;
+    }
+
+    return '';
+}, 999, 2);
+
+/* DEPRAT - Quantité sans prix dans le mini-panier */
+
+add_filter('woocommerce_widget_cart_item_quantity', function($html, $cart_item) {
+    $quantite = isset($cart_item['quantity'])
+        ? absint($cart_item['quantity'])
+        : 0;
+
+    return '<span class="quantity">Quantité : ' . esc_html($quantite) . '</span>';
+}, 10, 2);

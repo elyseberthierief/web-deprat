@@ -1,0 +1,36 @@
+add_action('admin_head-index.php', function () {
+    ?>
+    <style>
+    /* DEPRAT - Tableau de bord en 2 colonnes */
+
+    #dashboard-widgets {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 20px;
+        align-items: start;
+    }
+
+    #dashboard-widgets .postbox-container {
+        width: 100% !important;
+        min-width: 0 !important;
+        float: none !important;
+        margin: 0 !important;
+    }
+
+    #dashboard-widgets .postbox {
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    #dashboard-widgets .postbox .inside {
+        overflow-x: auto;
+    }
+
+    @media (max-width: 1100px) {
+        #dashboard-widgets {
+            grid-template-columns: 1fr;
+        }
+    }
+    </style>
+    <?php
+});

@@ -1,0 +1,223 @@
+/**
+ * DEPRAT — Tableau de bord du service ADV, version 1.
+ * NOUVEAU snippet PHP indépendant du code de devis V7.3.
+ * Code Snippets : exécuter uniquement dans l'administration WP, SANS <?php.
+ * Vue de commande : résumé, articles sans les prix, historique des notes,
+ * avertissement facture et bouton de mise à jour fixe.
+ * Les notes restent modifiables par voie technique / API : l'interface ne les efface plus.
+ */
+
+function deprat_adv_est_demande( $commande ) {
+    return $commande instanceof WC_Order && 'oui' === $commande->get_meta( '_deprat_demande', true );
+}
+function deprat_adv_ordre_courant() {
+    if ( ! function_exists( 'wc_get_order' ) || ! is_admin() ) { return false; }
+    $id = 0;
+    if ( isset( $_GET['page'], $_GET['action'], $_GET['id'] ) &&
+         'wc-orders' === sanitize_key( wp_unslash( $_GET['page'] ) ) &&
+         'edit' === sanitize_key( wp_unslash( $_GET['action'] ) ) ) {
+        $id = absint( $_GET['id'] );
+    } elseif ( isset( $_GET['post'], $_GET['action'] ) &&
+         'edit' === sanitize_key( wp_unslash( $_GET['action'] ) ) ) {
+        $id = absint( $_GET['post'] );
+    }
+    if ( ! $id ) { return false; }
+    $commande = wc_get_order( $id );
+    return deprat_adv_est_demande( $commande ) ? $commande : false;
+}
+function deprat_adv_date_heure( $utc ) {
+    if ( ! $utc ) { return '—'; }
+    if ( function_exists( 'deprat_date_utc_v7' ) ) { return deprat_date_utc_v7( $utc ); }
+    $timestamp = strtotime( $utc . ' UTC' );
+    return $timestamp ? wp_date( 'd/m/Y à H:i', $timestamp ) : '—';
+}
+function deprat_adv_nom_etat( $etat ) {
+    $noms = array(
+        'dpr-recu' => 'Nouvelle demande',
+        'dpr-encours' => 'En cours de traitement',
+        'dpr-envoye' => 'Envoyer le devis',
+        'dpr-accepte' => 'Devis accepté',
+        'dpr-facture' => 'Envoyer la facture',
+        'dpr-termine' => 'Commande terminée',
+    );
+    return $noms[ $etat ] ?? $etat;
+}
+
+// Encadré au-dessus du formulaire de documents V7.3.
+add_action( 'woocommerce_admin_order_data_after_order_details', function( $commande ) {
+    if ( ! deprat_adv_est_demande( $commande ) ) { return; }
+    if ( ! current_user_can( 'manage_woocommerce' ) && ! current_user_can( 'edit_shop_orders' ) ) { return; }
+    $accord = (string) $commande->get_meta( '_deprat_devis_accepte_le', true );
+    $facture = (string) $commande->get_meta( '_deprat_facture_envoyee_le', true );
+    $revision = 'oui' === $commande->get_meta( '_deprat_revision_en_attente', true );
+    $commentaire = (string) $commande->get_meta( '_deprat_commentaire', true );
+    echo '<section class="deprat-adv-bandeau" aria-label="Tableau de bord ADV">';
+    echo '<div class="deprat-adv-bandeau-titre"><div><span class="deprat-adv-surtitre">DEPRAT · SERVICE ADV</span><h2>Suivi de la demande n° ' . esc_html( $commande->get_order_number() ) . '</h2></div>';
+    echo '<span class="deprat-adv-statut">' . esc_html( deprat_adv_nom_etat( $commande->get_status() ) ) . '</span></div>';
+    echo '<div class="deprat-adv-indicateurs">';
+    echo '<div><small>Société</small><strong>' . esc_html( $commande->get_billing_company() ?: 'Non renseignée' ) . '</strong></div>';
+    echo '<div><small>Accord du client</small><strong>' . ( $accord ? esc_html( deprat_adv_date_heure( $accord ) ) : 'En attente' ) . '</strong></div>';
+    echo '<div><small>Facture disponible</small><strong>' . ( $facture ? esc_html( deprat_adv_date_heure( $facture ) ) : 'Non publiée' ) . '</strong></div>';
+    echo '</div>';
+    if ( $commentaire ) {
+        echo '<div class="deprat-adv-commentaire"><strong>Commentaire de la demande</strong><p>' . nl2br( esc_html( $commentaire ) ) . '</p></div>';
+    }
+    if ( $revision ) {
+        echo '<div class="deprat-adv-warning deprat-adv-revision"><strong>Le client a demandé une modification du devis.</strong><p>' . nl2br( esc_html( (string) $commande->get_meta( '_deprat_dernier_ajustement_texte', true ) ) ) . '</p><p>Déposez un nouveau devis avant de choisir « Envoyer le devis ».</p></div>';
+    }
+    if ( ! $accord ) {
+        echo '<div class="deprat-adv-warning" id="deprat-adv-non-valide"><strong>Facturation impossible pour le moment.</strong> Le client n’a pas accepté son devis dans l’espace professionnel. N’utilisez pas « Envoyer la facture ».</div>';
+    }
+    echo '</section>';
+}, 5 );
+
+// Tableau des références sous les articles natifs WooCommerce (qui restent enregistrés sans modification).
+add_action( 'woocommerce_admin_order_items_after_line_items', function( $order_id ) {
+    $commande = wc_get_order( absint( $order_id ) );
+    if ( ! deprat_adv_est_demande( $commande ) ) { return; }
+    echo '<tr class="deprat-adv-lignes-produits"><td colspan="8">';
+    echo '<div class="deprat-adv-articles-entete"><h3>Références demandées</h3><span>' . esc_html( count( $commande->get_items( 'line_item' ) ) ) . ' ligne(s)</span></div>';
+    echo '<div class="deprat-adv-articles-scroll"><table class="deprat-adv-table-produits"><thead><tr><th>Référence</th><th>Désignation</th><th>Quantité</th></tr></thead><tbody>';
+    foreach ( $commande->get_items( 'line_item' ) as $ligne ) {
+        $ref = (string) $ligne->get_meta( '_deprat_reference', true );
+        if ( ! $ref && $ligne->get_product() ) { $ref = (string) $ligne->get_product()->get_sku(); }
+        echo '<tr><td><code>' . esc_html( $ref ?: 'Sans référence' ) . '</code></td><td>' . esc_html( $ligne->get_name() ) . '</td><td class="deprat-adv-quantite">' . esc_html( $ligne->get_quantity() ) . '</td></tr>';
+    }
+    echo '</tbody></table></div></td></tr>';
+}, 10, 1 );
+
+// Réafficher les notes en timeline lisible, consultable sans supprimer depuis cette zone.
+add_action( 'woocommerce_admin_order_data_after_order_details', function( $commande ) {
+    if ( ! deprat_adv_est_demande( $commande ) || ! function_exists( 'wc_get_order_notes' ) ) { return; }
+    $notes = wc_get_order_notes( array( 'order_id' => $commande->get_id(), 'limit' => 60, 'orderby' => 'date_created', 'order' => 'DESC' ) );
+    echo '<section class="deprat-adv-historique" aria-label="Historique de la demande"><div class="deprat-adv-historique-titre"><h3>Historique de la demande</h3><span>' . esc_html( count( $notes ) ) . ' derniers événements</span></div>';
+    echo '<p class="deprat-adv-note-aide">Événements WooCommerce et actions du service ADV, du plus récent au plus ancien. Les notes ne sont pas effaçables depuis cette interface.</p>';
+    if ( ! $notes ) { echo '<p>Pas encore d’événement.</p>'; }
+    else {
+        echo '<ol class="deprat-adv-timeline">';
+        foreach ( $notes as $note ) {
+            $date = $note->date_created instanceof WC_DateTime ? wp_date( 'd/m/Y à H:i', $note->date_created->getTimestamp() ) : '';
+            echo '<li><time>' . esc_html( $date ) . '</time><div>' . wp_kses_post( wpautop( $note->content ) ) . '</div></li>';
+        }
+        echo '</ol>';
+    }
+    echo '</section>';
+}, 45 );
+
+// Nouvel indicateur de suivi dans la liste WooCommerce (HPOS ou mode classique).
+add_filter( 'manage_woocommerce_page_wc-orders_columns', function( $colonnes ) {
+    $colonnes['deprat_suivi_adv'] = 'Suivi ADV';
+    return $colonnes;
+}, 25 );
+add_action( 'manage_woocommerce_page_wc-orders_custom_column', function( $nom, $commande ) {
+    if ( 'deprat_suivi_adv' !== $nom || ! $commande instanceof WC_Order ) { return; }
+    if ( ! deprat_adv_est_demande( $commande ) ) { echo '—'; return; }
+    echo '<span class="deprat-adv-mini-badge">' . esc_html( deprat_adv_nom_etat( $commande->get_status() ) ) . '</span>';
+    if ( 'oui' === $commande->get_meta( '_deprat_revision_en_attente', true ) ) { echo '<small class="deprat-adv-a-traiter">Ajustement demandé</small>'; }
+}, 25, 2 );
+add_filter( 'manage_edit-shop_order_columns', function( $colonnes ) { $colonnes['deprat_suivi_adv'] = 'Suivi ADV'; return $colonnes; }, 25 );
+add_action( 'manage_shop_order_posts_custom_column', function( $nom, $post_id ) {
+    if ( 'deprat_suivi_adv' !== $nom ) { return; }
+    $commande = wc_get_order( $post_id );
+    echo deprat_adv_est_demande( $commande ) ? '<span class="deprat-adv-mini-badge">' . esc_html( deprat_adv_nom_etat( $commande->get_status() ) ) . '</span>' : '—';
+}, 25, 2 );
+
+// Bloquer le bouton AJAX « Supprimer la note » pour les demandes DEPRAT.
+// C'est un garde-fou ciblé sur l'interface WooCommerce ; sauvegardes/permissions restent nécessaires.
+$deprat_bloquer_suppression_note = function () {
+    $note_id = isset( $_POST['note_id'] ) ? absint( $_POST['note_id'] ) : 0;
+    $commentaire = $note_id ? get_comment( $note_id ) : false;
+    if ( ! $commentaire || 'order_note' !== $commentaire->comment_type ) { return; }
+    $commande = wc_get_order( (int) $commentaire->comment_post_ID );
+    if ( deprat_adv_est_demande( $commande ) ) {
+        wp_die( 'Suppression désactivée pour l’historique des demandes DEPRAT.', 'Historique protégé', array( 'response' => 403 ) );
+    }
+};
+add_action( 'wp_ajax_woocommerce_delete_order_note', $deprat_bloquer_suppression_note, 0 );
+add_action( 'wc_ajax_delete_order_note', $deprat_bloquer_suppression_note, 0 );
+
+// CSS ciblé sur les fiches DEPRAT uniquement, pas sur le reste de l'administration.
+add_filter( 'admin_body_class', function( $classes ) {
+    if ( deprat_adv_ordre_courant() ) { $classes .= ' deprat-adv-edition'; }
+    return $classes;
+} );
+add_action( 'admin_head', function() {
+    $screen = get_current_screen();
+    $est_liste = $screen && in_array( $screen->id, array( 'woocommerce_page_wc-orders', 'edit-shop_order' ), true );
+    if ( ! deprat_adv_ordre_courant() && ! $est_liste ) { return; }
+    ?>
+    <style id="deprat-adv-ui-v1">
+    .deprat-adv-bandeau,.deprat-adv-historique{clear:both;margin:20px 0;padding:22px;background:#fff;border:1px solid #dae4ee;border-radius:12px;box-shadow:0 2px 10px rgba(19,50,83,.04);font-family:Arial,sans-serif}
+    .deprat-adv-bandeau-titre,.deprat-adv-historique-titre{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
+    .deprat-adv-surtitre{font-weight:750;font-size:11px;color:#8c763c;letter-spacing:1.2px}
+    .deprat-adv-bandeau h2,.deprat-adv-historique h3{font-size:21px!important;margin:7px 0 16px!important;color:#113b76!important}
+    .deprat-adv-statut,.deprat-adv-mini-badge{display:inline-block;background:#e9f1fc;color:#19568d;padding:7px 10px;border-radius:20px;font-size:12px;font-weight:700}
+    .deprat-adv-indicateurs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:15px}
+    .deprat-adv-indicateurs>div{background:#f7f9fc;border:1px solid #e4eaf2;border-radius:8px;padding:12px;min-width:0}
+    .deprat-adv-indicateurs small{display:block;color:#6b7b8e;margin-bottom:6px}.deprat-adv-indicateurs strong{display:block;color:#143967;overflow-wrap:anywhere}
+    .deprat-adv-commentaire{padding:12px 14px;border-left:3px solid #ad963f;background:#fbfcfe;margin:15px 0}.deprat-adv-commentaire p{margin:6px 0 0}
+    .deprat-adv-warning{background:#fff0f0;color:#9e1f2a;border-left:5px solid #d12b38;padding:14px 16px;margin:14px 0;border-radius:4px;line-height:1.5}
+    .deprat-adv-revision{background:#fff7e1;color:#805800;border-left-color:#c98e14}
+    .deprat-adv-historique{border-left:4px solid #173f78}.deprat-adv-note-aide{color:#68788c}
+    .deprat-adv-timeline{max-height:340px;overflow-y:auto;list-style:none;margin:15px 0 0;padding:0 6px 0 18px;border-left:2px solid #c8d8e9}
+    .deprat-adv-timeline li{position:relative;margin:0 0 17px;padding:0 0 0 13px;color:#28405e;line-height:1.5}
+    .deprat-adv-timeline li:before{content:"";position:absolute;top:7px;left:-23px;width:9px;height:9px;background:#0f66b5;border:2px solid white;border-radius:50%;box-shadow:0 0 0 1px #a5c1dc}
+    .deprat-adv-timeline time{font-size:12px;color:#66788c}.deprat-adv-timeline p{margin:4px 0!important}
+    .deprat-adv-a-traiter{display:block;color:#bd3f26;margin-top:5px}
+    .deprat-adv-edition #woocommerce-order-notes a.delete_note{display:none!important}
+    .deprat-adv-edition #woocommerce-order-notes .hndle,.deprat-adv-edition #woocommerce-order-notes .handlediv{color:#143967}
+    .deprat-adv-edition #woocommerce-order-items .wc-order-totals,.deprat-adv-edition #woocommerce-order-items .wc-order-totals-items{display:none!important}
+    .deprat-adv-edition #woocommerce-order-items table.woocommerce_order_items th.item_cost,.deprat-adv-edition #woocommerce-order-items table.woocommerce_order_items td.item_cost,
+    .deprat-adv-edition #woocommerce-order-items table.woocommerce_order_items th.line_cost,.deprat-adv-edition #woocommerce-order-items table.woocommerce_order_items td.line_cost,
+    .deprat-adv-edition #woocommerce-order-items table.woocommerce_order_items th.line_tax,.deprat-adv-edition #woocommerce-order-items table.woocommerce_order_items td.line_tax{display:none!important}
+    .deprat-adv-lignes-produits>td{padding:18px!important;background:#f6f9fc}.deprat-adv-articles-entete{display:flex;justify-content:space-between;align-items:center}
+    .deprat-adv-articles-entete h3{margin:0 0 12px;color:#143967}.deprat-adv-articles-scroll{overflow:auto}
+    .deprat-adv-table-produits{width:100%;border-collapse:collapse}.deprat-adv-table-produits th{text-align:left;background:#ebf1f8;color:#173d6f;padding:11px 12px}
+    .deprat-adv-table-produits td{padding:11px 12px!important;border-bottom:1px solid #e5ebf2!important;background:white}
+    .deprat-adv-table-produits .deprat-adv-quantite{text-align:center;font-weight:700}.deprat-adv-table-produits code{color:#1c5b9c;background:#edf4fb}
+    body.deprat-adv-edition{padding-bottom:80px!important}
+    #deprat-adv-barre-fixe{position:fixed;z-index:10000;right:25px;bottom:18px;display:flex;align-items:center;gap:12px;padding:10px 14px;background:#fff;border:1px solid #cbd9e9;border-radius:12px;box-shadow:0 10px 30px rgba(22,47,82,.22)}
+    #deprat-adv-barre-fixe button{border:0;border-radius:8px;color:#fff;background:#1267be;padding:12px 19px;font-size:14px;font-weight:750;cursor:pointer}
+    #deprat-adv-barre-fixe small{color:#57708b}.deprat-adv-edition .deprat-adv-v7{max-width:none}
+    @media(max-width:950px){.deprat-adv-indicateurs{grid-template-columns:1fr}#deprat-adv-barre-fixe{right:10px;left:10px;justify-content:space-between}}
+    </style>
+    <?php
+} );
+add_action( 'admin_footer', function() {
+    $commande = deprat_adv_ordre_courant();
+    if ( ! $commande ) { return; }
+    $accord = (bool) $commande->get_meta( '_deprat_devis_accepte_le', true );
+    ?>
+    <script id="deprat-adv-comportement">
+    (function(){
+      var select = document.getElementById('order_status');
+      var bloc = document.getElementById('deprat-adv-non-valide');
+      var aAccord = <?php echo $accord ? 'true' : 'false'; ?>;
+      function alerte(){
+        if (!select || aAccord) return;
+        var valeur = select.value || '';
+        var erreur = valeur.indexOf('dpr-facture') !== -1 || valeur.indexOf('dpr-termine') !== -1;
+        if (bloc) bloc.style.display = erreur ? 'block' : 'none';
+        if (erreur && bloc && select.parentElement && !select.parentElement.querySelector('.deprat-statut-avertissement')) {
+          var p=document.createElement('p');p.className='deprat-statut-avertissement';p.style.cssText='color:#b4232f;font-weight:700';
+          p.textContent='Attention : devis non accepté. La V7.3 refusera ce changement de statut.';
+          select.parentElement.appendChild(p);
+        } else if (!erreur && select.parentElement) {
+          var texte=select.parentElement.querySelector('.deprat-statut-avertissement');if(texte)texte.remove();
+        }
+      }
+      if (select){select.addEventListener('change', alerte);alerte();}
+      var nativeBtn=document.querySelector('#woocommerce-order-actions button.save_order, #woocommerce-order-actions button[name="save"], #publish');
+      if(nativeBtn){
+        var bar=document.createElement('div');bar.id='deprat-adv-barre-fixe';
+        var info=document.createElement('small');info.textContent='Enregistrer les changements de statut';
+        var bout=document.createElement('button');bout.type='button';bout.textContent='Mettre à jour la demande';
+        bout.addEventListener('click',function(){nativeBtn.click();});
+        bar.append(info,bout);document.body.appendChild(bar);
+      }
+      var notes = document.querySelector('#woocommerce-order-notes .hndle');
+      if(notes)notes.textContent='Historique WooCommerce · Ajouter une note';
+    })();
+    </script>
+    <?php
+} );

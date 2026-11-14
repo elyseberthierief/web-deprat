@@ -1,0 +1,154 @@
+[
+  {
+    "id": 2,
+    "titre": "Page d’exemple",
+    "slug": "page-d-exemple",
+    "type": "page",
+    "parent": 0,
+    "ordre": 0
+  },
+  {
+    "id": 8,
+    "titre": "Kit par défaut",
+    "slug": "kit-par-defaut-2",
+    "type": "elementor_library",
+    "parent": 0,
+    "ordre": 0
+  },
+  {
+    "id": 53,
+    "titre": "Contact",
+    "slug": "elementor-53",
+    "type": "page",
+    "parent": 0,
+    "ordre": 0
+  },
+  {
+    "id": 144,
+    "titre": "Accueil",
+    "slug": "accueil",
+    "type": "page",
+    "parent": 0,
+    "ordre": 0
+  },
+  {
+    "id": 184,
+    "titre": "test",
+    "slug": "test",
+    "type": "elementor_library",
+    "parent": 0,
+    "ordre": 0
+  },
+  {
+    "id": 545,
+    "titre": "",
+    "slug": "545",
+    "type": "nav_menu_item",
+    "parent": 0,
+    "ordre": 1
+  },
+  {
+    "id": 549,
+    "titre": "Kit par défaut",
+    "slug": "kit-par-defaut",
+    "type": "elementor_library",
+    "parent": 0,
+    "ordre": 0
+  },
+  {
+    "id": 601,
+    "titre": "",
+    "slug": "601",
+    "type": "nav_menu_item",
+    "parent": 0,
+    "ordre": 5
+  },
+  {
+    "id": 613,
+    "titre": "Boutique",
+    "slug": "boutique",
+    "type": "page",
+    "parent": 0,
+    "ordre": 0
+  },
+  {
+    "id": 614,
+    "titre": "Ma demande en cours",
+    "slug": "panier",
+    "type": "page",
+    "parent": 0,
+    "ordre": 0
+  },
+  {
+    "id": 615,
+    "titre": "Validation de la commande",
+    "slug": "commander",
+    "type": "page",
+    "parent": 0,
+    "ordre": 0
+  },
+  {
+    "id": 616,
+    "titre": "Mon espace professionnel",
+    "slug": "mon-compte",
+    "type": "page",
+    "parent": 0,
+    "ordre": 0
+  },
+  {
+    "id": 618,
+    "titre": "B2B Registration",
+    "slug": "b2b-registration",
+    "type": "page",
+    "parent": 0,
+    "ordre": 0
+  },
+  {
+    "id": 619,
+    "titre": "Demander un devis",
+    "slug": "demander-un-devis",
+    "type": "page",
+    "parent": 0,
+    "ordre": 0
+  },
+  {
+    "id": 622,
+    "titre": "My Quote",
+    "slug": "my-quote",
+    "type": "page",
+    "parent": 0,
+    "ordre": 0
+  },
+  {
+    "id": 628,
+    "titre": "",
+    "slug": "628",
+    "type": "nav_menu_item",
+    "parent": 0,
+    "ordre": 2
+  },
+  {
+    "id": 634,
+    "titre": "Mon espace professionnel",
+    "slug": "mon-espace-professionnel",
+    "type": "nav_menu_item",
+    "parent": 0,
+    "ordre": 1
+  },
+  {
+    "id": 665,
+    "titre": "mes-demandes-devis",
+    "slug": "mes-demandes-devis",
+    "type": "page",
+    "parent": 0,
+    "ordre": 0
+  },
+  {
+    "id": 668,
+    "titre": "",
+    "slug": "668",
+    "type": "nav_menu_item",
+    "parent": 0,
+    "ordre": 4
+  }
+]
