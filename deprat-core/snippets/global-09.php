@@ -1254,15 +1254,15 @@ function deprat_html_historique() {
     echo '<div class="deprat-recherche-champs"><label class="screen-reader-text" for="deprat-q">Rechercher dans mes demandes</label>';
     echo '<input id="deprat-q" type="search" name="deprat_q" value="' . esc_attr( $recherche ) . '" placeholder="N° de demande, date, référence, désignation…">';
     echo '<button type="submit" class="deprat-rechercher">Rechercher</button></div>';
-    echo '<div class="deprat-filtres"><label for="deprat-statut">Statut</label><select id="deprat-statut" name="deprat_statut"><option value="">Tous les statuts</option>';
+    echo '<div class="deprat-filtres"><div class="deprat-filtre"><label for="deprat-statut">Statut :</label><select id="deprat-statut" name="deprat_statut"><option value="">Tous les statuts</option>';
     foreach ( $statuts as $option ) {
         echo '<option value="' . esc_attr( $option ) . '"' . selected( $statut, $option, false ) . '>' . esc_html( deprat_statut_client_v7( $option ) ) . '</option>';
     }
-    echo '</select><label for="deprat-periode">Période</label><select id="deprat-periode" name="deprat_periode"><option value="">Toutes les dates</option>';
+    echo '</select></div><div class="deprat-filtre"><label for="deprat-periode">Période :</label><select id="deprat-periode" name="deprat_periode"><option value="">Toutes les dates</option>';
     foreach ( $periodes as $valeur => $libelle ) {
         echo '<option value="' . esc_attr( $valeur ) . '"' . selected( $periode, $valeur, false ) . '>' . esc_html( $libelle ) . '</option>';
     }
-    echo '</select></div></form>';
+    echo '</select></div></div></form>';
 
     echo '<div class="deprat-historique-resultats-v72" aria-live="polite">';
     echo '<p class="deprat-resultats-count">' . esc_html( $total ) . ' demande' . ( 1 === $total ? '' : 's' ) . '</p>';
@@ -1378,7 +1378,7 @@ function deprat_html_historique() {
             if ( $facture_date ) { echo '<p class="deprat-texte-secondaire">Envoyée le ' . esc_html( deprat_date_utc_v7( $facture_date ) ) . '</p>'; }
             echo '<p class="deprat-paiement-v7">' . esc_html( deprat_mention_paiement_v7() ) . '</p>';
         } else {
-            echo '<p class="deprat-texte-secondaire">' . ( $accord ? 'Facture en préparation' : 'Disponible après validation du devis' ) . '</p>';
+            echo '<div class="deprat-facture-attente"><span class="deprat-facture-info" aria-hidden="true">i</span><span>' . ( $accord ? 'Facture en préparation' : 'Disponible après validation du devis' ) . '</span></div>';
         }
         echo '</div>';
 
