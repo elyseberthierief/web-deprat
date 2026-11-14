@@ -1547,3 +1547,44 @@ add_action( 'woocommerce_admin_order_data_after_order_details', function ( $comm
     echo $commentaire ? nl2br( esc_html( $commentaire ) ) : 'Aucun commentaire';
     echo '</p>';
 } );
+
+
+// Actualiser les quantités du panier classique dès leur modification.
+add_action( 'wp_enqueue_scripts', static function () {
+    if ( ! function_exists( 'is_cart' ) || ! is_cart() ) {
+        return;
+    }
+    wp_enqueue_script( 'wc-cart' );
+    wp_add_inline_script( 'wc-cart', <<<'JS'
+jQuery(function ($) {
+    const updateSelector = '.woocommerce-cart-form button[name="update_cart"]';
+    function hideUpdateButton() {
+        $(updateSelector).hide();
+    }
+    hideUpdateButton();
+    function unlockRequest() {
+        $('.deprat-cart-saving').prop('disabled', false).removeClass('deprat-cart-saving');
+    }
+    $(document.body).on('updated_wc_div', function () {
+        hideUpdateButton();
+        unlockRequest();
+    });
+    $(document).on('change', '.woocommerce-cart-form input.qty', function () {
+        if (!this.checkValidity()) {
+            this.reportValidity();
+            return;
+        }
+        $('[name="deprat_envoyer"]').closest('form').find(':submit:enabled')
+            .addClass('deprat-cart-saving').prop('disabled', true);
+        $(this).closest('form').find('button[name="update_cart"]')
+            .prop('disabled', false).trigger('click');
+    });
+    // Laisser la possibilité de réessayer si la requête échoue.
+    $(document).ajaxError(function () {
+        unlockRequest();
+        $(updateSelector).show().prop('disabled', false);
+    });
+});
+JS
+    );
+}, 20 );

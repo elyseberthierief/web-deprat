@@ -107,6 +107,9 @@ add_action( 'admin_footer', function () {
     $date_label = $date ? wp_date( 'd F Y à H:i', $date->getTimestamp(), wp_timezone() ) : 'Date inconnue';
     $status = $order->get_status();
     $status_name = function_exists( 'deprat_statut_client_v7' ) ? deprat_statut_client_v7( $status ) : wc_get_order_status_name( $status );
+    if ( 'dpr-recu' === $status ) {
+        $status_name = 'Demande reçue';
+    }
     $has_quote = (bool) $order->get_meta( '_deprat_pdf_fichier', true );
     $has_invoice = (bool) $order->get_meta( '_deprat_facture_pdf_fichier', true );
     $accepted = (bool) $order->get_meta( '_deprat_devis_accepte_le', true );
