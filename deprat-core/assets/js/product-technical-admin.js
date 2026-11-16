@@ -3,23 +3,94 @@
 
 
     function setupPackageSummary( editor ) {
-        var count = editor.querySelector( '[data-package-count]' );
-        var type = editor.querySelector( '[data-package-type]' );
-        var pieces = editor.querySelector( '[data-package-pieces]' );
-        var result = editor.querySelector( '[data-package-summary]' );
-        if ( ! count || ! type || ! pieces || ! result ) { return; }
-        function update() {
-            var n = Number( count.value ), p = Number( pieces.value );
-            var label = type.value.trim();
-            if ( ! Number.isSafeInteger( n ) || ! Number.isSafeInteger( p ) || n < 1 || p < 1 || ! label || n > 999999 || p > 99999999 ) {
-                result.textContent = 'Renseignez les trois champs pour afficher le récapitulatif.';
-                return;
-            }
-            var plural = n > 1 && ! /[sxz]$/i.test( label ) ? 's' : '';
-            result.textContent = 'Le client recevra ' + n + ' ' + label + plural + ' contenant ' + ( n > 1 ? 'chacun ' : '' ) + p + ' ' + ( p > 1 ? 'pièces' : 'pièce' ) + ', soit un total de ' + ( n * p ) + ' pièces.';
+        var list = editor.querySelector( '[data-package-list]' );
+        var add = editor.querySelector( '[data-package-add]' );
+        if ( ! list || ! add ) { return; }
+
+        function formatNumber( value ) {
+            return new Intl.NumberFormat( 'fr-FR', { maximumFractionDigits: 3 } ).format( value );
         }
-        [ count, type, pieces ].forEach( function ( field ) { field.addEventListener( 'input', update ); field.addEventListener( 'change', update ); } );
-        update();
+        function exactPositiveInt( value ) {
+            return /^[1-9]\d*$/.test( String( value ) ) ? Number( value ) : 0;
+        }
+        function rowPreview( row ) {
+            var mode = row.querySelector( '[data-package-mode]' ).value;
+            row.querySelector( '[data-package-fields="pieces"]' ).hidden = mode !== 'pieces';
+            row.querySelector( '[data-package-fields="length"]' ).hidden = mode !== 'length';
+            var result = row.querySelector( '[data-package-preview]' );
+            result.classList.remove( 'is-invalid' );
+            if ( mode === 'length' ) {
+                var total = Number( ( row.querySelector( '[data-package-total-m]' ).value || '' ).replace( ',', '.' ) );
+                var length = Number( ( row.querySelector( '[data-package-length-m]' ).value || '' ).replace( ',', '.' ) );
+                if ( ! total || ! length || total <= 0 || length <= 0 ) {
+                    result.textContent = 'Indiquez le total en mètres et la longueur de chaque barre.';
+                    return;
+                }
+                var bars = total / length;
+                if ( ! Number.isInteger( Math.round( bars ) ) || Math.abs( bars - Math.round( bars ) ) > 0.00000001 || bars < 1 ) {
+                    result.classList.add( 'is-invalid' );
+                    result.textContent = 'Répartition impossible : ' + formatNumber( total ) + ' m ÷ ' + formatNumber( length ) + ' m ne donne pas un nombre entier de longueurs.';
+                    return;
+                }
+                result.textContent = 'Le client recevra ' + formatNumber( total ) + ' m livrés en ' + Math.round( bars ) + ' longueurs de ' + formatNumber( length ) + ' m.';
+            } else {
+                var count = exactPositiveInt( row.querySelector( '[data-package-count]' ).value );
+                var pieces = exactPositiveInt( row.querySelector( '[data-package-pieces]' ).value );
+                var type = row.querySelector( '[data-package-type]' ).value.trim();
+                if ( ! count || ! pieces || ! type ) {
+                    result.textContent = 'Complétez la quantité, le type de conditionnement et le nombre de pièces.';
+                    return;
+                }
+                var plural = count > 1 && ! /[sxz]$/i.test( type ) ? 's' : '';
+                result.textContent = 'Le client recevra ' + count + ' ' + type + plural + ' de ' + pieces + ' pièces, soit ' + count * pieces + ' pièces.';
+            }
+        }
+
+        function renumber() {
+            list.querySelectorAll( '[data-package-row]' ).forEach( function ( row, index ) {
+                row.querySelector( '[data-package-index]' ).textContent = 'Conditionnement ' + ( index + 1 );
+                row.querySelectorAll( '[data-package-mode], [data-package-title], [data-package-type], [data-package-count], [data-package-pieces], [data-package-total-m], [data-package-length-m]' )
+                    .forEach( function ( field ) {
+                        var fieldName = field.getAttribute( 'data-package-mode' ) !== null ? 'mode' :
+                            field.getAttribute( 'data-package-title' ) !== null ? 'title' :
+                            field.getAttribute( 'data-package-count' ) !== null ? 'count' :
+                            field.getAttribute( 'data-package-type' ) !== null ? 'type' :
+                            field.getAttribute( 'data-package-pieces' ) !== null ? 'pieces' :
+                            field.getAttribute( 'data-package-total-m' ) !== null ? 'total_m' : 'length_m';
+                        field.name = 'deprat_product_tech[packages][' + index + '][' + fieldName + ']';
+                    } );
+                rowPreview( row );
+            } );
+        }
+
+        function createRow() {
+            var row = document.createElement( 'article' );
+            row.className = 'deprat-package-row';
+            row.setAttribute( 'data-package-row', '' );
+            row.innerHTML = '<header class="deprat-package-row-head"><strong data-package-index></strong><button type="button" class="button-link-delete" data-package-delete>Supprimer</button></header>' +
+                '<div class="deprat-package-row-fields"><label class="deprat-tech-field"><span>Mode de calcul</span><select data-package-mode><option value="pieces">À la pièce</option><option value="length">Au mètre</option></select></label><label class="deprat-tech-field"><span>Nom (facultatif)</span><input data-package-title placeholder="Ex. Lot pro"></label></div>' +
+                '<div class="deprat-package-row-fields" data-package-fields="pieces"><label class="deprat-tech-field"><span>Nombre de conditionnements</span><input type="number" min="1" max="999999" step="1" data-package-count placeholder="Ex. 2"></label><label class="deprat-tech-field"><span>Type de conditionnement</span><input data-package-type list="deprat-packaging-suggestions" placeholder="Ex. carton"></label><label class="deprat-tech-field"><span>Pièces par conditionnement</span><input type="number" min="1" step="1" data-package-pieces placeholder="Ex. 50"></label></div>' +
+                '<div class="deprat-package-row-fields" data-package-fields="length" hidden><label class="deprat-tech-field"><span>Nombre de mètres par conditionnement</span><input type="number" min="0.001" step="0.001" data-package-total-m placeholder="Ex. 504"></label><label class="deprat-tech-field"><span>Longueur de chaque barre (m)</span><input type="number" min="0.001" step="0.001" data-package-length-m placeholder="Ex. 6"></label></div>' +
+                '<div class="deprat-package-summary" aria-live="polite" data-package-preview></div>';
+            list.appendChild( row );
+            renumber();
+            row.querySelector( '[data-package-mode]' ).focus();
+        }
+        add.addEventListener( 'click', function () {
+            if ( list.querySelectorAll( '[data-package-row]' ).length < 30 ) { createRow(); }
+        } );
+        editor.addEventListener( 'click', function ( event ) {
+            var remove = event.target.closest( '[data-package-delete]' );
+            var row = remove && remove.closest( '[data-package-row]' );
+            if ( row && list.contains( row ) ) { row.remove(); renumber(); }
+        } );
+        function update( event ) {
+            var row = event.target && event.target.closest( '[data-package-row]' );
+            if ( row && list.contains( row ) ) { rowPreview( row ); }
+        }
+        editor.addEventListener( 'input', update );
+        editor.addEventListener( 'change', update );
+        renumber();
     }
 
     function setupCategoryModal( editor ) {
