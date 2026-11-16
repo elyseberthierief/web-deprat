@@ -13,14 +13,20 @@ curl -fsS --retry 12 --retry-delay 1 --retry-connrefused "$base/?post_type=produ
 for expected in "Informations techniques" "Acier galvanisé" "NF EN 12194" "Couple de destruction" "Pièces par conditionnement" "Schéma des dimensions" "Télécharger la fiche technique PDF" "product-technical-front.css"; do
     grep -Fq "$expected" /tmp/deprat-product.html || { echo "Boutique : élément manquant : $expected" >&2; exit 1; }
 done
+echo "La page produit Astra contient les informations techniques."
 curl -fsS "$base/wp-content/uploads/integration-test/fiche.pdf" -o /tmp/deprat-test.pdf
-test "$(head -c 4 /tmp/deprat-test.pdf)" = "%PDF"
+test "$(head -c 4 /tmp/deprat-test.pdf)" = "%PDF" || { echo "Le PDF téléchargé ne correspond pas au fichier attendu." >&2; exit 1; }
+echo "Le PDF est téléchargeable."
 
 curl -fsS -c /tmp/deprat-cookies "$base/wp-login.php" -o /dev/null
 status="$(curl -sS -b /tmp/deprat-cookies -c /tmp/deprat-cookies -o /tmp/deprat-login.html -w '%{http_code}' \
     --data-urlencode 'log=deprat-test' --data-urlencode 'pwd=deprat-test' --data-urlencode 'wp-submit=Log In' \
     --data-urlencode "redirect_to=$base/wp-admin/" --data-urlencode 'testcookie=1' "$base/wp-login.php")"
-test "$status" = 302
+if [ "$status" != 302 ]; then
+    echo "Connexion au compte de test : réponse HTTP $status." >&2
+    grep -E 'login_error|message|Erreur|error' /tmp/deprat-login.html | head -5 >&2 || true
+    exit 1
+fi
 curl -fsS -b /tmp/deprat-cookies "$base/wp-admin/post.php?post=$product_id&action=edit" -o /tmp/deprat-admin.html
 for expected in "Fiche technique DEPRAT" "Acier galvanisé" "Conditionnement" "Fiche technique PDF" "product-technical-admin.js" "product-technical-admin.css"; do
     grep -Fq "$expected" /tmp/deprat-admin.html || { echo "Administration : élément manquant : $expected" >&2; exit 1; }

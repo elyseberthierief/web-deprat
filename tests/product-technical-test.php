@@ -14,6 +14,7 @@ function get_post_type( $id ) { return isset( $GLOBALS['test_attachments'][ $id 
 function get_post_mime_type( $id ) { return isset( $GLOBALS['test_attachments'][ $id ] ) ? $GLOBALS['test_attachments'][ $id ] : ''; }
 function wp_attachment_is_image( $id ) { return 0 === strpos( get_post_mime_type( $id ), 'image/' ); }
 function wp_unslash( $value ) { return $value; }
+function wp_slash( $value ) { return $value; }
 function sanitize_text_field( $value ) { return trim( strip_tags( $value ) ); }
 function sanitize_textarea_field( $value ) { return trim( strip_tags( $value ) ); }
 function wp_verify_nonce( $nonce, $action ) { return 'valid' === $nonce && 'deprat_product_tech_save' === $action; }

@@ -122,7 +122,8 @@ function deprat_product_tech_save( $post_id ) {
         'dimensions_image' => deprat_product_tech_attachment( isset( $input['dimensions_image'] ) ? $input['dimensions_image'] : 0, 'image' ),
         'datasheet' => deprat_product_tech_attachment( isset( $input['datasheet'] ) ? $input['datasheet'] : 0, 'pdf' ),
     );
-    update_post_meta( $post_id, '_deprat_product_technical', $clean );
+    // WordPress déséchappe les métadonnées à l’enregistrement.
+    update_post_meta( $post_id, '_deprat_product_technical', wp_slash( $clean ) );
 }
 add_action( 'save_post_product', 'deprat_product_tech_save' );
 

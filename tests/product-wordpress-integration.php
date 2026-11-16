@@ -41,7 +41,7 @@ file_put_contents( $uploads['basedir'] . '/integration-test/schema.png', base64_
 $_POST = array(
     'deprat_product_tech_nonce' => wp_create_nonce( 'deprat_product_tech_save' ),
     'deprat_product_tech' => array(
-        'description' => 'Description technique de test',
+        'description' => 'Description technique \\ spéciale',
         'features' => array(
             array( 'label' => 'Matière', 'value' => 'Acier galvanisé' ),
             array( 'label' => 'Zéro', 'value' => '0' ),
@@ -56,9 +56,11 @@ $_POST = array(
         'datasheet' => (string) $pdf,
     ),
 );
+$_POST = wp_slash( $_POST );
 do_action( 'save_post_product', $product_id, get_post( $product_id ), true );
 $saved = deprat_product_tech_data( $product_id );
 deprat_integration_assert( isset( $saved['features'][0]['value'] ) && 'Acier galvanisé' === $saved['features'][0]['value'], 'La caractéristique ne s’enregistre pas.' );
+deprat_integration_assert( 'Description technique \\ spéciale' === $saved['description'], 'Un caractère spécial de la description a été perdu.' );
 deprat_integration_assert( (int) $pdf === $saved['datasheet'] && (int) $image === $saved['technical_image'], 'Les médias ne s’enregistrent pas.' );
 deprat_integration_assert( 'TEST-DP62' === wc_get_product( $product_id )->get_sku(), 'La référence WooCommerce a été modifiée.' );
 deprat_integration_assert( false !== has_action( 'woocommerce_after_single_product_summary', 'deprat_product_tech_render_front' ), 'L’affichage boutique n’est pas raccordé à WooCommerce.' );
