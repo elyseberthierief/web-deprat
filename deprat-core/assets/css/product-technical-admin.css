@@ -218,3 +218,35 @@ body.deprat-modal-open { overflow: hidden; }
 .deprat-autosave-status.is-error { color: #9f2626; }
 .deprat-tech-page-actions .deprat-tech-publish { background: #146336; border-color: #146336; color: #fff; font-weight: 700; min-height: 36px; }
 .deprat-tech-page-actions .deprat-tech-publish:hover { background: #0f4d28; border-color: #0f4d28; }
+
+/* Bouton DEPRAT flottant : même commande, toujours à portée pendant le défilement. */
+body.deprat-product-editor-ready .deprat-tech-save.deprat-tech-save-floating {
+    position: fixed;
+    right: 28px;
+    bottom: 26px;
+    z-index: 100050;
+    padding: 12px 19px;
+    min-height: 48px;
+    border-radius: 10px;
+    background: #092e68;
+    color: #fff;
+    border: 1px solid #174980;
+    box-shadow: 0 9px 26px rgba(8,36,76,.28);
+    max-width: calc(100vw - 32px);
+}
+body.deprat-product-editor-ready .deprat-tech-save.deprat-tech-save-floating:hover {
+    background: #0c478e;
+    box-shadow: 0 11px 28px rgba(8,36,76,.34);
+}
+body.deprat-product-editor-ready .deprat-tech-save.deprat-tech-save-floating:focus-visible {
+    outline: 3px solid #e5a32e;
+    outline-offset: 3px;
+}
+@media (max-width: 782px) {
+    body.deprat-product-editor-ready .deprat-tech-save.deprat-tech-save-floating {
+        right: 12px;
+        bottom: 16px;
+        padding: 10px 14px;
+        font-size: 12px;
+    }
+}
