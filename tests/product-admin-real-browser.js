@@ -17,6 +17,15 @@ const assert = require( 'assert' );
         await page.waitForSelector( 'body.deprat-product-editor-ready [data-editor-chrome]:visible' );
 
         assert.strictEqual( await page.locator( '[data-product-name]' ).inputValue(), 'Tube de test' );
+        assert.strictEqual( await page.locator( '[data-product-save]' ).getAttribute( 'data-floating' ), 'false', 'Le bouton est d’abord à son emplacement normal.' );
+        await page.evaluate( () => window.scrollTo( 0, document.documentElement.scrollHeight ) );
+        await page.waitForFunction( () => document.querySelector( '[data-product-save]' ).getAttribute( 'data-floating' ) === 'true' );
+        const floatingSave = page.locator( '[data-product-save]' );
+        assert( await floatingSave.isVisible(), 'Le bouton Enregistrer doit rester visible en bas de page.' );
+        assert( await floatingSave.evaluate( node => getComputedStyle( node ).position ) === 'fixed', 'La sauvegarde doit flotter pendant le défilement.' );
+        await page.evaluate( () => window.scrollTo( 0, 0 ) );
+        await page.waitForFunction( () => document.querySelector( '[data-product-save]' ).getAttribute( 'data-floating' ) === 'false' );
+
         assert( Number( await page.locator( '[data-glb-id]' ).inputValue() ) > 0, 'Le modèle 3D doit apparaître dans le formulaire.' );
         assert( await page.locator( '[data-glb-upload]' ).isVisible(), 'Importer un modèle 3D sans quitter le produit.' );
         assert.strictEqual( await page.locator( '[data-product-sku]' ).inputValue(), 'TEST-DP62' );
@@ -193,6 +202,17 @@ const assert = require( 'assert' );
         assert( await page.locator( '.deprat-client-product [data-package-calculator]' ).count() === 1, 'Récapitulatif du conditionnement.' );
         const quantityField = page.locator( '.deprat-client-quote form.cart input.qty' );
         assert( await quantityField.count() === 1, 'Champ de quantité WooCommerce.' );
+        assert.strictEqual( await page.locator( '.deprat-client-quote .quantity .deprat-qty-button' ).count(), 2, 'Une seule paire de boutons quantité.' );
+        await page.evaluate( () => {
+            const quantity = document.querySelector( '.deprat-client-quote .quantity' );
+            const injectedPlus = document.createElement( 'button' );
+            injectedPlus.type = 'button';
+            injectedPlus.className = 'plus';
+            injectedPlus.textContent = '+';
+            quantity.appendChild( injectedPlus );
+        } );
+        await page.waitForFunction( () => !document.querySelector( '.deprat-client-quote .quantity button.plus' ) );
+        assert.strictEqual( await page.locator( '.deprat-client-quote .quantity .deprat-qty-button' ).count(), 2, 'Le bouton + Astra supplémentaire doit être retiré.' );
         await page.locator( '.deprat-client-quote .deprat-qty-button' ).last().click();
         assert.strictEqual( await quantityField.inputValue(), '2', 'Quantité mise à jour sans rechargement.' );
         assert( ( await page.locator( '[data-package-calculator]' ).textContent() ).includes( '200' ), 'Deux demandes de deux cartons de 50 donnent 200 pièces.' );
