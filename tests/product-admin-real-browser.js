@@ -166,7 +166,7 @@ const assert = require( 'assert' );
             const rect = selector => document.querySelector( selector ).getBoundingClientRect();
             return {
                 gallery: rect( '.woocommerce-product-gallery' ).toJSON(),
-                summary: rect( 'div.product .summary' ).toJSON(),
+                summary: rect( 'div.product .summary .deprat-client-info' ).toJSON(),
                 quote: rect( '.deprat-client-quote' ).toJSON(),
                 tabs: rect( '.deprat-client-tech' ).toJSON()
             };
