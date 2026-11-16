@@ -7,6 +7,11 @@ $GLOBALS['test_autosave'] = false;
 $GLOBALS['test_revision'] = false;
 function add_action() {}
 function add_filter() {}
+function get_the_terms( $id, $taxonomy ) { return isset( $GLOBALS['test_categories'][ $id ] ) ? $GLOBALS['test_categories'][ $id ] : false; }
+function get_ancestors( $id, $taxonomy ) { return 44 === $id ? array( 5 ) : array(); }
+function get_term( $id, $taxonomy ) { return isset( $GLOBALS['test_term_index'][ $id ] ) ? $GLOBALS['test_term_index'][ $id ] : false; }
+function is_wp_error( $value ) { return false; }
+function wc_add_notice( $message, $type ) { $GLOBALS['test_notices'][] = $message; }
 function delete_post_meta( $id, $key ) { unset( $GLOBALS['test_meta'][$id][$key] ); }
 function add_meta_box() {}
 function get_post_meta( $id, $key, $single = true ) { return isset( $GLOBALS['test_meta'][ $id ][ $key ] ) ? $GLOBALS['test_meta'][ $id ][ $key ] : ''; }
@@ -157,5 +162,31 @@ $piece_package = deprat_packaging_clean_row( array( 'mode' => 'pieces', 'count' 
 expect( false !== strpos( deprat_packaging_total_text( $piece_package, 2 ), '200 pièces' ), 'Deux lots de deux cartons de 50 donnent 200 pièces.' );
 $choice_data = array( 'packages' => array( $meter_package, $piece_package ) );
 expect( 2 === count( deprat_product_tech_packages( $choice_data ) ), 'Les choix mètres et pièces sont sauvegardables.' );
+
+
+$GLOBALS['test_term_index'] = array(
+    5 => (object) array( 'term_id' => 5, 'slug' => 'tubes-acier', 'name' => 'Tubes acier' ),
+    6 => (object) array( 'term_id' => 6, 'slug' => 'embouts', 'name' => 'Embouts' ),
+    44 => (object) array( 'term_id' => 44, 'slug' => 'serie-2000', 'name' => 'Série 2000' ),
+);
+$GLOBALS['test_categories'] = array(
+    42 => array( $GLOBALS['test_term_index'][5] ),
+    43 => array( $GLOBALS['test_term_index'][6] ),
+    44 => array( $GLOBALS['test_term_index'][44] ),
+);
+expect( deprat_packaging_is_tube_product( 42 ), 'Tubes acier doit imposer le conditionnement standard.' );
+expect( deprat_packaging_is_tube_product( 44 ), 'Les sous-catégories de tubes suivent la règle du parent.' );
+expect( null === deprat_packaging_request_row( 42, 'unitary' ), 'Interdire le conditionnement unitaire sur les tubes.' );
+expect( ! deprat_packaging_allow_unitary( 42 ) && deprat_packaging_allow_unitary( 43 ), 'L’unitaire n’est proposé que pour les pièces.' );
+expect( null === deprat_packaging_clean_row( array( 'mode' => 'unitary' ) ), 'Une offre unitaire ne peut pas être stockée comme standard en admin.' );
+$_POST['deprat_package_choice'] = 'unitary';
+expect( false === deprat_packaging_validate_cart_choice( true, 42, 7 ), 'Refus serveur d’une demande unitaire sur un tube.' );
+expect( true === deprat_packaging_validate_cart_choice( true, 43, 7 ), 'Autoriser 7 pièces libres.' );
+$custom = deprat_packaging_cart_item_data( array(), 43, 0, 7 );
+expect( 'unitary' === $custom['deprat_package_index'], 'Le panier mémorise le mode unitaire.' );
+expect( ! empty( $custom['deprat_nonstandard_packaging'] ), 'Le panier marque le conditionnement non standard.' );
+$display = deprat_packaging_cart_item_display( array(), array_merge( $custom, array( 'quantity' => 7 ) ) );
+expect( false !== strpos( implode( ' ', array_column( $display, 'value' ) ), '7 pièces' ), 'Le panier conserve la quantité choisie.' );
+expect( false !== strpos( implode( ' ', array_column( $display, 'value' ) ), 'plus-value' ), 'Le panier affiche la plus-value.' );
 
 echo "Tests de sauvegarde, droits, médias et rendu boutique réussis.\n";
