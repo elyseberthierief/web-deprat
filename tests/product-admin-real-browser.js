@@ -3,6 +3,7 @@ const assert = require( 'assert' );
 
 ( async function () {
     const productId = process.argv[2];
+    const pieceProductId = process.argv[3];
     const base = 'http://127.0.0.1:8099';
     const browser = await chromium.launch( { executablePath: '/usr/bin/google-chrome', args: [ '--no-sandbox' ], headless: true } );
     const page = await browser.newPage( { viewport: { width: 1600, height: 1000 }, deviceScaleFactor: 1 } );
@@ -233,7 +234,35 @@ const assert = require( 'assert' );
         assert.strictEqual( await page.locator( '[data-product-name]' ).inputValue(), 'Produit auto-brouillon DEPRAT test', 'Le nom est retrouvé après réouverture.' );
         assert.strictEqual( await page.locator( '[name="deprat_product_tech[description]"]' ).inputValue(), 'Sauvegarde automatique non publiée.', 'La description est retrouvée.' );
         assert( await page.locator( '[data-product-publish]' ).isVisible(), 'Le brouillon reste soumis à une publication volontaire.' );
-        console.log( 'Éditeur, conditionnements, 3D, devis AJAX et autosave brouillon validés.' );
+
+        // La catégorie Tubes ne peut pas proposer un conditionnement unitaire.
+        await page.goto( base + '/?post_type=product&p=' + productId, { waitUntil: 'domcontentloaded' } );
+        await page.waitForSelector( '.deprat-client-quote [data-package-choice]' );
+        assert.strictEqual( await page.locator( '.deprat-client-quote [data-package-choice] option[value="unitary"]' ).count(), 0, 'Aucun choix unitaire dans les Tubes.' );
+
+        // Une pièce propose simultanément le standard défini par l’admin et une quantité libre.
+        await page.goto( base + '/?post_type=product&p=' + pieceProductId, { waitUntil: 'domcontentloaded' } );
+        await page.waitForSelector( '.deprat-client-quote [data-package-choice]' );
+        const pieceSelect = page.locator( '.deprat-client-quote [data-package-choice]' );
+        assert.strictEqual( await pieceSelect.locator( 'option' ).count(), 2, 'Une pièce propose le conditionnement standard et le choix unitaire.' );
+        assert( await page.locator( '[data-unitary-warning]' ).isHidden(), 'Pas de plus-value sur le conditionnement standard.' );
+        await pieceSelect.selectOption( 'unitary' );
+        assert( await page.locator( '[data-unitary-warning]' ).isVisible(), 'Avertissement affiché pour la quantité libre.' );
+        assert( ( await page.locator( '[data-unitary-warning]' ).textContent() ).includes( 'plus-value' ), 'La mention plus-value doit être explicite.' );
+        assert( ( await page.locator( '.deprat-client-quantity-label' ).textContent() ).includes( 'pièces souhaitées' ), 'Le client saisit des pièces et non des cartons.' );
+        const pieceQty = page.locator( '.deprat-client-quote form.cart input.qty' );
+        await pieceQty.fill( '7' );
+        assert( ( await page.locator( '[data-package-calculator]' ).textContent() ).includes( '7 pièces à l’unité' ), 'La demande de 7 pièces doit rester de 7 pièces.' );
+        const pieceUrl = page.url();
+        await page.locator( '.deprat-client-quote .single_add_to_cart_button' ).click();
+        await page.locator( '[data-quote-feedback].is-success' ).waitFor( { timeout: 20000 } );
+        assert.strictEqual( page.url(), pieceUrl, 'La pièce unitaire s’ajoute sans navigation.' );
+        await pieceSelect.selectOption( '0' );
+        assert( await page.locator( '[data-unitary-warning]' ).isHidden(), 'Pas de plus-value au retour sur conditionnement standard.' );
+        assert( ( await page.locator( '.deprat-client-quantity-label' ).textContent() ).includes( 'conditionnements' ), 'Le champ repasse en nombre de conditionnements.' );
+        await pieceQty.fill( '2' );
+        assert( ( await page.locator( '[data-package-calculator]' ).textContent() ).includes( '100 pièces' ), 'Deux cartons de 50 représentent 100 pièces.' );
+        console.log( 'Tubes standard et pièces libres : calculs, avertissement et panier AJAX validés.' );
     } catch ( error ) {
         await page.screenshot( { path: process.env.RUNNER_TEMP + '/deprat-editor-error.png', fullPage: true } ).catch( () => {} );
         throw error;
