@@ -16,6 +16,20 @@ function deprat_product_single_activate_layout() {
 }
 add_action( 'wp', 'deprat_product_single_activate_layout', 20 );
 
+/**
+ * Les onglets WooCommerce « Description » et « Informations complémentaires »
+ * répètent les données de notre en-tête et des cartes techniques DEPRAT.
+ * Ils sont masqués sur la page publique sans modifier ni effacer les données
+ * des produits. Les éventuels autres onglets restent disponibles.
+ */
+function deprat_product_single_remove_duplicate_tabs( $tabs ) {
+    if ( ! is_array( $tabs ) ) { return $tabs; }
+    unset( $tabs['description'], $tabs['additional_information'] );
+    return $tabs;
+}
+add_filter( 'woocommerce_product_tabs', 'deprat_product_single_remove_duplicate_tabs', 99 );
+
+
 function deprat_product_single_breadcrumb() {
     if ( ! function_exists( 'is_product' ) || ! is_product() ) { return; }
     global $product;
