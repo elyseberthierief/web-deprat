@@ -34,7 +34,7 @@ if [ "$admin_status" != 200 ]; then
     grep -i '^location:' /tmp/deprat-admin-headers >&2 || true
     exit 1
 fi
-for expected in "Fiche technique DEPRAT" "Acier galvanisé" "Type de conditionnement" "Fiche technique PDF" "product-technical-admin.js" "product-technical-admin.css"; do
+for expected in "Fiche technique DEPRAT" "Acier galvanisé" "Type de conditionnement" "Fiches techniques PDF" "product-technical-admin.js" "product-technical-admin.css"; do
     grep -Fq "$expected" /tmp/deprat-admin.html || { echo "Administration : élément manquant : $expected" >&2; exit 1; }
 done
 echo "Pages Astra de la boutique et de l’administration, et téléchargement du PDF vérifiés."
