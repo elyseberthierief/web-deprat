@@ -88,6 +88,55 @@ function deprat_product_tech_diagrams( $data ) {
     return $visible;
 }
 
+
+/** Documents PDF ordonnés, compatibles avec l'ancien PDF unique. */
+function deprat_product_tech_datasheets( $data ) {
+    if ( array_key_exists( 'datasheets', $data ) && is_array( $data['datasheets'] ) ) {
+        $rows = $data['datasheets'];
+    } else {
+        $rows = array( array(
+            'title' => 'Fiche technique PDF',
+            'file' => isset( $data['datasheet'] ) ? $data['datasheet'] : 0,
+        ) );
+    }
+    $result = array();
+    foreach ( array_slice( $rows, 0, 30 ) as $row ) {
+        if ( ! is_array( $row ) ) { continue; }
+        $file = deprat_product_tech_attachment( isset( $row['file'] ) ? $row['file'] : 0, 'pdf' );
+        if ( ! $file ) { continue; }
+        $title = deprat_product_tech_text( isset( $row['title'] ) ? $row['title'] : '' );
+        $result[] = array(
+            'title' => '' !== $title ? $title : 'Fiche technique PDF',
+            'file' => $file,
+        );
+    }
+    return $result;
+}
+
+/**
+ * Met à jour la galerie native WooCommerce. Les photos sont donc visibles
+ * dans la galerie du produit Astra, sans nouvelle galerie indépendante.
+ */
+function deprat_product_tech_save_gallery( $product ) {
+    if ( ! is_object( $product ) || ! is_callable( array( $product, 'set_gallery_image_ids' ) ) ) { return; }
+    $id = $product->get_id();
+    if ( ! isset( $_POST['deprat_product_tech_nonce'] ) || ! is_scalar( $_POST['deprat_product_tech_nonce'] )
+        || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['deprat_product_tech_nonce'] ) ), 'deprat_product_tech_save' )
+        || ! current_user_can( 'edit_post', $id )
+        || ! isset( $_POST['deprat_product_gallery'] ) || ! is_scalar( $_POST['deprat_product_gallery'] ) ) {
+        return;
+    }
+    $raw = sanitize_text_field( wp_unslash( $_POST['deprat_product_gallery'] ) );
+    $ids = array();
+    foreach ( array_slice( explode( ',', $raw ), 0, 50 ) as $value ) {
+        if ( ! ctype_digit( $value ) ) { continue; }
+        $image = deprat_product_tech_attachment( $value, 'image' );
+        if ( $image && ! in_array( $image, $ids, true ) ) { $ids[] = $image; }
+    }
+    $product->set_gallery_image_ids( $ids );
+}
+add_action( 'woocommerce_admin_process_product_object', 'deprat_product_tech_save_gallery', 20 );
+
 function deprat_product_tech_package_summary( $data ) {
     $count = isset( $data['package_count'] ) ? absint( $data['package_count'] ) : 0;
     $pieces = isset( $data['package_quantity'] ) ? absint( $data['package_quantity'] ) : 0;
@@ -209,6 +258,18 @@ function deprat_product_tech_save( $post_id ) {
             );
         }
     }
+    $datasheets = array();
+    if ( isset( $input['datasheets'] ) && is_array( $input['datasheets'] ) ) {
+        foreach ( array_slice( $input['datasheets'], 0, 30 ) as $row ) {
+            if ( ! is_array( $row ) ) { continue; }
+            $file = deprat_product_tech_attachment( isset( $row['file'] ) ? $row['file'] : 0, 'pdf' );
+            if ( ! $file ) { continue; }
+            $datasheets[] = array(
+                'title' => deprat_product_tech_text( isset( $row['title'] ) ? $row['title'] : '' ),
+                'file' => $file,
+            );
+        }
+    }
     $clean = array(
         'package_count' => $count,
         'description' => deprat_product_tech_text( isset( $input['description'] ) ? $input['description'] : '', true ),
@@ -223,6 +284,10 @@ function deprat_product_tech_save( $post_id ) {
         'datasheet' => deprat_product_tech_attachment( isset( $input['datasheet'] ) ? $input['datasheet'] : 0, 'pdf' ),
     );
     if ( isset( $input['diagrams_present'] ) ) { $clean['diagrams'] = $diagrams; }
+    if ( isset( $input['datasheets_present'] ) ) {
+        $clean['datasheets'] = $datasheets;
+        $clean['datasheet'] = $datasheets ? $datasheets[0]['file'] : 0;
+    }
     // WordPress déséchappe les métadonnées à l’enregistrement.
     update_post_meta( $post_id, '_deprat_product_technical', wp_slash( $clean ) );
 }
@@ -234,8 +299,8 @@ function deprat_product_tech_admin_assets( $hook ) {
         return;
     }
     wp_enqueue_media();
-    wp_enqueue_style( 'deprat-product-tech-admin', plugins_url( 'assets/css/product-technical-admin.css', dirname( __DIR__ ) . '/deprat-core.php' ), array(), '0.1.16' );
-    wp_enqueue_script( 'deprat-product-tech-admin', plugins_url( 'assets/js/product-technical-admin.js', dirname( __DIR__ ) . '/deprat-core.php' ), array( 'jquery', 'media-views' ), '0.1.16', true );
+    wp_enqueue_style( 'deprat-product-tech-admin', plugins_url( 'assets/css/product-technical-admin.css', dirname( __DIR__ ) . '/deprat-core.php' ), array(), '0.1.17' );
+    wp_enqueue_script( 'deprat-product-tech-admin', plugins_url( 'assets/js/product-technical-admin.js', dirname( __DIR__ ) . '/deprat-core.php' ), array( 'jquery', 'media-views' ), '0.1.17', true );
     wp_localize_script( 'deprat-product-tech-admin', 'depratProductEditor', array(
         'ajaxUrl' => admin_url( 'admin-ajax.php' ),
         'categoryNonce' => wp_create_nonce( 'deprat_create_product_category' ),
@@ -245,7 +310,7 @@ add_action( 'admin_enqueue_scripts', 'deprat_product_tech_admin_assets' );
 
 function deprat_product_tech_front_assets() {
     if ( function_exists( 'is_product' ) && is_product() ) {
-        wp_enqueue_style( 'deprat-product-tech-front', plugins_url( 'assets/css/product-technical-front.css', dirname( __DIR__ ) . '/deprat-core.php' ), array(), '0.1.16' );
+        wp_enqueue_style( 'deprat-product-tech-front', plugins_url( 'assets/css/product-technical-front.css', dirname( __DIR__ ) . '/deprat-core.php' ), array(), '0.1.17' );
     }
 }
 add_action( 'wp_enqueue_scripts', 'deprat_product_tech_front_assets' );
@@ -281,11 +346,11 @@ function deprat_product_tech_render_front() {
     $package_quantity = isset( $data['package_quantity'] ) && is_scalar( $data['package_quantity'] ) ? absint( $data['package_quantity'] ) : 0;
     $technical_image = deprat_product_tech_attachment( isset( $data['technical_image'] ) ? $data['technical_image'] : 0, 'image' );
     $dimensions_image = deprat_product_tech_attachment( isset( $data['dimensions_image'] ) ? $data['dimensions_image'] : 0, 'image' );
-    $datasheet = deprat_product_tech_attachment( isset( $data['datasheet'] ) ? $data['datasheet'] : 0, 'pdf' );
+    $datasheets = deprat_product_tech_datasheets( $data );
     $diagrams = deprat_product_tech_diagrams( $data );
     $package_summary = deprat_product_tech_package_summary( $data );
     $package_count = isset( $data['package_count'] ) ? absint( $data['package_count'] ) : 0;
-    if ( ! $features && ! $tests && ! $norms && '' === $description && '' === $delivery && '' === $packaging && ! $package_quantity && ! $diagrams && ! $datasheet ) {
+    if ( ! $features && ! $tests && ! $norms && '' === $description && '' === $delivery && '' === $packaging && ! $package_quantity && ! $diagrams && ! $datasheets ) {
         return;
     }
     require dirname( __DIR__ ) . '/templates/product-technical-front.php';
