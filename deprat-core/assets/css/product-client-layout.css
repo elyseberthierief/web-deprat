@@ -2,7 +2,7 @@
  * DEPRAT — fiche produit B2B. Le header et le menu du thème restent inchangés.
  * Bleu marine #103b79, bleu vif #0752aa, or #e5a32e.
  */
-body.deprat-client-product .woocommerce div.product {
+body.deprat-client-product div.product {
   --deprat-navy: #103b79;
   --deprat-blue: #064ca3;
   --deprat-border: #dce5f2;
@@ -13,8 +13,8 @@ body.deprat-client-product .woocommerce div.product {
   gap: 26px 24px;
   color: #132f58;
 }
-body.deprat-client-product .woocommerce div.product > .woocommerce-product-gallery,
-body.deprat-client-product .woocommerce div.product > div.images {
+body.deprat-client-product div.product > .woocommerce-product-gallery,
+body.deprat-client-product div.product > div.images {
   grid-column: 1;
   grid-row: 1;
   float: none !important;
@@ -28,8 +28,8 @@ body.deprat-client-product .woocommerce div.product > div.images {
   position: relative;
   min-width: 0;
 }
-body.deprat-client-product .woocommerce div.product > div.summary,
-body.deprat-client-product .woocommerce div.product > .entry-summary {
+body.deprat-client-product div.product > div.summary,
+body.deprat-client-product div.product > .entry-summary {
   grid-column: 2;
   grid-row: 1;
   float: none !important;
@@ -37,24 +37,24 @@ body.deprat-client-product .woocommerce div.product > .entry-summary {
   margin: 0 !important;
   min-width: 0;
 }
-body.deprat-client-product .woocommerce div.product > .deprat-client-quote {
+body.deprat-client-product div.product > .deprat-client-quote {
   grid-column: 3;
   grid-row: 1;
 }
-body.deprat-client-product .woocommerce div.product > .deprat-client-tech {
+body.deprat-client-product div.product > .deprat-client-tech {
   grid-column: 1 / -1;
   grid-row: 2;
 }
-body.deprat-client-product .woocommerce div.product > .deprat-client-related {
+body.deprat-client-product div.product > .deprat-client-related {
   grid-column: 1 / -1;
   grid-row: 3;
 }
-body.deprat-client-product .woocommerce div.product::before,
-body.deprat-client-product .woocommerce div.product::after { content: none; }
+body.deprat-client-product div.product::before,
+body.deprat-client-product div.product::after { content: none; }
 
 /* Images à gauche, navigation WooCommerce conservée. */
-body.deprat-client-product .woocommerce div.product .woocommerce-product-gallery__wrapper,
-body.deprat-client-product .woocommerce div.product .flex-viewport {
+body.deprat-client-product div.product .woocommerce-product-gallery__wrapper,
+body.deprat-client-product div.product .flex-viewport {
   border-radius: 13px;
   border: 1px solid #e0e8f2;
   background: #f7f9fc;
@@ -62,7 +62,7 @@ body.deprat-client-product .woocommerce div.product .flex-viewport {
   box-shadow: 0 7px 23px rgba(10,38,74,.07);
   margin: 0;
 }
-body.deprat-client-product .woocommerce div.product .woocommerce-product-gallery__image img {
+body.deprat-client-product div.product .woocommerce-product-gallery__image img {
   width: 100%;
   height: 345px;
   max-height: 345px;
@@ -70,14 +70,14 @@ body.deprat-client-product .woocommerce div.product .woocommerce-product-gallery
   background: #f6f8fc;
   margin: 0;
 }
-body.deprat-client-product .woocommerce div.product .flex-control-thumbs {
+body.deprat-client-product div.product .flex-control-thumbs {
   margin: 10px 0 0 !important;
   display: grid;
   grid-template-columns: repeat(4,minmax(0,1fr));
   gap: 9px;
   list-style: none;
 }
-body.deprat-client-product .woocommerce div.product .flex-control-thumbs li {
+body.deprat-client-product div.product .flex-control-thumbs li {
   width: 100% !important;
   float: none !important;
   border-radius: 9px;
@@ -85,14 +85,14 @@ body.deprat-client-product .woocommerce div.product .flex-control-thumbs li {
   background: #fff;
   overflow: hidden;
 }
-body.deprat-client-product .woocommerce div.product .flex-control-thumbs li img {
+body.deprat-client-product div.product .flex-control-thumbs li img {
   width: 100%;
   height: 82px;
   max-height: 82px;
   object-fit: contain;
   opacity: .8;
 }
-body.deprat-client-product .woocommerce div.product .flex-control-thumbs li img.flex-active {
+body.deprat-client-product div.product .flex-control-thumbs li img.flex-active {
   opacity: 1; outline: 2px solid #0e54ae; outline-offset: -2px;
 }
 body.deprat-client-product .woocommerce-product-gallery__trigger { display: none !important; }
@@ -135,7 +135,7 @@ body.deprat-client-product .woocommerce-product-gallery.deprat-three-active .dep
   color: #0b4a9f; background: #e9f2ff; border-radius: 7px;
   padding: 6px 10px; font-weight: 750; font-size: 12px; text-decoration: none;
 }
-body.deprat-client-product .woocommerce div.product h1.product_title {
+body.deprat-client-product div.product h1.product_title {
   font-size: clamp(29px, 2.5vw, 40px); font-weight: 850; line-height: 1.16;
   margin: 0 0 6px; padding: 0; border: 0; color: #0d326a;
   letter-spacing: -.02em;
@@ -170,14 +170,14 @@ body.deprat-client-product .woocommerce div.product h1.product_title {
 .deprat-client-packaging b { color: #103b79; }
 
 /* Encart de demande à droite. */
-body.deprat-client-product .woocommerce div.product .deprat-client-quote {
+body.deprat-client-product div.product .deprat-client-quote {
   border: 1px solid #d8e3f1; background: #fff; border-radius: 15px; padding: 22px 19px;
   box-shadow: 0 9px 25px rgba(10,46,90,.09); min-width: 0;
 }
 .deprat-client-quote h2 { font-size: clamp(18px,1.6vw,22px); color: #103c7b; margin: 0 0 22px; font-weight: 800; line-height: 1.3; }
 .deprat-client-quote h2 span { margin-right: 5px; }
 .deprat-client-quote-form { min-width: 0; }
-body.deprat-client-product .woocommerce div.product .deprat-client-quote form.cart {
+body.deprat-client-product div.product .deprat-client-quote form.cart {
   display: flex;
   gap: 10px;
   align-items: center;
@@ -186,12 +186,12 @@ body.deprat-client-product .woocommerce div.product .deprat-client-quote form.ca
   margin: 0 0 12px !important;
   min-width: 0;
 }
-body.deprat-client-product .woocommerce div.product .deprat-client-quote form.cart .quantity {
+body.deprat-client-product div.product .deprat-client-quote form.cart .quantity {
   display: inline-flex; flex: 0 0 125px; align-items: center; justify-content: space-between;
   border-radius: 8px; border: 1px solid #cbd6e6; background: #f7f9fc;
   margin: 0 !important; overflow: hidden; height: 46px;
 }
-body.deprat-client-product .woocommerce div.product .deprat-client-quote form.cart .quantity input.qty {
+body.deprat-client-product div.product .deprat-client-quote form.cart .quantity input.qty {
   border: 0; box-shadow: none; background: #fff; border-radius: 0; text-align: center;
   width: 48px; min-width: 38px; height: 44px; padding: 0;
   font-weight: 750; color: #11396e; appearance: textfield; -moz-appearance: textfield;
@@ -204,13 +204,13 @@ body.deprat-client-product .woocommerce div.product .deprat-client-quote form.ca
   cursor: pointer;
 }
 .deprat-client-quote .deprat-qty-button:hover { background: #e0ebfa; }
-body.deprat-client-product .woocommerce div.product .deprat-client-quote form.cart .single_add_to_cart_button {
+body.deprat-client-product div.product .deprat-client-quote form.cart .single_add_to_cart_button {
   margin: 0 !important; float: none !important;
   flex: 1 1 175px; min-height: 46px; border-radius: 9px; padding: 9px 10px;
   background: linear-gradient(140deg,#0755b7,#073d87); color: #fff; border: 0;
   font-size: 14px; font-weight: 800; line-height: 1.25; cursor: pointer;
 }
-body.deprat-client-product .woocommerce div.product .deprat-client-quote form.cart .single_add_to_cart_button:hover { background: #063778; }
+body.deprat-client-product div.product .deprat-client-quote form.cart .single_add_to_cart_button:hover { background: #063778; }
 .deprat-client-quote form.cart .variations { width: 100%; margin: 0 0 12px; }
 .deprat-client-quote form.cart .single_variation_wrap { width: 100%; }
 .deprat-client-quote-no-payment { font-size: 12px; color: #667d9b; margin: -3px 0 13px; line-height: 1.45; text-align: center; }
@@ -294,26 +294,38 @@ body.deprat-client-product .woocommerce div.product .deprat-client-quote form.ca
 .deprat-client-related-arrow { font-size: 26px; color: #1b4e87; text-align: center; }
 
 @media (max-width: 1180px) {
-  body.deprat-client-product .woocommerce div.product { grid-template-columns: minmax(0,1.15fr) minmax(0,.9fr); }
-  body.deprat-client-product .woocommerce div.product > .deprat-client-quote {
+  body.deprat-client-product div.product { grid-template-columns: minmax(0,1.15fr) minmax(0,.9fr); }
+  body.deprat-client-product div.product > .deprat-client-quote {
     grid-column: 2; grid-row: 2;
   }
-  body.deprat-client-product .woocommerce div.product > .deprat-client-tech { grid-row: 3; }
-  body.deprat-client-product .woocommerce div.product > .deprat-client-related { grid-row: 4; }
+  body.deprat-client-product div.product > .deprat-client-tech { grid-row: 3; }
+  body.deprat-client-product div.product > .deprat-client-related { grid-row: 4; }
 }
 @media (max-width: 780px) {
-  body.deprat-client-product .woocommerce div.product { display: grid; grid-template-columns: minmax(0,1fr); gap: 21px; }
-  body.deprat-client-product .woocommerce div.product > div.images,
-  body.deprat-client-product .woocommerce div.product > .woocommerce-product-gallery { grid-column: 1; grid-row: 1; }
-  body.deprat-client-product .woocommerce div.product > div.summary { grid-column: 1; grid-row: 2; }
-  body.deprat-client-product .woocommerce div.product > .deprat-client-quote { grid-column: 1; grid-row: 3; }
-  body.deprat-client-product .woocommerce div.product > .deprat-client-tech { grid-column: 1; grid-row: 4; }
-  body.deprat-client-product .woocommerce div.product > .deprat-client-related { grid-column: 1; grid-row: 5; }
-  body.deprat-client-product .woocommerce div.product .woocommerce-product-gallery__image img { height: 300px; max-height: 300px; }
+  body.deprat-client-product div.product { display: grid; grid-template-columns: minmax(0,1fr); gap: 21px; }
+  body.deprat-client-product div.product > div.images,
+  body.deprat-client-product div.product > .woocommerce-product-gallery { grid-column: 1; grid-row: 1; }
+  body.deprat-client-product div.product > div.summary { grid-column: 1; grid-row: 2; }
+  body.deprat-client-product div.product > .deprat-client-quote { grid-column: 1; grid-row: 3; }
+  body.deprat-client-product div.product > .deprat-client-tech { grid-column: 1; grid-row: 4; }
+  body.deprat-client-product div.product > .deprat-client-related { grid-column: 1; grid-row: 5; }
+  body.deprat-client-product div.product .woocommerce-product-gallery__image img { height: 300px; max-height: 300px; }
   .deprat-client-feature-table, .deprat-client-test-grid, .deprat-client-doc-grid { grid-template-columns: 1fr; }
   .deprat-client-related-grid { grid-template-columns: 1fr; }
   .deprat-client-tech-tabs [role=tab] { padding: 10px 12px; font-size: 12px; }
 }
 @media (min-width: 781px) and (max-width: 1180px) {
   .deprat-client-feature-table { grid-template-columns: repeat(2,minmax(0,1fr)); }
+}
+
+/* Astra peut afficher un second ensemble de titre/référence/panier dans le résumé
+   WooCommerce. Notre bloc DEPRAT prend seul en charge cette colonne. */
+body.deprat-client-product div.product > .summary > :not(.deprat-client-info) {
+    display: none !important;
+}
+/* La galerie et le bloc WooCommerce occupent des colonnes explicites. */
+body.deprat-client-product div.product > .woocommerce-product-gallery,
+body.deprat-client-product div.product > .summary,
+body.deprat-client-product div.product > .deprat-client-quote {
+    min-width: 0;
 }
