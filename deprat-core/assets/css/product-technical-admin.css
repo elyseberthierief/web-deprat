@@ -190,3 +190,11 @@ body.deprat-modal-open { overflow: hidden; }
 @media (max-width: 600px) {
   #deprat-product-technical .deprat-tech-quick-upload { max-width: 100%; white-space: normal; }
 }
+
+/* Import et documents 3D SolidWorks. */
+.deprat-three-admin .deprat-three-selected { margin: 16px 0 12px; border: 1px dashed #c4d7ed; background: #f8fbff; color: #3f5677; border-radius: 7px; padding: 14px; overflow-wrap: anywhere; }
+.deprat-three-admin .deprat-three-selected a { color: #174b91; text-decoration: underline; }
+.deprat-three-admin .deprat-three-actions { display: flex; flex-wrap: wrap; gap: 9px; align-items: center; }
+.deprat-three-admin .deprat-three-actions .button { min-height: 35px; }
+.deprat-three-admin .deprat-three-actions [data-glb-upload] { background: #103d80; color: #fff; border-color: #103d80; font-weight: 700; }
+.deprat-three-admin .deprat-three-actions [data-glb-upload]:hover { background: #1555a1; color: #fff; }
