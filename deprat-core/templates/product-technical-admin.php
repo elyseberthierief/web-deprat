@@ -9,42 +9,9 @@ $packaging = isset( $data['packaging'] ) && is_scalar( $data['packaging'] ) ? (s
 $package_count = isset( $data['package_count'] ) && is_scalar( $data['package_count'] ) ? (string) $data['package_count'] : '';
 $all_diagrams = deprat_product_tech_diagrams( $data );
 $package_quantity = isset( $data['package_quantity'] ) && is_scalar( $data['package_quantity'] ) ? (string) $data['package_quantity'] : '';
-$media_fields = array(
-    'datasheet' => array( 'label' => 'Fiche technique PDF', 'kind' => 'pdf' ),
-    'technical_image' => array( 'label' => 'Schéma technique', 'kind' => 'image' ),
-    'dimensions_image' => array( 'label' => 'Schéma des dimensions', 'kind' => 'image' ),
-);
-$render_media = static function ( $key, $field ) use ( $data ) {
-    $attachment_id = deprat_product_tech_attachment( isset( $data[ $key ] ) ? $data[ $key ] : 0, $field['kind'] );
-    $url = $attachment_id ? wp_get_attachment_url( $attachment_id ) : '';
-    $is_pdf = 'pdf' === $field['kind'];
-    ?>
-    <section class="deprat-tech-media <?php echo $is_pdf ? 'deprat-tech-card deprat-tech-pdf' : 'deprat-tech-diagram'; ?>" data-media-kind="<?php echo esc_attr( $field['kind'] ); ?>">
-        <?php if ( $is_pdf ) : ?><h3><span class="dashicons dashicons-media-document" aria-hidden="true"></span> <?php echo esc_html( $field['label'] ); ?></h3>
-        <?php else : ?><h4><?php echo esc_html( $field['label'] ); ?></h4><?php endif; ?>
-        <input type="hidden" name="deprat_product_tech[<?php echo esc_attr( $key ); ?>]" value="<?php echo esc_attr( $attachment_id ); ?>" data-media-id>
-        <div class="deprat-tech-media-content">
-            <div class="deprat-tech-media-preview" data-media-preview>
-                <?php if ( $attachment_id && ! $is_pdf ) : ?>
-                    <?php echo wp_get_attachment_image( $attachment_id, 'medium', false, array( 'alt' => $field['label'] ) ); ?>
-                <?php elseif ( $attachment_id && $url ) : ?>
-                    <a href="<?php echo esc_url( $url ); ?>" target="_blank" rel="noopener noreferrer"><?php echo esc_html( get_the_title( $attachment_id ) ); ?></a>
-                <?php else : ?>
-                    <span><?php echo $is_pdf ? 'Aucun PDF sélectionné' : 'Aucun schéma sélectionné'; ?></span>
-                <?php endif; ?>
-            </div>
-            <div class="deprat-tech-media-actions">
-                <button type="button" class="button deprat-tech-media-select" data-media-select><?php echo $attachment_id ? ( $is_pdf ? 'Remplacer le PDF' : 'Remplacer le schéma' ) : ( $is_pdf ? 'Ajouter un PDF' : 'Ajouter un schéma' ); ?></button>
-                <button type="button" class="button-link-delete" data-media-remove <?php echo $attachment_id ? '' : 'hidden'; ?>>Retirer</button>
-            </div>
-        </div>
-        <?php if ( $is_pdf ) : ?>
-            <a class="deprat-tech-pdf-download" data-media-download href="<?php echo esc_url( $url ); ?>" download <?php echo $url ? '' : 'hidden'; ?>>↓ Télécharger la fiche technique</a>
-            <p class="deprat-tech-help">Le client pourra télécharger ce document.</p>
-        <?php endif; ?>
-    </section>
-    <?php
-};
+$all_datasheets = deprat_product_tech_datasheets( $data );
+$gallery_product = function_exists( 'wc_get_product' ) ? wc_get_product( $post->ID ) : false;
+$gallery_ids = $gallery_product ? $gallery_product->get_gallery_image_ids() : array();
 ?>
 <div class="deprat-tech-editor">
     <div class="deprat-tech-chrome" data-editor-chrome hidden>
@@ -57,11 +24,17 @@ $render_media = static function ( $key, $field ) use ( $data ) {
             </div>
         </header>
         <section class="deprat-tech-identity" aria-label="Informations du produit">
+            <div class="deprat-tech-identity-photo" data-featured-panel hidden>
+                <div class="deprat-featured-preview" data-featured-preview></div>
+                <div class="deprat-tech-media-actions"><button type="button" class="button" data-featured-select>Modifier l’image</button><button type="button" class="button-link-delete" data-featured-remove hidden>Retirer</button></div>
+            </div>
+            <div class="deprat-tech-identity-fields">
             <label class="deprat-tech-field"><span>Nom du produit</span><input type="text" data-product-name autocomplete="off"></label>
             <label class="deprat-tech-field"><span>Référence du produit</span><input type="text" data-product-sku autocomplete="off"></label>
             <label class="deprat-tech-field"><span>Type de produit</span><select data-product-type></select></label>
             <div class="deprat-tech-field"><span>Catégorie</span><details class="deprat-tech-category" data-category-picker><summary data-category-summary>Choisir une catégorie</summary><div class="deprat-tech-category-options" data-category-options></div></details>
                 <button class="button deprat-category-create-button" type="button" data-category-open>+ Nouvelle catégorie / sous-catégorie</button></div>
+            </div>
         </section>
     </div>
 
@@ -87,7 +60,6 @@ $render_media = static function ( $key, $field ) use ( $data ) {
                         </div>
                     <?php endforeach; ?>
                 </div>
-                <div class="deprat-tech-delivery-mirror" data-delivery-mirror hidden><label for="deprat-delivery-proxy">Livraison</label><input id="deprat-delivery-proxy" type="text" data-delivery-proxy value="<?php echo esc_attr( $delivery ); ?>"></div>
                 <button type="button" class="button deprat-tech-add" data-add-row="features">+ Ajouter une caractéristique</button>
 
             </section>
@@ -114,7 +86,7 @@ $render_media = static function ( $key, $field ) use ( $data ) {
                         ?>
                         <div class="deprat-tech-pair" data-row>
                             <input aria-label="Nom de l’essai ou de la mesure" name="deprat_product_tech[tests][<?php echo esc_attr( $index ); ?>][label]" value="<?php echo esc_attr( $label ); ?>" placeholder="Essai ou mesure">
-                            <input aria-label="Valeur de l’essai ou de la mesure" name="deprat_product_tech[tests][<?php echo esc_attr( $index ); ?>][value]" value="<?php echo esc_attr( $value ); ?>" placeholder="Valeur et unité">
+                            <textarea class="deprat-tech-auto-grow" data-auto-grow aria-label="Valeur de l’essai ou de la mesure" name="deprat_product_tech[tests][<?php echo esc_attr( $index ); ?>][value]" rows="1" placeholder="Valeur et unité"><?php echo esc_textarea( $value ); ?></textarea>
                             <button type="button" class="deprat-tech-remove" data-remove-row aria-label="Supprimer cet essai">×</button>
                         </div>
                     <?php endforeach; ?>
@@ -146,13 +118,43 @@ $render_media = static function ( $key, $field ) use ( $data ) {
         </div>
 
         <aside class="deprat-tech-side" aria-label="Documents et schémas">
-            <section class="deprat-tech-card deprat-featured-card" data-featured-panel hidden>
-                <h3><span class="dashicons dashicons-format-image" aria-hidden="true"></span> Image du produit</h3>
-                <div class="deprat-featured-preview" data-featured-preview></div>
-                <div class="deprat-tech-media-actions"><button type="button" class="button" data-featured-select>Choisir une image</button><button type="button" class="button-link-delete" data-featured-remove hidden>Retirer</button></div>
+
+            <section class="deprat-tech-card deprat-gallery-card">
+                <h3><span class="dashicons dashicons-images-alt2" aria-hidden="true"></span> Autres images du produit</h3>
+                <p class="deprat-tech-help">Ces photos compléteront l’image principale dans la galerie de la fiche produit.</p>
+                <input type="hidden" name="deprat_product_gallery" data-gallery-ids value="<?php echo esc_attr( implode( ',', array_map( 'absint', $gallery_ids ) ) ); ?>">
+                <div class="deprat-product-gallery-list" data-gallery-list>
+                    <?php foreach ( $gallery_ids as $id ) :
+                        if ( ! wp_attachment_is_image( $id ) ) { continue; } ?>
+                        <article class="deprat-product-gallery-item" data-gallery-item data-gallery-id="<?php echo esc_attr( $id ); ?>">
+                            <?php echo wp_get_attachment_image( $id, 'thumbnail', false, array( 'alt' => 'Photo complémentaire du produit' ) ); ?>
+                            <button type="button" class="button-link-delete" data-gallery-remove>Retirer</button>
+                        </article>
+                    <?php endforeach; ?>
+                </div>
+                <button type="button" class="button deprat-tech-add" data-gallery-add>+ Ajouter des images</button>
             </section>
 
-            <?php $render_media( 'datasheet', $media_fields['datasheet'] ); ?>
+            <section class="deprat-tech-card deprat-tech-pdf-panel">
+                <h3><span class="dashicons dashicons-media-document" aria-hidden="true"></span> Fiches techniques PDF</h3>
+                <p class="deprat-tech-help">Ajoutez plusieurs documents, chacun avec son titre. Tous seront téléchargeables par le client.</p>
+                <input type="hidden" name="deprat_product_tech[datasheets_present]" value="1">
+                <div class="deprat-datasheets-list" data-datasheets-list>
+                    <?php foreach ( $all_datasheets as $index => $sheet ) :
+                        $url = wp_get_attachment_url( $sheet['file'] ); ?>
+                        <article class="deprat-datasheet-entry" data-datasheet-row>
+                            <div class="deprat-tech-diagram-toolbar"><strong>Document <?php echo esc_html( $index + 1 ); ?></strong><button type="button" class="button-link-delete" data-datasheet-delete>Supprimer</button></div>
+                            <label class="deprat-tech-field"><span>Nom du document</span>
+                                <input data-datasheet-title name="deprat_product_tech[datasheets][<?php echo esc_attr( $index ); ?>][title]" value="<?php echo esc_attr( $sheet['title'] ); ?>" placeholder="Ex. Notice d'installation">
+                            </label>
+                            <input type="hidden" data-datasheet-file name="deprat_product_tech[datasheets][<?php echo esc_attr( $index ); ?>][file]" value="<?php echo esc_attr( $sheet['file'] ); ?>">
+                            <div class="deprat-tech-media-preview" data-datasheet-preview><?php if ( $url ) : ?><a target="_blank" rel="noopener noreferrer" href="<?php echo esc_url( $url ); ?>"><?php echo esc_html( get_the_title( $sheet['file'] ) ); ?></a><?php endif; ?></div>
+                            <button type="button" class="button" data-datasheet-select>Remplacer le PDF</button>
+                        </article>
+                    <?php endforeach; ?>
+                </div>
+                <button type="button" class="button deprat-tech-add" data-datasheet-add>+ Ajouter une fiche technique PDF</button>
+            </section>
             <section class="deprat-tech-card deprat-tech-diagrams-panel">
                 <h3><span class="dashicons dashicons-editor-contract" aria-hidden="true"></span> Schémas techniques et dimensionnels</h3>
                 <p class="deprat-tech-help">Ajoutez des schémas et organisez-les avec les flèches.</p>
@@ -196,5 +198,5 @@ $render_media = static function ( $key, $field ) use ( $data ) {
 
     <template data-row-template="features"><div class="deprat-tech-pair" data-row><input aria-label="Nom de la caractéristique" name="deprat_product_tech[features][__index__][label]" placeholder="Caractéristique"><input aria-label="Valeur de la caractéristique" name="deprat_product_tech[features][__index__][value]" placeholder="Valeur"><button type="button" class="deprat-tech-remove" data-remove-row aria-label="Supprimer cette caractéristique">×</button></div></template>
     <template data-row-template="norms"><div class="deprat-tech-norm-row" data-row><input aria-label="Norme" name="deprat_product_tech[norms][__index__]" placeholder="Ex. NF EN 12194"><button type="button" class="deprat-tech-remove" data-remove-row aria-label="Supprimer cette norme">×</button></div></template>
-    <template data-row-template="tests"><div class="deprat-tech-pair" data-row><input aria-label="Nom de l’essai ou de la mesure" name="deprat_product_tech[tests][__index__][label]" placeholder="Essai ou mesure"><input aria-label="Valeur de l’essai ou de la mesure" name="deprat_product_tech[tests][__index__][value]" placeholder="Valeur et unité"><button type="button" class="deprat-tech-remove" data-remove-row aria-label="Supprimer cet essai">×</button></div></template>
+    <template data-row-template="tests"><div class="deprat-tech-pair" data-row><input aria-label="Nom de l’essai ou de la mesure" name="deprat_product_tech[tests][__index__][label]" placeholder="Essai ou mesure"><textarea class="deprat-tech-auto-grow" data-auto-grow aria-label="Valeur de l’essai ou de la mesure" name="deprat_product_tech[tests][__index__][value]" rows="1" placeholder="Valeur et unité"></textarea><button type="button" class="deprat-tech-remove" data-remove-row aria-label="Supprimer cet essai">×</button></div></template>
 </div>
