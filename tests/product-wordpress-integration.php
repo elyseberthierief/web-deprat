@@ -55,10 +55,13 @@ $_POST = array(
         'tests' => array( array( 'label' => 'Couple de destruction', 'value' => '5 m.kg' ) ),
         'delivery' => 'Longueurs de 6 m',
         'packaging' => 'Lot',
+        'package_count' => '2',
         'package_quantity' => '96',
         'technical_image' => (string) $image,
         'dimensions_image' => (string) $image,
         'datasheet' => (string) $pdf,
+        'diagrams_present' => '1',
+        'diagrams' => array( array( 'title' => 'Schéma dimensionnel personnalisé', 'image' => (string) $image ) ),
     ),
 );
 $_POST = wp_slash( $_POST );
@@ -81,7 +84,7 @@ $GLOBALS['product'] = wc_get_product( $product_id );
 ob_start();
 deprat_product_tech_render_front();
 $front_html = ob_get_clean();
-foreach ( array( 'Caractéristiques techniques', 'Acier galvanisé', '>0<', 'NF EN 12194', 'Couple de destruction', 'Longueurs de 6 m', 'Pièces par conditionnement', '>96<', 'Schéma technique', 'Schéma des dimensions', 'Télécharger la fiche technique PDF' ) as $expected ) {
+foreach ( array( 'Caractéristiques techniques', 'Acier galvanisé', '>0<', 'NF EN 12194', 'Couple de destruction', 'Longueurs de 6 m', 'Pièces par conditionnement', '>96<', 'Schéma technique', 'Schéma dimensionnel personnalisé', 'Télécharger la fiche technique PDF' ) as $expected ) {
     deprat_integration_assert( false !== strpos( $front_html, $expected ), 'Information absente de la boutique : ' . $expected );
 }
 
