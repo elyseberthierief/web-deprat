@@ -8,7 +8,7 @@ body.deprat-client-product div.product {
   --deprat-border: #dce5f2;
   --deprat-gold: #e5a32e;
   display: grid;
-  grid-template-columns: minmax(0,1.17fr) minmax(0,.94fr) minmax(300px,.96fr);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.75fr);
   align-items: start;
   gap: 26px 24px;
   color: #132f58;
@@ -36,10 +36,15 @@ body.deprat-client-product div.product > .entry-summary {
   width: 100% !important;
   margin: 0 !important;
   min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(0,1fr) minmax(285px,1fr);
+  align-items: start;
+  gap: 22px;
 }
-body.deprat-client-product div.product > .deprat-client-quote {
-  grid-column: 3;
+body.deprat-client-product div.product .summary > .deprat-client-quote {
+  grid-column: 2;
   grid-row: 1;
+  min-width: 0;
 }
 body.deprat-client-product div.product > .deprat-client-tech {
   grid-column: 1 / -1;
@@ -295,20 +300,22 @@ body.deprat-client-product div.product .deprat-client-quote form.cart .single_ad
 
 @media (max-width: 1180px) {
   body.deprat-client-product div.product { grid-template-columns: minmax(0,1.15fr) minmax(0,.9fr); }
-  body.deprat-client-product div.product > .deprat-client-quote {
-    grid-column: 2; grid-row: 2;
-  }
-  body.deprat-client-product div.product > .deprat-client-tech { grid-row: 3; }
-  body.deprat-client-product div.product > .deprat-client-related { grid-row: 4; }
+  body.deprat-client-product div.product > div.summary,
+  body.deprat-client-product div.product > .entry-summary { grid-template-columns: minmax(0,1fr); }
+  body.deprat-client-product div.product .summary > .deprat-client-quote { grid-column: 1; grid-row: 2; }
+  body.deprat-client-product div.product > .deprat-client-tech { grid-row: 2; }
+  body.deprat-client-product div.product > .deprat-client-related { grid-row: 3; }
 }
 @media (max-width: 780px) {
   body.deprat-client-product div.product { display: grid; grid-template-columns: minmax(0,1fr); gap: 21px; }
   body.deprat-client-product div.product > div.images,
   body.deprat-client-product div.product > .woocommerce-product-gallery { grid-column: 1; grid-row: 1; }
   body.deprat-client-product div.product > div.summary { grid-column: 1; grid-row: 2; }
-  body.deprat-client-product div.product > .deprat-client-quote { grid-column: 1; grid-row: 3; }
-  body.deprat-client-product div.product > .deprat-client-tech { grid-column: 1; grid-row: 4; }
-  body.deprat-client-product div.product > .deprat-client-related { grid-column: 1; grid-row: 5; }
+  body.deprat-client-product div.product > div.summary,
+  body.deprat-client-product div.product > .entry-summary { grid-column: 1; grid-row: 2; grid-template-columns: minmax(0,1fr); }
+  body.deprat-client-product div.product .summary > .deprat-client-quote { grid-column: 1; grid-row: 2; }
+  body.deprat-client-product div.product > .deprat-client-tech { grid-column: 1; grid-row: 3; }
+  body.deprat-client-product div.product > .deprat-client-related { grid-column: 1; grid-row: 4; }
   body.deprat-client-product div.product .woocommerce-product-gallery__image img { height: 300px; max-height: 300px; }
   .deprat-client-feature-table, .deprat-client-test-grid, .deprat-client-doc-grid { grid-template-columns: 1fr; }
   .deprat-client-related-grid { grid-template-columns: 1fr; }
@@ -320,7 +327,7 @@ body.deprat-client-product div.product .deprat-client-quote form.cart .single_ad
 
 /* Astra peut afficher un second ensemble de titre/référence/panier dans le résumé
    WooCommerce. Notre bloc DEPRAT prend seul en charge cette colonne. */
-body.deprat-client-product div.product > .summary > :not(.deprat-client-info) {
+body.deprat-client-product div.product > .summary > :not(.deprat-client-info):not(.deprat-client-quote):not(.deprat-client-contact) {
     display: none !important;
 }
 /* La galerie et le bloc WooCommerce occupent des colonnes explicites. */
@@ -328,4 +335,12 @@ body.deprat-client-product div.product > .woocommerce-product-gallery,
 body.deprat-client-product div.product > .summary,
 body.deprat-client-product div.product > .deprat-client-quote {
     min-width: 0;
+}
+
+/* Distinguer les trois zones du visuel : galerie | informations | demande. */
+body.deprat-client-product div.product .summary > .deprat-client-info { grid-column: 1; grid-row: 1; min-width: 0; }
+body.deprat-client-product div.product .summary > .deprat-client-quote { grid-column: 2; grid-row: 1; }
+@media (max-width: 1180px) {
+  body.deprat-client-product div.product .summary > .deprat-client-info { grid-column: 1; grid-row: 1; }
+  body.deprat-client-product div.product .summary > .deprat-client-quote { grid-column: 1; grid-row: 2; }
 }
