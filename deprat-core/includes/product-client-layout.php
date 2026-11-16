@@ -14,6 +14,7 @@ function deprat_client_product_setup() {
     remove_action( 'woocommerce_single_product_summary', 'woocommerce_template_single_rating', 10 );
     remove_action( 'woocommerce_single_product_summary', 'woocommerce_template_single_add_to_cart', 30 );
     add_action( 'woocommerce_single_product_summary', 'deprat_client_product_intro', 4 );
+    add_filter( 'woocommerce_product_single_add_to_cart_text', 'deprat_client_quote_button_text', 20 );
 
     // Placement : galerie native à gauche, résumé au centre, formulaire de demande à droite.
     add_action( 'woocommerce_after_single_product_summary', 'deprat_client_product_quote', 3 );
@@ -25,6 +26,10 @@ function deprat_client_product_setup() {
     add_action( 'woocommerce_after_single_product_summary', 'deprat_client_product_related', 22 );
 }
 add_action( 'wp', 'deprat_client_product_setup', 35 );
+
+function deprat_client_quote_button_text( $text ) {
+    return function_exists( 'is_product' ) && is_product() ? 'Ajouter à ma demande' : $text;
+}
 
 function deprat_client_product_body_class( $classes ) {
     if ( function_exists( 'is_product' ) && is_product() ) { $classes[] = 'deprat-client-product'; }
@@ -126,6 +131,7 @@ function deprat_client_product_quote() {
                 <p class="deprat-client-quote-unavailable">Ce produit ne peut pas être ajouté à la demande actuellement. Contactez un conseiller.</p>
             <?php endif; ?>
         </div>
+        <p class="deprat-client-quote-no-payment">Sans paiement en ligne — demande de devis uniquement.</p>
         <?php if ( $single ) : ?>
             <div class="deprat-client-quote-calculation" data-package-calculator
                 data-type="<?php echo esc_attr( $package['type'] ); ?>"
@@ -165,12 +171,12 @@ function deprat_client_product_tabs() {
     $diagrams = deprat_product_tech_diagrams( $data );
 
     // Ajouter les attributs visibles WooCommerce en évitant de répéter les champs DEPRAT.
-    $used = array_map( static function ( $row ) { return mb_strtolower( trim( $row['label'] ) ); }, $features );
+    $used = array_map( static function ( $row ) { return strtolower( trim( $row['label'] ) ); }, $features );
     foreach ( $product->get_attributes() as $attribute ) {
         if ( ! is_object( $attribute ) || ! method_exists( $attribute, 'get_visible' ) || ! $attribute->get_visible() ) { continue; }
         $key = $attribute->get_name();
         $label = wc_attribute_label( $key );
-        if ( in_array( mb_strtolower( trim( $label ) ), $used, true ) ) { continue; }
+        if ( in_array( strtolower( trim( $label ) ), $used, true ) ) { continue; }
         $value = $product->get_attribute( $key );
         if ( '' !== trim( $value ) ) {
             $features[] = array( 'label' => $label, 'value' => $value );
