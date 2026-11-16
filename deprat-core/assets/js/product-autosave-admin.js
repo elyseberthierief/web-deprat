@@ -19,6 +19,8 @@
         }
         if ( publish ) { publish.hidden = ! canAutosave; }
         if ( ! canAutosave ) {
+            var saveButton = editor.querySelector( '[data-product-save]' );
+            if ( saveButton ) { saveButton.textContent = 'Enregistrer les modifications'; }
             announce( 'Produit déjà publié : les modifications restent manuelles.' );
             return;
         }
