@@ -155,6 +155,11 @@
     }
 
 
+    function mirrorNativeGallery( value ) {
+        var original = document.getElementById ? document.getElementById( 'product_image_gallery' ) : null;
+        if ( original ) { original.value = value; }
+    }
+
     function setupGallery( editor ) {
         var field = editor.querySelector( '[data-gallery-ids]' );
         var list = editor.querySelector( '[data-gallery-list]' );
@@ -164,6 +169,7 @@
             field.value = Array.prototype.map.call( list.querySelectorAll( '[data-gallery-item]' ), function ( item ) {
                 return item.getAttribute( 'data-gallery-id' );
             } ).join( ',' );
+            mirrorNativeGallery( field.value );
         }
         function addFile( file ) {
             if ( ! file || file.type !== 'image' || ! file.id ||
@@ -328,6 +334,7 @@
             field.value = Array.prototype.map.call( list.querySelectorAll( '[data-gallery-item]' ), function ( node ) {
                 return node.getAttribute( 'data-gallery-id' );
             } ).join( ',' );
+            mirrorNativeGallery( field.value );
         }
         function applyUpload( purpose, button, file ) {
             if ( purpose === 'gallery' ) { galleryAdd( file ); return; }
