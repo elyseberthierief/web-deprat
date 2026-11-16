@@ -29,13 +29,15 @@ const assert = require( 'assert' );
                 aside: box( '.deprat-tech-side' ),
                 image: box( '.deprat-featured-card' ),
                 pdf: box( '.deprat-tech-pdf' ),
-                diagrams: Array.from( document.querySelectorAll( '.deprat-tech-diagram' ), element => element.getBoundingClientRect().toJSON() )
+                description: box( '.deprat-tech-description-card' ),
+                diagramsPanel: box( '.deprat-tech-diagrams-panel' )
             };
         } );
-        assert( layout.identity.bottom <= layout.main.top + 1, 'L’identité doit précéder les fiches.' );
+        assert( layout.identity.bottom <= layout.description.top + 1, 'La description doit suivre l’identité.' );
+        assert( layout.description.bottom <= layout.main.top + 1, 'La description doit précéder les caractéristiques.' );
         assert( layout.main.right <= layout.aside.left + 1, 'Les deux colonnes doivent être côte à côte.' );
         assert( layout.image.bottom <= layout.pdf.top + 1, 'Le PDF doit être sous l’image du produit.' );
-        assert( layout.diagrams[0].right <= layout.diagrams[1].left + 1, 'Les schémas doivent être côte à côte.' );
+        assert( layout.pdf.bottom <= layout.diagramsPanel.top + 1, 'Les schémas doivent être sous le PDF.' );
         await page.screenshot( { path: process.env.RUNNER_TEMP + '/deprat-editor-desktop.png', fullPage: true } );
 
         await page.click( '[data-native-toggle]' );
@@ -54,10 +56,23 @@ const assert = require( 'assert' );
             await gotIt.click();
         }
         await page.locator( '[data-product-type]' ).selectOption( 'simple' );
-        await page.fill( '[data-delivery-proxy]', 'Longueurs de 4 m' );
-        assert.strictEqual( await page.locator( '[name="deprat_product_tech[delivery]"]' ).inputValue(), 'Longueurs de 4 m' );
-        await page.locator( '[name="deprat_product_tech[delivery]"]' ).fill( 'Longueurs de 5 m' );
-        assert.strictEqual( await page.locator( '[data-delivery-proxy]' ).inputValue(), 'Longueurs de 5 m' );
+        await page.fill( '[name="deprat_product_tech[delivery]"]', 'Longueurs de 5 m' );
+        await page.locator( '[data-package-count]' ).fill( '2' );
+        await page.locator( '[data-package-type]' ).fill( 'carton' );
+        await page.locator( '[data-package-pieces]' ).fill( '50' );
+        assert( ( await page.locator( '[data-package-summary]' ).textContent() ).includes( '2 cartons contenant chacun 50 pièces, soit un total de 100 pièces.' ) );
+        await page.locator( '.deprat-tech-description-card textarea' ).fill( 'Description visible directement.' );
+        await page.click( '[data-category-open]' );
+        await page.locator( '[data-category-name]' ).fill( 'Tubes de test' );
+        await page.locator( '[data-category-parent]' ).selectOption( { label: 'Tubes' } );
+        await page.click( '[data-category-submit]' );
+        await page.waitForSelector( '[data-category-modal]', { state: 'hidden' } );
+        assert( ( await page.locator( '[data-category-summary]' ).textContent() ).includes( 'Tubes de test' ), 'La nouvelle sous-catégorie doit être sélectionnée.' );
+        await page.click( '[data-diagram-add]' );
+        const diagram = page.locator( '[data-diagram-row]' ).last();
+        await diagram.locator( '[data-diagram-title]' ).fill( 'Schéma de montage personnalisé' );
+        await page.locator( '[data-diagram-up]' ).last().click();
+        assert.strictEqual( await page.locator( '[data-diagram-title]' ).first().inputValue(), 'Schéma de montage personnalisé' );
 
         await page.click( '[data-add-row="features"]' );
         const row = page.locator( '[data-rows="features"] [data-row]' ).last();
@@ -74,7 +89,10 @@ const assert = require( 'assert' );
         await page.waitForSelector( 'body.deprat-product-editor-ready [data-editor-chrome]:visible' );
         assert.strictEqual( await page.locator( '[data-product-name]' ).inputValue(), 'Tube de test modifié' );
         assert.strictEqual( await page.locator( '[data-product-sku]' ).inputValue(), 'TEST-DP62-MODIF' );
-        assert.strictEqual( await page.locator( '[data-delivery-proxy]' ).inputValue(), 'Longueurs de 5 m' );
+        assert.strictEqual( await page.locator( '[name="deprat_product_tech[delivery]"]' ).inputValue(), 'Longueurs de 5 m' );
+        assert( ( await page.locator( '[data-package-summary]' ).textContent() ).includes( '100 pièces' ) );
+        assert( ( await page.locator( '[data-category-summary]' ).textContent() ).includes( 'Tubes de test' ) );
+        assert.strictEqual( await page.locator( '.deprat-tech-description-card textarea' ).inputValue(), 'Description visible directement.' );
         assert( ( await page.locator( '[data-category-summary]' ).textContent() ).includes( 'Tubes' ) );
         assert( ( await page.locator( '[data-category-summary]' ).textContent() ).includes( 'Embouts' ) );
         assert.strictEqual( await page.locator( '[data-rows="features"] [data-row]' ).last().locator( 'input' ).nth( 1 ).inputValue(), 'Test' );

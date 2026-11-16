@@ -1,6 +1,159 @@
 ( function () {
     'use strict';
 
+
+    function setupPackageSummary( editor ) {
+        var count = editor.querySelector( '[data-package-count]' );
+        var type = editor.querySelector( '[data-package-type]' );
+        var pieces = editor.querySelector( '[data-package-pieces]' );
+        var result = editor.querySelector( '[data-package-summary]' );
+        if ( ! count || ! type || ! pieces || ! result ) { return; }
+        function update() {
+            var n = Number( count.value ), p = Number( pieces.value );
+            var label = type.value.trim();
+            if ( ! Number.isSafeInteger( n ) || ! Number.isSafeInteger( p ) || n < 1 || p < 1 || ! label || n > 999999 || p > 99999999 ) {
+                result.textContent = 'Renseignez les trois champs pour afficher le récapitulatif.';
+                return;
+            }
+            var plural = n > 1 && ! /[sxz]$/i.test( label ) ? 's' : '';
+            result.textContent = 'Le client recevra ' + n + ' ' + label + plural + ' contenant ' + ( n > 1 ? 'chacun ' : '' ) + p + ' ' + ( p > 1 ? 'pièces' : 'pièce' ) + ', soit un total de ' + ( n * p ) + ' pièces.';
+        }
+        [ count, type, pieces ].forEach( function ( field ) { field.addEventListener( 'input', update ); field.addEventListener( 'change', update ); } );
+        update();
+    }
+
+    function setupCategoryModal( editor ) {
+        var dialog = editor.querySelector( '[data-category-modal]' );
+        var name = editor.querySelector( '[data-category-name]' );
+        var parent = editor.querySelector( '[data-category-parent]' );
+        var error = editor.querySelector( '[data-category-error]' );
+        var submit = editor.querySelector( '[data-category-submit]' );
+        if ( ! dialog || ! name || ! parent || ! submit ) { return; }
+
+        function close() { dialog.hidden = true; document.body.classList.remove( 'deprat-modal-open' ); }
+        function open() {
+            dialog.hidden = false;
+            document.body.classList.add( 'deprat-modal-open' );
+            error.hidden = true;
+            name.value = '';
+            name.focus();
+        }
+        function fail( message ) { error.textContent = message; error.hidden = false; }
+        function addNativeCategory( id, label, parentId ) {
+            var list = document.getElementById( 'product_catchecklist' );
+            if ( ! list ) { return; }
+            var target = list;
+            if ( parentId ) {
+                var parentInput = list.querySelector( 'input[value="' + parentId + '"]' );
+                if ( parentInput ) {
+                    var li = parentInput.closest( 'li' );
+                    if ( li ) {
+                        target = li.querySelector( 'ul.children' );
+                        if ( ! target ) {
+                            target = document.createElement( 'ul' );
+                            target.className = 'children';
+                            li.appendChild( target );
+                        }
+                    }
+                }
+            }
+            var li = document.createElement( 'li' );
+            li.id = 'product_cat-' + id;
+            var text = document.createElement( 'label' );
+            var checkbox = document.createElement( 'input' );
+            checkbox.type = 'checkbox';
+            checkbox.name = 'tax_input[product_cat][]';
+            checkbox.value = String( id );
+            checkbox.checked = true;
+            text.appendChild( checkbox );
+            text.appendChild( document.createTextNode( ' ' + label ) );
+            li.appendChild( text );
+            target.appendChild( li );
+            list.dispatchEvent( new Event( 'change', { bubbles: true } ) );
+        }
+        editor.addEventListener( 'click', function ( event ) {
+            if ( event.target.closest( '[data-category-open]' ) ) { open(); }
+            if ( event.target.closest( '[data-category-close]' ) ) { close(); }
+        } );
+        document.addEventListener( 'keydown', function ( event ) { if ( event.key === 'Escape' && ! dialog.hidden ) { close(); } } );
+        submit.addEventListener( 'click', function () {
+            var value = name.value.trim();
+            if ( ! value ) { fail( 'Renseignez un nom de catégorie.' ); name.focus(); return; }
+            if ( ! window.depratProductEditor || ! window.depratProductEditor.ajaxUrl ) { fail( 'Configuration AJAX indisponible.' ); return; }
+            submit.disabled = true;
+            error.hidden = true;
+            var body = new URLSearchParams();
+            body.set( 'action', 'deprat_product_category_create' );
+            body.set( 'nonce', window.depratProductEditor.categoryNonce );
+            body.set( 'name', value );
+            body.set( 'parent', parent.value );
+            window.fetch( window.depratProductEditor.ajaxUrl, {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
+                body: body.toString()
+            } ).then( function ( response ) { return response.json(); } ).then( function (json) {
+                if ( ! json.success || ! json.data ) { fail( json.data && json.data.message ? json.data.message : 'La création a échoué.' ); return; }
+                addNativeCategory( json.data.id, json.data.name, json.data.parent );
+                var option = document.createElement( 'option' );
+                option.value = String( json.data.id );
+                option.textContent = json.data.name;
+                parent.appendChild( option );
+                close();
+            } ).catch( function () { fail( 'Erreur réseau. Réessayez.' ); } ).finally( function () { submit.disabled = false; } );
+        } );
+    }
+
+    function setupDiagrams( editor ) {
+        var list = editor.querySelector( '[data-diagrams-list]' );
+        if ( ! list ) { return; }
+        function renumber() {
+            list.querySelectorAll( '[data-diagram-row]' ).forEach( function ( row, index ) {
+                var label = row.querySelector( '.deprat-tech-diagram-index' );
+                if ( label ) { label.textContent = 'Schéma ' + ( index + 1 ); }
+                row.querySelector( '[data-diagram-title]' ).name = 'deprat_product_tech[diagrams][' + index + '][title]';
+                row.querySelector( '[data-diagram-image]' ).name = 'deprat_product_tech[diagrams][' + index + '][image]';
+            } );
+        }
+        function choose( row ) {
+            if ( ! window.wp || ! window.wp.media ) { return; }
+            var frame = window.wp.media( { title: 'Choisir un schéma', button: { text: 'Utiliser cette image' }, library: { type: 'image' }, multiple: false } );
+            frame.on( 'select', function () {
+                var selected = frame.state().get( 'selection' ).first();
+                if ( ! selected ) { return; }
+                var file = selected.toJSON();
+                if ( file.type !== 'image' ) { return; }
+                row.querySelector( '[data-diagram-image]' ).value = file.id;
+                var preview = row.querySelector( '[data-diagram-preview]' );
+                preview.textContent = '';
+                var img = document.createElement( 'img' );
+                img.src = file.sizes && file.sizes.medium ? file.sizes.medium.url : file.url;
+                img.alt = row.querySelector( '[data-diagram-title]' ).value || 'Schéma technique';
+                preview.appendChild( img );
+            } );
+            frame.open();
+        }
+        editor.addEventListener( 'click', function ( event ) {
+            var add = event.target.closest( '[data-diagram-add]' );
+            if ( add ) {
+                var row = document.createElement( 'article' );
+                row.className = 'deprat-tech-diagram-entry';
+                row.setAttribute( 'data-diagram-row', '' );
+                row.innerHTML = '<div class="deprat-tech-diagram-toolbar"><span class="deprat-tech-diagram-index"></span><div><button type="button" class="button" data-diagram-up aria-label="Monter le schéma">↑</button> <button type="button" class="button" data-diagram-down aria-label="Descendre le schéma">↓</button> <button type="button" class="button-link-delete" data-diagram-delete>Supprimer</button></div></div><label class="deprat-tech-field"><span>Titre du schéma</span><input data-diagram-title placeholder="Ex. Schéma de raccordement électrique"></label><input type="hidden" data-diagram-image><div class="deprat-tech-media-preview" data-diagram-preview>Aucun schéma sélectionné</div><button type="button" class="button" data-diagram-select>Choisir une image</button>';
+                list.appendChild( row ); renumber();
+                row.querySelector( '[data-diagram-title]' ).focus();
+                return;
+            }
+            var row = event.target.closest( '[data-diagram-row]' );
+            if ( ! row || ! list.contains( row ) ) { return; }
+            if ( event.target.closest( '[data-diagram-select]' ) ) { choose( row ); }
+            if ( event.target.closest( '[data-diagram-delete]' ) ) { row.remove(); renumber(); }
+            if ( event.target.closest( '[data-diagram-up]' ) && row.previousElementSibling ) { list.insertBefore( row, row.previousElementSibling ); renumber(); }
+            if ( event.target.closest( '[data-diagram-down]' ) && row.nextElementSibling ) { list.insertBefore( row.nextElementSibling, row ); renumber(); }
+        } );
+        renumber();
+    }
+
     function setupProductEditor( editor ) {
         if ( ! document.getElementById ) {
             return;
@@ -187,6 +340,9 @@
             return;
         }
         setupProductEditor( editor );
+        setupPackageSummary( editor );
+        setupCategoryModal( editor );
+        setupDiagrams( editor );
 
         function nextIndex( container, type ) {
             var highest = -1;

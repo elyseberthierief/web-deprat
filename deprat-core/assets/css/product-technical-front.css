@@ -22,3 +22,7 @@
 .deprat-tech-front a.deprat-tech-download { display: inline-block; max-width: 100%; padding: 10px 15px; border: 1px solid #0b59ad; border-radius: 6px; color: #0758ad; background: #fff; text-decoration: none; font-weight: 600; }
 .deprat-tech-front a.deprat-tech-download:hover, .deprat-tech-front a.deprat-tech-download:focus { background: #edf5ff; color: #063a76; }
 @media (max-width: 767px) { .deprat-tech-front-grid, .deprat-tech-images { grid-template-columns: 1fr; } .deprat-tech-schematics { grid-column: auto; } .deprat-tech-front-card dl div { grid-template-columns: 1fr; gap: 3px; } }
+
+.deprat-tech-front .deprat-tech-package-generated { margin: 0 0 14px; padding: 14px 16px; background: #f1f6fc; border-left: 4px solid #d8a631; border-radius: 5px; color: #103262; font-size: 1.05em; font-weight: 700; line-height: 1.5; }
+.deprat-tech-front .deprat-tech-images { grid-template-columns: repeat(2,minmax(0,1fr)); }
+@media (max-width: 767px) { .deprat-tech-front .deprat-tech-images { grid-template-columns: 1fr; } }
