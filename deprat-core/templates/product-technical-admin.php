@@ -6,6 +6,8 @@ wp_nonce_field( 'deprat_product_tech_save', 'deprat_product_tech_nonce' );
 $description = isset( $data['description'] ) && is_scalar( $data['description'] ) ? (string) $data['description'] : '';
 $delivery = isset( $data['delivery'] ) && is_scalar( $data['delivery'] ) ? (string) $data['delivery'] : '';
 $packaging = isset( $data['packaging'] ) && is_scalar( $data['packaging'] ) ? (string) $data['packaging'] : '';
+$package_count = isset( $data['package_count'] ) && is_scalar( $data['package_count'] ) ? (string) $data['package_count'] : '';
+$all_diagrams = deprat_product_tech_diagrams( $data );
 $package_quantity = isset( $data['package_quantity'] ) && is_scalar( $data['package_quantity'] ) ? (string) $data['package_quantity'] : '';
 $media_fields = array(
     'datasheet' => array( 'label' => 'Fiche technique PDF', 'kind' => 'pdf' ),
@@ -58,9 +60,17 @@ $render_media = static function ( $key, $field ) use ( $data ) {
             <label class="deprat-tech-field"><span>Nom du produit</span><input type="text" data-product-name autocomplete="off"></label>
             <label class="deprat-tech-field"><span>Référence du produit</span><input type="text" data-product-sku autocomplete="off"></label>
             <label class="deprat-tech-field"><span>Type de produit</span><select data-product-type></select></label>
-            <div class="deprat-tech-field"><span>Catégorie</span><details class="deprat-tech-category" data-category-picker><summary data-category-summary>Choisir une catégorie</summary><div class="deprat-tech-category-options" data-category-options></div></details></div>
+            <div class="deprat-tech-field"><span>Catégorie</span><details class="deprat-tech-category" data-category-picker><summary data-category-summary>Choisir une catégorie</summary><div class="deprat-tech-category-options" data-category-options></div></details>
+                <button class="button deprat-category-create-button" type="button" data-category-open>+ Nouvelle catégorie / sous-catégorie</button></div>
         </section>
     </div>
+
+    <section class="deprat-tech-card deprat-tech-description-card">
+        <h3><span class="dashicons dashicons-edit" aria-hidden="true"></span> Description du produit</h3>
+        <label class="deprat-tech-field"><span>Présentation et utilisation du produit</span>
+            <textarea name="deprat_product_tech[description]" rows="5" placeholder="Décrivez le produit, son utilisation et ses avantages."><?php echo esc_textarea( $description ); ?></textarea>
+        </label>
+    </section>
     <div class="deprat-tech-layout">
         <div class="deprat-tech-main">
             <section class="deprat-tech-card">
@@ -79,7 +89,7 @@ $render_media = static function ( $key, $field ) use ( $data ) {
                 </div>
                 <div class="deprat-tech-delivery-mirror" data-delivery-mirror hidden><label for="deprat-delivery-proxy">Livraison</label><input id="deprat-delivery-proxy" type="text" data-delivery-proxy value="<?php echo esc_attr( $delivery ); ?>"></div>
                 <button type="button" class="button deprat-tech-add" data-add-row="features">+ Ajouter une caractéristique</button>
-                <details class="deprat-tech-description-editor" <?php echo '' !== $description ? 'open' : ''; ?>><summary>Description technique</summary><label class="deprat-tech-field"><span class="screen-reader-text">Description technique</span><textarea name="deprat_product_tech[description]" rows="3" placeholder="Présentation et utilisation du produit"><?php echo esc_textarea( $description ); ?></textarea></label></details>
+
             </section>
 
             <section class="deprat-tech-card">
@@ -112,21 +122,26 @@ $render_media = static function ( $key, $field ) use ( $data ) {
                 <button type="button" class="button deprat-tech-add" data-add-row="tests">+ Ajouter un essai</button>
             </section>
 
-            <section class="deprat-tech-card">
+
+            <section class="deprat-tech-card deprat-package-editor">
                 <h3><span class="dashicons dashicons-archive" aria-hidden="true"></span> Livraison et conditionnement</h3>
-                <div class="deprat-tech-fields">
-                    <label class="deprat-tech-field"><span>Livraison</span><input name="deprat_product_tech[delivery]" value="<?php echo esc_attr( $delivery ); ?>" placeholder="Ex. longueurs de 6 m"></label>
-                    <label class="deprat-tech-field"><span>Conditionnement</span><input name="deprat_product_tech[packaging]" value="<?php echo esc_attr( $packaging ); ?>" placeholder="Ex. carton, lot ou unité"></label>
-                    <label class="deprat-tech-field"><span>Nombre de pièces par conditionnement</span><input type="number" min="1" max="99999999" step="1" name="deprat_product_tech[package_quantity]" value="<?php echo esc_attr( $package_quantity ); ?>" placeholder="À renseigner"></label>
+                <div class="deprat-tech-package-fields">
+                    <label class="deprat-tech-field"><span>Quantité de conditionnements</span>
+                        <input type="number" min="1" max="999999" step="1" name="deprat_product_tech[package_count]" value="<?php echo esc_attr( $package_count ); ?>" placeholder="Ex. 2" data-package-count>
+                    </label>
+                    <label class="deprat-tech-field"><span>Type de conditionnement</span>
+                        <input type="text" list="deprat-packaging-suggestions" autocomplete="off" name="deprat_product_tech[packaging]" value="<?php echo esc_attr( $packaging ); ?>" placeholder="Ex. carton" data-package-type>
+                        <datalist id="deprat-packaging-suggestions"><?php foreach ( deprat_product_tech_packaging_suggestions() as $suggestion ) : ?><option value="<?php echo esc_attr( $suggestion ); ?>"></option><?php endforeach; ?></datalist>
+                    </label>
+                    <label class="deprat-tech-field"><span>Nombre de pièces par conditionnement</span>
+                        <input type="number" min="1" max="99999999" step="1" name="deprat_product_tech[package_quantity]" value="<?php echo esc_attr( $package_quantity ); ?>" placeholder="Ex. 50" data-package-pieces>
+                    </label>
                 </div>
-                <p class="deprat-tech-help">Ces informations décrivent le produit. La quantité saisie dans une demande reste celle choisie par le client.</p>
-            </section>
-            <section class="deprat-tech-card deprat-tech-schematics-editor">
-                <h3><span class="dashicons dashicons-editor-contract" aria-hidden="true"></span> Schémas et dimensions</h3>
-                <div class="deprat-tech-diagrams">
-                    <?php $render_media( 'technical_image', $media_fields['technical_image'] ); ?>
-                    <?php $render_media( 'dimensions_image', $media_fields['dimensions_image'] ); ?>
-                </div>
+                <div class="deprat-package-summary" aria-live="polite" data-package-summary>Renseignez les trois champs pour afficher le récapitulatif.</div>
+                <label class="deprat-tech-field deprat-package-delivery"><span>Informations complémentaires de livraison</span>
+                    <input name="deprat_product_tech[delivery]" value="<?php echo esc_attr( $delivery ); ?>" placeholder="Ex. longueur de 6 m, transport sur palette">
+                </label>
+                <p class="deprat-tech-help">Le récapitulatif se calcule automatiquement à partir des valeurs enregistrées. Les quantités de la demande de devis restent indépendantes.</p>
             </section>
         </div>
 
@@ -136,8 +151,46 @@ $render_media = static function ( $key, $field ) use ( $data ) {
                 <div class="deprat-featured-preview" data-featured-preview></div>
                 <div class="deprat-tech-media-actions"><button type="button" class="button" data-featured-select>Choisir une image</button><button type="button" class="button-link-delete" data-featured-remove hidden>Retirer</button></div>
             </section>
+
             <?php $render_media( 'datasheet', $media_fields['datasheet'] ); ?>
+            <section class="deprat-tech-card deprat-tech-diagrams-panel">
+                <h3><span class="dashicons dashicons-editor-contract" aria-hidden="true"></span> Schémas techniques et dimensionnels</h3>
+                <p class="deprat-tech-help">Ajoutez des schémas et organisez-les avec les flèches.</p>
+                <input type="hidden" name="deprat_product_tech[diagrams_present]" value="1">
+                <div class="deprat-tech-diagrams-list" data-diagrams-list>
+                <?php foreach ( $all_diagrams as $index => $diagram ) : ?>
+                    <article class="deprat-tech-diagram-entry" data-diagram-row>
+                        <div class="deprat-tech-diagram-toolbar">
+                            <span class="deprat-tech-diagram-index">Schéma <?php echo esc_html( $index + 1 ); ?></span>
+                            <div><button type="button" class="button" data-diagram-up aria-label="Monter le schéma">↑</button>
+                            <button type="button" class="button" data-diagram-down aria-label="Descendre le schéma">↓</button>
+                            <button type="button" class="button-link-delete" data-diagram-delete>Supprimer</button></div>
+                        </div>
+                        <label class="deprat-tech-field"><span>Titre du schéma</span><input data-diagram-title name="deprat_product_tech[diagrams][<?php echo esc_attr( $index ); ?>][title]" value="<?php echo esc_attr( $diagram['title'] ); ?>" placeholder="Ex. Schéma de montage"></label>
+                        <input type="hidden" data-diagram-image name="deprat_product_tech[diagrams][<?php echo esc_attr( $index ); ?>][image]" value="<?php echo esc_attr( $diagram['image'] ); ?>">
+                        <div class="deprat-tech-media-preview" data-diagram-preview><?php echo wp_get_attachment_image( $diagram['image'], 'medium', false, array( 'alt' => $diagram['title'] ) ); ?></div>
+                        <button type="button" class="button" data-diagram-select>Modifier le schéma</button>
+                    </article>
+                <?php endforeach; ?>
+                </div>
+                <button type="button" class="button deprat-tech-add" data-diagram-add>+ Ajouter un schéma</button>
+            </section>
         </aside>
+    </div>
+
+    <div class="deprat-category-modal" data-category-modal hidden>
+        <div class="deprat-category-backdrop" data-category-close></div>
+        <div class="deprat-category-dialog" role="dialog" aria-modal="true" aria-labelledby="deprat-category-title">
+            <header><h2 id="deprat-category-title">Créer une catégorie</h2><button type="button" class="button" data-category-close aria-label="Fermer">×</button></header>
+            <label class="deprat-tech-field"><span>Nom de la catégorie</span><input type="text" maxlength="160" data-category-name placeholder="Ex. Tubes acier"></label>
+            <label class="deprat-tech-field"><span>Catégorie parente</span><select data-category-parent><option value="0">Aucune — catégorie principale</option>
+                <?php foreach ( get_terms( array( 'taxonomy' => 'product_cat', 'hide_empty' => false ) ) as $term ) : ?>
+                    <option value="<?php echo esc_attr( $term->term_id ); ?>"><?php echo esc_html( $term->name ); ?></option>
+                <?php endforeach; ?></select>
+            </label>
+            <p class="deprat-category-error" role="alert" data-category-error hidden></p>
+            <footer><button type="button" class="button" data-category-close>Annuler</button><button type="button" class="button button-primary" data-category-submit>Créer et sélectionner</button></footer>
+        </div>
     </div>
     <button type="button" class="deprat-tech-native-toggle" data-native-toggle aria-expanded="false" hidden>Afficher les autres options WooCommerce</button>
 
