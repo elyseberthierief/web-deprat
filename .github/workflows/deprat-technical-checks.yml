@@ -26,3 +26,34 @@ jobs:
         run: |
           node --check deprat-core/assets/js/product-technical-admin.js
           node tests/product-technical-browser-test.js
+
+  wordpress-integration:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: test
+          MYSQL_ROOT_HOST: "%"
+          MYSQL_DATABASE: wordpress
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -ptest"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Préparer WordPress et WooCommerce
+        run: |
+          curl -fsSL --retry 3 https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar -o /tmp/wp-cli.phar
+          mkdir -p /tmp/deprat-wp
+          php /tmp/wp-cli.phar core download --locale=fr_FR --path=/tmp/deprat-wp
+          php /tmp/wp-cli.phar config create --dbname=wordpress --dbuser=root --dbpass=test --dbhost=127.0.0.1:3306 --path=/tmp/deprat-wp
+          php /tmp/wp-cli.phar core install --url=http://localhost --title=DEPRAT --admin_user=deprat-test --admin_password=deprat-test --admin_email=test@example.test --skip-email --path=/tmp/deprat-wp
+          php /tmp/wp-cli.phar plugin install woocommerce --version=11.2.1 --activate --path=/tmp/deprat-wp
+          cp -R deprat-core /tmp/deprat-wp/wp-content/plugins/deprat-core
+          php /tmp/wp-cli.phar plugin activate deprat-core --path=/tmp/deprat-wp
+      - name: Vérifier la fiche produit avec WooCommerce
+        run: php /tmp/wp-cli.phar eval-file "$GITHUB_WORKSPACE/tests/product-wordpress-integration.php" --path=/tmp/deprat-wp
