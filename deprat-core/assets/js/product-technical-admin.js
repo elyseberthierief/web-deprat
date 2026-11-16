@@ -154,6 +154,150 @@
         renumber();
     }
 
+
+    function setupGallery( editor ) {
+        var field = editor.querySelector( '[data-gallery-ids]' );
+        var list = editor.querySelector( '[data-gallery-list]' );
+        if ( ! field || ! list ) { return; }
+
+        function syncIds() {
+            field.value = Array.prototype.map.call( list.querySelectorAll( '[data-gallery-item]' ), function ( item ) {
+                return item.getAttribute( 'data-gallery-id' );
+            } ).join( ',' );
+        }
+        function addFile( file ) {
+            if ( ! file || file.type !== 'image' || ! file.id ||
+                 list.querySelector( '[data-gallery-id="' + Number( file.id ) + '"]' ) ) { return; }
+            var item = document.createElement( 'article' );
+            item.className = 'deprat-product-gallery-item';
+            item.setAttribute( 'data-gallery-item', '' );
+            item.setAttribute( 'data-gallery-id', String( file.id ) );
+            var picture = document.createElement( 'img' );
+            picture.src = file.sizes && file.sizes.thumbnail ? file.sizes.thumbnail.url : file.url;
+            picture.alt = file.alt || 'Photo complémentaire du produit';
+            var remove = document.createElement( 'button' );
+            remove.type = 'button';
+            remove.className = 'button-link-delete';
+            remove.setAttribute( 'data-gallery-remove', '' );
+            remove.textContent = 'Retirer';
+            item.appendChild( picture );
+            item.appendChild( remove );
+            list.appendChild( item );
+        }
+        editor.addEventListener( 'click', function ( event ) {
+            if ( event.target.closest( '[data-gallery-remove]' ) ) {
+                var item = event.target.closest( '[data-gallery-item]' );
+                if ( item && list.contains( item ) ) { item.remove(); syncIds(); }
+                return;
+            }
+            if ( ! event.target.closest( '[data-gallery-add]' ) || ! window.wp || ! window.wp.media ) { return; }
+            var frame = window.wp.media( {
+                title: 'Photos complémentaires du produit',
+                button: { text: 'Ajouter à la galerie' },
+                library: { type: 'image' },
+                multiple: true
+            } );
+            frame.on( 'select', function () {
+                frame.state().get( 'selection' ).each( function ( attachment ) {
+                    addFile( attachment.toJSON() );
+                } );
+                syncIds();
+            } );
+            frame.open();
+        } );
+        syncIds();
+    }
+
+    function setupDatasheets( editor ) {
+        var list = editor.querySelector( '[data-datasheets-list]' );
+        if ( ! list ) { return; }
+
+        function renumber() {
+            list.querySelectorAll( '[data-datasheet-row]' ).forEach( function ( row, index ) {
+                row.querySelector( 'strong' ).textContent = 'Document ' + ( index + 1 );
+                row.querySelector( '[data-datasheet-title]' ).name = 'deprat_product_tech[datasheets][' + index + '][title]';
+                row.querySelector( '[data-datasheet-file]' ).name = 'deprat_product_tech[datasheets][' + index + '][file]';
+            } );
+        }
+
+        function choose( row ) {
+            if ( ! window.wp || ! window.wp.media ) { return; }
+            var frame = window.wp.media( {
+                title: 'Choisir une fiche technique PDF',
+                button: { text: 'Ajouter ce PDF' },
+                library: { type: 'application/pdf' },
+                multiple: false
+            } );
+            frame.on( 'select', function () {
+                var selected = frame.state().get( 'selection' ).first();
+                if ( ! selected ) { return; }
+                var file = selected.toJSON();
+                if ( file.mime !== 'application/pdf' ) {
+                    window.alert( 'Sélectionnez un fichier PDF.' );
+                    return;
+                }
+                row.querySelector( '[data-datasheet-file]' ).value = file.id;
+                var preview = row.querySelector( '[data-datasheet-preview]' );
+                preview.textContent = '';
+                var link = document.createElement( 'a' );
+                link.textContent = file.filename || file.title || 'Fiche technique PDF';
+                link.href = file.url;
+                link.target = '_blank';
+                link.rel = 'noopener noreferrer';
+                preview.appendChild( link );
+                row.querySelector( '[data-datasheet-select]' ).textContent = 'Remplacer le PDF';
+            } );
+            frame.open();
+        }
+
+        editor.addEventListener( 'click', function ( event ) {
+            if ( event.target.closest( '[data-datasheet-add]' ) ) {
+                var row = document.createElement( 'article' );
+                row.className = 'deprat-datasheet-entry';
+                row.setAttribute( 'data-datasheet-row', '' );
+                row.innerHTML = '<div class="deprat-tech-diagram-toolbar"><strong></strong><button type="button" class="button-link-delete" data-datasheet-delete>Supprimer</button></div><label class="deprat-tech-field"><span>Nom du document</span><input data-datasheet-title placeholder="Ex. Notice de montage"></label><input type="hidden" data-datasheet-file><div class="deprat-tech-media-preview" data-datasheet-preview>Aucun PDF sélectionné</div><button type="button" class="button" data-datasheet-select>Choisir un PDF</button>';
+                list.appendChild( row );
+                renumber();
+                row.querySelector( '[data-datasheet-title]' ).focus();
+                return;
+            }
+            var row = event.target.closest( '[data-datasheet-row]' );
+            if ( ! row || ! list.contains( row ) ) { return; }
+            if ( event.target.closest( '[data-datasheet-delete]' ) ) { row.remove(); renumber(); return; }
+            if ( event.target.closest( '[data-datasheet-select]' ) ) { choose( row ); }
+        } );
+        renumber();
+    }
+
+    function setupAutoGrow( editor ) {
+        if ( ! editor.querySelectorAll ) { return; }
+        function adjust( textarea ) {
+            if ( ! textarea || ! textarea.matches || ! textarea.matches( '[data-auto-grow]' ) ) { return; }
+            textarea.style.height = 'auto';
+            textarea.style.height = Math.max( 40, textarea.scrollHeight + 3 ) + 'px';
+        }
+        editor.querySelectorAll( '[data-auto-grow]' ).forEach( adjust );
+        editor.addEventListener( 'input', function ( event ) { adjust( event.target ); } );
+        if ( window.addEventListener ) {
+            window.addEventListener( 'resize', function () {
+                editor.querySelectorAll( '[data-auto-grow]' ).forEach( adjust );
+            } );
+        }
+        editor.addEventListener( 'click', function ( event ) {
+            if ( event.target.closest( '[data-add-row="tests"]' ) ) {
+                var list = editor.querySelector( '[data-rows="tests"]' );
+                if ( list ) {
+                    // L'ajout dynamique est traité après le clic par l'autre gestionnaire.
+                    if ( window.requestAnimationFrame ) {
+                        window.requestAnimationFrame( function () {
+                            list.querySelectorAll( '[data-auto-grow]' ).forEach( adjust );
+                        } );
+                    }
+                }
+            }
+        } );
+    }
+
     function setupProductEditor( editor ) {
         if ( ! document.getElementById ) {
             return;
@@ -316,14 +460,6 @@
             }
         }
 
-        var delivery = editor.querySelector( '[name="deprat_product_tech[delivery]"]' );
-        var deliveryProxy = editor.querySelector( '[data-delivery-proxy]' );
-        var deliveryMirror = editor.querySelector( '[data-delivery-mirror]' );
-        connectText( deliveryProxy, delivery );
-        if ( delivery && deliveryProxy && deliveryMirror ) {
-            deliveryMirror.hidden = false;
-        }
-
         box.classList.remove( 'closed' );
         content.insertBefore( box, content.firstChild );
         chrome.hidden = false;
@@ -343,6 +479,9 @@
         setupPackageSummary( editor );
         setupCategoryModal( editor );
         setupDiagrams( editor );
+        setupGallery( editor );
+        setupDatasheets( editor );
+        setupAutoGrow( editor );
 
         function nextIndex( container, type ) {
             var highest = -1;
