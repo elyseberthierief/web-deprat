@@ -420,6 +420,74 @@
         } );
     }
 
+
+    function setupProduct3D( editor ) {
+        var input = editor.querySelector( '[data-glb-id]' );
+        var upload = editor.querySelector( '[data-glb-upload]' );
+        var remove = editor.querySelector( '[data-glb-remove]' );
+        var status = editor.querySelector( '[data-glb-status]' );
+        if ( ! input || ! upload || ! remove || ! status ) { return; }
+        function setModel( id, url, label ) {
+            input.value = id ? String( id ) : '';
+            status.textContent = '';
+            if ( id && url ) {
+                var link = document.createElement( 'a' );
+                link.href = url;
+                link.target = '_blank';
+                link.rel = 'noopener noreferrer';
+                link.textContent = label || 'Fichier 3D (.GLB)';
+                status.appendChild( link );
+            } else {
+                status.textContent = 'Aucun fichier 3D sélectionné';
+            }
+            remove.disabled = ! id;
+        }
+        remove.addEventListener( 'click', function () {
+            setModel( 0, '', '' );
+        } );
+        upload.addEventListener( 'click', function () {
+            var chooser = document.createElement( 'input' );
+            chooser.type = 'file';
+            chooser.accept = '.glb,model/gltf-binary';
+            chooser.hidden = true;
+            document.body.appendChild( chooser );
+            chooser.addEventListener( 'change', function () {
+                var file = chooser.files && chooser.files[0];
+                chooser.remove();
+                if ( ! file ) { return; }
+                var settings = window.depratProductEditor || {};
+                if ( ! settings.postId || ! settings.uploadNonce || ! settings.ajaxUrl ) {
+                    window.alert( 'Enregistrez d’abord le produit avant d’ajouter la vue 3D.' );
+                    return;
+                }
+                var form = new FormData();
+                form.append( 'action', 'deprat_product_glb_upload' );
+                form.append( 'post_id', String( settings.postId ) );
+                form.append( 'nonce', settings.uploadNonce );
+                form.append( 'file', file );
+                var original = upload.textContent;
+                upload.disabled = true;
+                upload.textContent = 'Import du fichier GLB…';
+                fetch( settings.ajaxUrl, { method: 'POST', credentials: 'same-origin', body: form } )
+                    .then( function ( response ) { return response.json(); } )
+                    .then( function ( response ) {
+                        if ( ! response.success || ! response.data ) {
+                            throw new Error( response.data && response.data.message ? response.data.message : 'Le fichier 3D n’a pas pu être importé.' );
+                        }
+                        setModel( response.data.id, response.data.url, response.data.filename );
+                    } )
+                    .catch( function ( error ) {
+                        window.alert( error.message || 'Échec de l’import GLB.' );
+                    } )
+                    .finally( function () {
+                        upload.disabled = false;
+                        upload.textContent = original;
+                    } );
+            } );
+            chooser.click();
+        } );
+    }
+
     function setupProductEditor( editor ) {
         if ( ! document.getElementById ) {
             return;
@@ -605,6 +673,7 @@
         setupDatasheets( editor );
         setupAutoGrow( editor );
         setupQuickUploads( editor );
+        setupProduct3D( editor );
 
         function nextIndex( container, type ) {
             var highest = -1;
