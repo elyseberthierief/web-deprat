@@ -17,6 +17,7 @@ function get_post_mime_type( $id ) { return isset( $GLOBALS['test_attachments'][
 function wp_attachment_is_image( $id ) { return 0 === strpos( get_post_mime_type( $id ), 'image/' ); }
 function wp_unslash( $value ) { return $value; }
 function wp_slash( $value ) { return $value; }
+function sanitize_key( $value ) { return strtolower( preg_replace( '/[^a-z0-9_\-]/', '', $value ) ); }
 function sanitize_text_field( $value ) { return trim( strip_tags( $value ) ); }
 function sanitize_textarea_field( $value ) { return trim( strip_tags( $value ) ); }
 function wp_verify_nonce( $nonce, $action ) { return 'valid' === $nonce && 'deprat_product_tech_save' === $action; }
@@ -35,6 +36,7 @@ function admin_url( $path ) { return 'https://example.test/wp-admin/' . $path; }
 function expect( $condition, $message ) { if ( ! $condition ) { fwrite( STDERR, "ÉCHEC : " . $message . "\n" ); exit( 1 ); } }
 
 require __DIR__ . '/../deprat-core/includes/product-technical-data.php';
+require __DIR__ . '/../deprat-core/includes/product-packaging.php';
 require __DIR__ . '/../deprat-core/includes/product-single-layout.php';
 require __DIR__ . '/../deprat-core/includes/product-3d.php';
 
@@ -142,4 +144,18 @@ expect( ! deprat_product_3d_valid_binary( $tmp_glb, strlen( $valid_glb ) + 1 ), 
 file_put_contents( $tmp_glb, "%PDF-1.4\n" );
 expect( ! deprat_product_3d_valid_binary( $tmp_glb, filesize( $tmp_glb ) ), 'Un PDF renommé en GLB est refusé.' );
 unlink( $tmp_glb );
+
+$meter_package = deprat_packaging_clean_row( array(
+    'mode' => 'length', 'title' => 'Grand lot',
+    'total_m' => '504', 'length_m' => '6',
+) );
+expect( $meter_package && 84 === $meter_package['sections'], '504 m par 6 m donnent 84 longueurs.' );
+expect( false !== strpos( deprat_packaging_total_text( $meter_package, 2 ), '168 longueurs' ), 'Deux conditionnements donnent 168 longueurs.' );
+expect( false !== strpos( deprat_packaging_total_text( $meter_package, 2 ), '1 008 m' ), 'Deux conditionnements donnent 1 008 mètres.' );
+expect( ! deprat_packaging_clean_row( array( 'mode' => 'length', 'total_m' => '500', 'length_m' => '6' ) ), 'Les longueurs fractionnaires sont interdites.' );
+$piece_package = deprat_packaging_clean_row( array( 'mode' => 'pieces', 'count' => '2', 'type' => 'carton', 'pieces' => '50' ) );
+expect( false !== strpos( deprat_packaging_total_text( $piece_package, 2 ), '200 pièces' ), 'Deux lots de deux cartons de 50 donnent 200 pièces.' );
+$choice_data = array( 'packages' => array( $meter_package, $piece_package ) );
+expect( 2 === count( deprat_product_tech_packages( $choice_data ) ), 'Les choix mètres et pièces sont sauvegardables.' );
+
 echo "Tests de sauvegarde, droits, médias et rendu boutique réussis.\n";
