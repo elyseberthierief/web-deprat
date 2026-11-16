@@ -144,6 +144,8 @@ $gallery_ids = $gallery_product ? $gallery_product->get_gallery_image_ids() : ar
                 <button type="button" class="button deprat-tech-add deprat-tech-quick-upload" data-quick-upload="gallery">+ Importer des photos</button>
             </section>
 
+            <?php deprat_product_3d_render_admin( $post->ID ); ?>
+
             <section class="deprat-tech-card deprat-tech-pdf-panel">
                 <h3><span class="dashicons dashicons-media-document" aria-hidden="true"></span> Fiches techniques PDF</h3>
                 <p class="deprat-tech-help">Ajoutez plusieurs documents, chacun avec son titre. Tous seront téléchargeables par le client.</p>
