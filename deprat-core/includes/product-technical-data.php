@@ -419,6 +419,10 @@ function deprat_product_tech_save( $post_id ) {
         'dimensions_image' => deprat_product_tech_attachment( isset( $input['dimensions_image'] ) ? $input['dimensions_image'] : 0, 'image' ),
         'datasheet' => deprat_product_tech_attachment( isset( $input['datasheet'] ) ? $input['datasheet'] : 0, 'pdf' ),
     );
+    if ( isset( $input['packages_present'] ) ) {
+        $rows = isset( $input['packages'] ) && is_array( $input['packages'] ) ? array_slice( $input['packages'], 0, 30 ) : array();
+        $clean['packages'] = array_values( array_filter( array_map( 'deprat_packaging_clean_row', $rows ) ) );
+    }
     if ( isset( $input['diagrams_present'] ) ) { $clean['diagrams'] = $diagrams; }
     if ( function_exists( 'wp_update_post' ) ) {
         foreach ( $diagrams as $diagram ) { deprat_product_tech_enrich_image( $diagram['image'], $post_id, 'diagram', $diagram['title'] ); }
@@ -490,6 +494,7 @@ function deprat_product_tech_render_front() {
     $datasheets = deprat_product_tech_datasheets( $data );
     $diagrams = deprat_product_tech_diagrams( $data );
     $package_summary = deprat_product_tech_package_summary( $data );
+    $new_packages = deprat_product_tech_packages( $data );
     $package_count = isset( $data['package_count'] ) ? absint( $data['package_count'] ) : 0;
     if ( ! $features && ! $tests && ! $norms && '' === $description && '' === $delivery && '' === $packaging && ! $package_quantity && ! $diagrams && ! $datasheets ) {
         return;
