@@ -54,7 +54,7 @@
 
         if ( switchBackground ) {
             switchBackground.addEventListener( 'click', function () {
-                backgroundOverride = backgroundOverride === 'auto' ? 'dark' : backgroundOverride === 'dark' ? 'light' : 'auto';
+                backgroundOverride = backgroundOverride === 'auto' ? ( automaticBackground === 'dark' ? 'light' : 'dark' ) : backgroundOverride === 'dark' ? 'light' : 'auto';
                 applyBackground();
             } );
         }
