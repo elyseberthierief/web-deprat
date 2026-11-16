@@ -120,7 +120,7 @@ function deprat_client_product_quote() {
     $single = deprat_client_product_package_label( $package );
     // Les coordonnées peuvent être configurées dans WordPress via ces deux options.
     $phone = (string) get_option( 'deprat_contact_phone', '03 20 89 68 00' );
-    $email = sanitize_email( (string) get_option( 'deprat_contact_email', get_option( 'admin_email' ) ) );
+    $email = sanitize_email( (string) get_option( 'deprat_contact_email', 'contact@deprat.com' ) );
     ?>
     <aside class="deprat-client-quote" aria-label="Demande de devis">
         <h2><span aria-hidden="true">▤</span> Ajouter à ma demande de devis</h2>
