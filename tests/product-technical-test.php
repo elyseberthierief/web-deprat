@@ -29,6 +29,7 @@ function wp_get_attachment_url( $id ) { return get_post_type( $id ) ? 'https://e
 function wp_get_attachment_image( $id ) { return '<img src="https://example.test/media/' . (int) $id . '" alt="schéma">'; }
 function wp_nonce_field() {}
 function get_the_title( $id ) { return 'Fichier ' . (int) $id; }
+function admin_url( $path ) { return 'https://example.test/wp-admin/' . $path; }
 function expect( $condition, $message ) { if ( ! $condition ) { fwrite( STDERR, "ÉCHEC : " . $message . "\n" ); exit( 1 ); } }
 
 require __DIR__ . '/../deprat-core/includes/product-technical-data.php';

@@ -38,3 +38,4 @@ for expected in "Fiche technique DEPRAT" "Acier galvanisé" "Conditionnement" "F
     grep -Fq "$expected" /tmp/deprat-admin.html || { echo "Administration : élément manquant : $expected" >&2; exit 1; }
 done
 echo "Pages Astra de la boutique et de l’administration, et téléchargement du PDF vérifiés."
+node "$GITHUB_WORKSPACE/tests/product-admin-real-browser.js" "$product_id"
