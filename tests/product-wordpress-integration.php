@@ -76,7 +76,7 @@ deprat_integration_assert( false !== has_action( 'woocommerce_after_single_produ
 ob_start();
 deprat_product_tech_render_admin( get_post( $product_id ) );
 $admin_html = ob_get_clean();
-foreach ( array( 'Caractéristiques techniques', 'Acier galvanisé', 'Normes', 'Valeurs testées', 'Conditionnement', 'Fiche technique PDF', 'Schéma des dimensions' ) as $expected ) {
+foreach ( array( 'Caractéristiques techniques', 'Acier galvanisé', 'Normes', 'Valeurs testées', 'Conditionnement', 'Fiche technique PDF', 'Schéma dimensionnel personnalisé' ) as $expected ) {
     deprat_integration_assert( false !== strpos( $admin_html, $expected ), 'Champ absent de l’administration : ' . $expected );
 }
 
@@ -84,7 +84,7 @@ $GLOBALS['product'] = wc_get_product( $product_id );
 ob_start();
 deprat_product_tech_render_front();
 $front_html = ob_get_clean();
-foreach ( array( 'Caractéristiques techniques', 'Acier galvanisé', '>0<', 'NF EN 12194', 'Couple de destruction', 'Longueurs de 6 m', 'Pièces par conditionnement', '>96<', 'Schéma technique', 'Schéma dimensionnel personnalisé', 'Télécharger la fiche technique PDF' ) as $expected ) {
+foreach ( array( 'Caractéristiques techniques', 'Acier galvanisé', '>0<', 'NF EN 12194', 'Couple de destruction', 'Longueurs de 6 m', '192 pièces', 'Schéma dimensionnel personnalisé', 'Télécharger la fiche technique PDF' ) as $expected ) {
     deprat_integration_assert( false !== strpos( $front_html, $expected ), 'Information absente de la boutique : ' . $expected );
 }
 
