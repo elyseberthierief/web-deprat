@@ -57,7 +57,19 @@ jobs:
           php /tmp/wp-cli.phar theme install astra --activate --path=/tmp/deprat-wp
           cp -R deprat-core /tmp/deprat-wp/wp-content/plugins/deprat-core
           php /tmp/wp-cli.phar plugin activate deprat-core --path=/tmp/deprat-wp
+      - name: Installer l’outil de test navigateur
+        run: npm install --prefix "$RUNNER_TEMP/deprat-browser" --no-save --no-audit --no-fund playwright-core@1.62.1
       - name: Vérifier la fiche produit avec WooCommerce
         run: php /tmp/wp-cli.phar eval-file "$GITHUB_WORKSPACE/tests/product-wordpress-integration.php" --path=/tmp/deprat-wp
       - name: Vérifier les pages Astra et le téléchargement du PDF
+        env:
+          NODE_PATH: ${{ runner.temp }}/deprat-browser/node_modules
         run: bash tests/product-http-test.sh
+      - name: Conserver l’aperçu de test
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: apercu-editeur-produit
+          path: ${{ runner.temp }}/deprat-editor-*.png
+          if-no-files-found: ignore
+          retention-days: 3

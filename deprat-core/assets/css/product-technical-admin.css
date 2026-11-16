@@ -1,30 +1,98 @@
-#deprat-product-technical { border: 1px solid #d3e0f0; border-radius: 10px; overflow: hidden; }
+/* Mise en page réservée à l’éditeur classique d’un produit. */
+body.deprat-product-editor-ready #wpbody-content { background: #eef4fb; }
+body.deprat-product-editor-ready #wpbody-content .wrap > h1,
+body.deprat-product-editor-ready #wpbody-content .wrap > .page-title-action { display: none; }
+body.deprat-product-editor-ready #poststuff { padding-top: 0; }
+body.deprat-product-editor-ready #poststuff #post-body.columns-2 { margin-right: 0; }
+body.deprat-product-editor-ready #post-body-content { float: none; width: 100%; min-width: 0; margin-bottom: 0; }
+body.deprat-product-editor-ready #post-body-content > #titlediv,
+body.deprat-product-editor-ready #post-body-content > #postdivrich,
+body.deprat-product-editor-ready #postbox-container-1,
+body.deprat-product-editor-ready #postbox-container-2 { display: none; }
+body.deprat-product-editor-ready.deprat-product-editor-advanced #post-body-content > #titlediv,
+body.deprat-product-editor-ready.deprat-product-editor-advanced #post-body-content > #postdivrich,
+body.deprat-product-editor-ready.deprat-product-editor-advanced #postbox-container-1,
+body.deprat-product-editor-ready.deprat-product-editor-advanced #postbox-container-2 { display: block; }
+body.deprat-product-editor-ready.deprat-product-editor-advanced #postbox-container-1,
+body.deprat-product-editor-ready.deprat-product-editor-advanced #postbox-container-2 { float: none; width: 100%; margin: 0; }
+
+#deprat-product-technical { border: 1px solid #d3e0f0; border-radius: 10px; overflow: visible; }
 #deprat-product-technical > .postbox-header { color: #102d5c; background: #f8fbff; border-bottom: 1px solid #dce6f3; }
 #deprat-product-technical > .inside { margin: 0; padding: 18px; background: #edf3f9; }
-.deprat-tech-editor { color: #142d56; font-family: "Agenda", "Agenda Std", Arial, sans-serif; }
+body.deprat-product-editor-ready #deprat-product-technical { margin: 0 0 20px; border: 0; box-shadow: none; background: transparent; }
+body.deprat-product-editor-ready #deprat-product-technical > .postbox-header { display: none; }
+body.deprat-product-editor-ready #deprat-product-technical > .inside { padding: 0; background: transparent; }
+.deprat-tech-editor { color: #102953; font-family: "Agenda", "Agenda Std", Arial, sans-serif; font-size: 14px; }
 .deprat-tech-editor *, .deprat-tech-editor *::before, .deprat-tech-editor *::after { box-sizing: border-box; }
-.deprat-tech-intro { margin: 0 0 16px; color: #526782; }
-.deprat-tech-layout { display: grid; grid-template-columns: minmax(0, 2fr) minmax(240px, 1fr); gap: 16px; align-items: start; }
+.deprat-tech-editor [hidden] { display: none !important; }
+.deprat-tech-breadcrumb { display: flex; gap: 9px; align-items: center; margin: 3px 0 16px; color: #4f6685; font-size: 13px; }
+.deprat-tech-breadcrumb a { color: #075bb5; text-decoration: none; }
+.deprat-tech-page-header { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin-bottom: 20px; }
+.deprat-tech-heading { display: flex; align-items: center; gap: 16px; min-width: 0; border-left: 4px solid #dfaa31; padding-left: 16px; }
+#deprat-product-technical .deprat-tech-heading h1 { padding: 0; margin: 0; color: #0b2551; font-size: 30px; line-height: 1.15; font-weight: 700; }
+.deprat-tech-status { flex: 0 0 auto; padding: 5px 12px; border-radius: 20px; background: #e0f3e3; color: #247438; font-size: 13px; font-weight: 700; }
+.deprat-tech-page-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.deprat-tech-page-actions button { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 40px; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: 700; font-size: 13px; }
+.deprat-tech-preview { background: #fff; color: #0b3370; border: 1px solid #6383ae; }
+.deprat-tech-save { background: #092e68; color: #fff; border: 1px solid #092e68; }
+.deprat-tech-save:hover { background: #0c478e; }
+.deprat-tech-identity, .deprat-tech-card { background: #fff; border: 1px solid #d2e0f0; border-radius: 9px; box-shadow: 0 2px 8px rgba(14, 43, 85, .05); min-width: 0; }
+.deprat-tech-identity { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 13px 28px; padding: 18px 22px; margin-bottom: 16px; }
+.deprat-tech-layout { display: grid; grid-template-columns: minmax(0, 2.25fr) minmax(250px, 1fr); gap: 16px; align-items: start; }
 .deprat-tech-main, .deprat-tech-side { display: grid; gap: 14px; min-width: 0; }
-.deprat-tech-card { background: #fff; border: 1px solid #d4e0ef; border-radius: 9px; padding: 16px; box-shadow: 0 2px 8px rgba(14, 43, 85, .04); min-width: 0; }
-#deprat-product-technical .deprat-tech-card h3 { display: flex; align-items: center; gap: 8px; margin: 0 0 14px; padding: 0 0 10px; border-bottom: 1px solid #dda834; color: #102d5c; font-size: 16px; }
-.deprat-tech-card h3 .dashicons { color: #174981; }
-.deprat-tech-field { display: grid; gap: 6px; font-weight: 600; min-width: 0; }
-.deprat-tech-field span { line-height: 1.35; }
-.deprat-tech-editor input:not([type=hidden]), .deprat-tech-editor textarea { width: 100%; max-width: none; min-width: 0; border: 1px solid #bdcde1; border-radius: 5px; padding: 6px 9px; color: #142d56; background: #fff; font-weight: 400; }
-.deprat-tech-editor input:focus, .deprat-tech-editor textarea:focus { border-color: #176bc0; box-shadow: 0 0 0 1px #176bc0; }
-.deprat-tech-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
-.deprat-tech-fields .deprat-tech-field:first-child { grid-column: 1 / -1; }
-.deprat-tech-pair-head, .deprat-tech-pair { display: grid; grid-template-columns: minmax(120px, 1fr) minmax(120px, 1.4fr) 32px; gap: 8px; align-items: center; }
-.deprat-tech-pair-head { margin: 14px 0 5px; font-weight: 600; color: #5b6c82; font-size: 12px; }
-.deprat-tech-rows { display: grid; gap: 8px; }
-.deprat-tech-norm-row { display: grid; grid-template-columns: minmax(0, 1fr) 32px; gap: 8px; align-items: center; }
-.deprat-tech-remove { width: 32px; height: 32px; border: 1px solid #c5d4e6; border-radius: 5px; color: #365778; background: #fff; cursor: pointer; font-size: 20px; line-height: 1; }
-.deprat-tech-remove:hover { color: #a12626; border-color: #d89b9b; }
-#deprat-product-technical .deprat-tech-add { margin-top: 12px; color: #0759ab; border-color: #9bbce1; }
-.deprat-tech-help { color: #657992; font-size: 12px; line-height: 1.5; margin: 10px 0 0; }
-.deprat-tech-media-preview { display: flex; align-items: center; justify-content: center; min-height: 72px; padding: 12px; border: 1px dashed #bdd0e5; border-radius: 6px; color: #687d94; background: #f8fbff; overflow-wrap: anywhere; }
-.deprat-tech-media-preview img { display: block; max-width: 100%; height: auto; max-height: 190px; object-fit: contain; }
-.deprat-tech-media-actions { display: flex; align-items: center; gap: 12px; margin-top: 10px; }
-@media (max-width: 1000px) { .deprat-tech-layout { grid-template-columns: 1fr; } .deprat-tech-side { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (max-width: 600px) { #deprat-product-technical > .inside { padding: 10px; } .deprat-tech-fields, .deprat-tech-side { grid-template-columns: 1fr; } .deprat-tech-fields .deprat-tech-field:first-child { grid-column: auto; } .deprat-tech-pair-head { display: none; } .deprat-tech-pair { grid-template-columns: 1fr 32px; } .deprat-tech-pair input:first-child { grid-column: 1; } .deprat-tech-pair input:nth-child(2) { grid-column: 1; } .deprat-tech-pair button { grid-column: 2; grid-row: 1 / span 2; } }
+.deprat-tech-card { padding: 15px 18px 17px; }
+#deprat-product-technical .deprat-tech-card h3 { display: flex; align-items: center; gap: 9px; margin: 0 0 13px; padding: 0 0 9px; border-bottom: 1px solid #dba633; color: #0c2b5c; font-size: 17px; line-height: 1.25; font-weight: 700; }
+.deprat-tech-card h3 .dashicons { color: #153c76; }
+.deprat-tech-field { display: grid; gap: 5px; font-weight: 700; min-width: 0; }
+.deprat-tech-field span { line-height: 1.3; }
+.deprat-tech-editor input:not([type=hidden]):not([type=checkbox]),
+.deprat-tech-editor select, .deprat-tech-editor textarea,
+.deprat-tech-category summary { width: 100%; max-width: none; min-width: 0; min-height: 33px; border: 1px solid #b8c9df; border-radius: 5px; padding: 5px 9px; color: #142d50; background-color: #fff; box-shadow: inset 0 1px 2px rgba(16, 41, 75, .06); font-family: inherit; font-weight: 400; }
+.deprat-tech-editor input:focus, .deprat-tech-editor select:focus, .deprat-tech-editor textarea:focus { border-color: #176bc0; box-shadow: 0 0 0 1px #176bc0; }
+.deprat-tech-category { position: relative; min-width: 0; font-weight: 400; }
+.deprat-tech-category summary { display: block; position: relative; padding-right: 28px; cursor: pointer; list-style: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.deprat-tech-category summary::-webkit-details-marker { display: none; }
+.deprat-tech-category summary::after { content: "⌄"; position: absolute; right: 10px; top: 3px; color: #183b70; font-size: 18px; }
+.deprat-tech-category-options { position: absolute; top: calc(100% + 4px); z-index: 20; width: 100%; max-height: 240px; overflow: auto; padding: 8px; border: 1px solid #b9cde4; border-radius: 5px; background: #fff; box-shadow: 0 6px 16px rgba(9, 38, 78, .14); }
+.deprat-tech-category-options label { display: flex; align-items: center; gap: 8px; padding: 5px; font-weight: 400; }
+.deprat-tech-category-options input[type=checkbox] { flex: 0 0 auto; }
+.deprat-tech-rows { display: grid; gap: 7px; }
+.deprat-tech-pair, .deprat-tech-delivery-mirror { display: grid; grid-template-columns: minmax(125px, .68fr) minmax(0, 1.6fr) 28px; gap: 8px; align-items: center; }
+.deprat-tech-delivery-mirror label { padding-left: 3px; font-weight: 700; }
+.deprat-tech-editor .deprat-tech-pair input:first-child { border-color: transparent; background: transparent; box-shadow: none; padding-left: 3px; font-weight: 700; }
+.deprat-tech-editor .deprat-tech-pair input:first-child:focus { border-color: #176bc0; background: #fff; box-shadow: 0 0 0 1px #176bc0; }
+.deprat-tech-remove { width: 28px; height: 30px; border: 0; border-radius: 5px; color: #47658b; background: transparent; cursor: pointer; font-size: 19px; line-height: 1; }
+.deprat-tech-remove:hover { color: #aa2828; background: #fff1f1; }
+#deprat-product-technical .deprat-tech-add { margin-top: 10px; padding: 1px 11px; color: #0a4d9b; border: 1px solid #a4c0e4; border-radius: 5px; background: #f8fbff; font-weight: 600; }
+.deprat-tech-description-editor { margin-top: 12px; color: #315b89; }
+.deprat-tech-description-editor summary { cursor: pointer; font-weight: 600; }
+.deprat-tech-description-editor textarea { margin-top: 8px; }
+.deprat-tech-rows[data-rows=norms] { display: flex; flex-wrap: wrap; gap: 8px; }
+.deprat-tech-norm-row { display: flex; align-items: center; width: 160px; max-width: 100%; border: 1px solid #c3d3e7; border-radius: 5px; background: #f4f8fd; }
+.deprat-tech-editor .deprat-tech-norm-row input { min-width: 0; border: 0; background: transparent; box-shadow: none; }
+.deprat-tech-rows[data-rows=tests] { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 16px; }
+.deprat-tech-rows[data-rows=tests] .deprat-tech-pair { grid-template-columns: minmax(105px, 1fr) minmax(80px, 1fr) 24px; gap: 4px; }
+.deprat-tech-rows[data-rows=tests] .deprat-tech-remove { width: 24px; }
+.deprat-tech-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 16px; }
+.deprat-tech-fields .deprat-tech-field { grid-template-columns: minmax(110px, .85fr) minmax(0, 1.15fr); align-items: center; gap: 8px; }
+.deprat-tech-fields .deprat-tech-field:first-child { grid-column: 1 / -1; grid-template-columns: minmax(110px, .55fr) minmax(0, 1.45fr); }
+.deprat-tech-help { color: #687d96; font-size: 12px; line-height: 1.45; margin: 10px 0 0; }
+.deprat-featured-preview { display: flex; align-items: center; justify-content: center; min-height: 210px; padding: 14px; border: 1px solid #e2eaf4; border-radius: 6px; color: #70849c; background: #fbfdff; }
+.deprat-featured-preview img { display: block; width: auto; max-width: 100%; max-height: 260px; height: auto; object-fit: contain; }
+.deprat-tech-media-preview { display: flex; align-items: center; justify-content: center; min-height: 72px; padding: 12px; border: 1px dashed #bdd0e5; border-radius: 6px; color: #687d94; background: #f8fbff; overflow-wrap: anywhere; text-align: center; }
+.deprat-tech-media-preview img { display: block; max-width: 100%; height: auto; max-height: 150px; object-fit: contain; }
+.deprat-tech-media-actions { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+.deprat-tech-media-actions .button { color: #103b7b; border-color: #a4bddd; background: #fff; font-weight: 600; }
+.deprat-tech-pdf .deprat-tech-media-preview { justify-content: flex-start; min-height: 60px; background: #edf4fc; border: 0; text-align: left; }
+.deprat-tech-pdf .deprat-tech-media-preview::before { content: "PDF"; margin-right: 10px; color: #c93030; font-weight: 700; }
+.deprat-tech-pdf-download { display: inline-block; margin-top: 12px; color: #075bb5; font-weight: 600; }
+.deprat-tech-diagrams { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.deprat-tech-diagram { padding: 10px; border: 1px solid #d7e4f2; border-radius: 7px; }
+#deprat-product-technical .deprat-tech-diagram h4 { margin: 0 0 8px; color: #102d5c; font-size: 13px; }
+.deprat-tech-diagram .deprat-tech-media-content { display: flex; gap: 10px; align-items: center; }
+.deprat-tech-diagram .deprat-tech-media-preview { flex: 1 1 50%; min-width: 0; min-height: 95px; }
+.deprat-tech-diagram .deprat-tech-media-actions { flex: 0 1 auto; flex-wrap: wrap; margin-top: 0; }
+.deprat-tech-native-toggle { margin: 18px 0 12px; padding: 9px 14px; border: 1px solid #b5cce6; border-radius: 6px; background: #fff; color: #164b88; font-weight: 600; cursor: pointer; }
+@media (max-width: 1100px) { .deprat-tech-rows[data-rows=tests] { grid-template-columns: 1fr; } .deprat-tech-diagram .deprat-tech-media-content { flex-direction: column; align-items: stretch; } }
+@media (max-width: 782px) { .deprat-tech-page-header { align-items: flex-start; flex-direction: column; } .deprat-tech-layout { grid-template-columns: 1fr; } .deprat-tech-side { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 600px) { #deprat-product-technical > .inside { padding: 10px; } body.deprat-product-editor-ready #deprat-product-technical > .inside { padding: 0; } .deprat-tech-identity, .deprat-tech-fields, .deprat-tech-side, .deprat-tech-diagrams { grid-template-columns: 1fr; } .deprat-tech-fields .deprat-tech-field:first-child { grid-column: auto; } .deprat-tech-fields .deprat-tech-field, .deprat-tech-fields .deprat-tech-field:first-child { grid-template-columns: 1fr; } .deprat-tech-pair, .deprat-tech-delivery-mirror { grid-template-columns: minmax(100px, 1fr) minmax(0, 1.3fr) 28px; } #deprat-product-technical .deprat-tech-heading h1 { font-size: 24px; } }

@@ -19,6 +19,10 @@ $product->set_regular_price( '0' );
 $product->set_status( 'publish' );
 $product_id = $product->save();
 deprat_integration_assert( (bool) $product_id, 'Création du produit de test impossible.' );
+$tube_category = wp_insert_term( 'Tubes', 'product_cat' );
+$end_category = wp_insert_term( 'Embouts', 'product_cat' );
+deprat_integration_assert( ! is_wp_error( $tube_category ) && ! is_wp_error( $end_category ), 'Création des catégories de test impossible.' );
+wp_set_object_terms( $product_id, array( (int) $tube_category['term_id'], (int) $end_category['term_id'] ), 'product_cat' );
 
 $image = wp_insert_attachment( array(
     'post_title' => 'Schéma de test',
@@ -37,6 +41,7 @@ $uploads = wp_upload_dir();
 wp_mkdir_p( $uploads['basedir'] . '/integration-test' );
 file_put_contents( $uploads['basedir'] . '/integration-test/fiche.pdf', "%PDF-1.4\n%%EOF\n" );
 file_put_contents( $uploads['basedir'] . '/integration-test/schema.png', base64_decode( 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jRr0AAAAASUVORK5CYII=' ) );
+set_post_thumbnail( $product_id, $image );
 
 $_POST = array(
     'deprat_product_tech_nonce' => wp_create_nonce( 'deprat_product_tech_save' ),
