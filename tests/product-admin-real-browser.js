@@ -16,6 +16,8 @@ const assert = require( 'assert' );
         await page.waitForSelector( 'body.deprat-product-editor-ready [data-editor-chrome]:visible' );
 
         assert.strictEqual( await page.locator( '[data-product-name]' ).inputValue(), 'Tube de test' );
+        assert( Number( await page.locator( '[data-glb-id]' ).inputValue() ) > 0, 'Le modèle 3D doit apparaître dans le formulaire.' );
+        assert( await page.locator( '[data-glb-upload]' ).isVisible(), 'Importer un modèle 3D sans quitter le produit.' );
         assert.strictEqual( await page.locator( '[data-product-sku]' ).inputValue(), 'TEST-DP62' );
         assert.strictEqual( await page.locator( '[data-product-type]' ).inputValue(), 'simple' );
         const categorySummary = await page.locator( '[data-category-summary]' ).textContent();
@@ -145,7 +147,16 @@ const assert = require( 'assert' );
         await page.screenshot( { path: process.env.RUNNER_TEMP + '/deprat-editor-mobile.png', fullPage: true } );
         const noOverflow = await page.locator( '.deprat-tech-editor' ).evaluate( element => element.scrollWidth <= element.clientWidth + 1 );
         assert( noOverflow, 'Le formulaire ne doit pas déborder sur mobile.' );
-        console.log( 'Éditeur réel : disposition, liaison WooCommerce, image, catégories et enregistrement vérifiés.' );
+        await page.goto( base + '/?post_type=product&p=' + productId, { waitUntil: 'domcontentloaded' } );
+        await page.waitForSelector( '[data-deprat-3d]' );
+        assert( await page.locator( '[data-three-mode="model"]' ).isVisible(), 'Le bouton Vue 3D doit apparaître avec un modèle.' );
+        assert( await page.locator( '.deprat-three-viewport' ).isHidden(), 'La galerie photo doit rester sélectionnée à l’ouverture.' );
+        await page.locator( '[data-three-mode="model"]' ).click();
+        assert( await page.locator( '.deprat-three-viewport' ).isVisible(), 'La visionneuse GLB doit s’ouvrir.' );
+        assert( await page.locator( '.woocommerce-product-gallery.deprat-three-active' ).count() > 0, 'La galerie passe en mode 3D.' );
+        await page.locator( '[data-three-mode="photos"]' ).click();
+        assert( await page.locator( '.deprat-three-viewport' ).isHidden(), 'Le retour aux photos fonctionne.' );
+        console.log( 'Éditeur et boutique : données, modèle 3D, galerie et commandes testés.' );
     } catch ( error ) {
         await page.screenshot( { path: process.env.RUNNER_TEMP + '/deprat-editor-error.png', fullPage: true } ).catch( () => {} );
         throw error;

@@ -101,3 +101,19 @@ body.single-product .woocommerce div.product h1.product_title {
   .deprat-tech-front .deprat-tech-front-card h3 { font-size: 17px; }
   .deprat-tech-front-card dl div { grid-template-columns: 1fr; }
 }
+
+/* Une bascule discrète entre photos et visionneuse 3D, dans la galerie WooCommerce. */
+body.single-product .deprat-three-widget { clear: both; padding-top: 14px; color: #153b6e; }
+.deprat-three-tabs { display: flex; gap: 8px; margin-bottom: 9px; }
+.deprat-three-tabs button { appearance: none; border: 1px solid #c8d9ee; border-radius: 6px; background: #f5f8fe; color: #1b497e; padding: 9px 16px; font-weight: 700; cursor: pointer; font-size: 13px; }
+.deprat-three-tabs button.is-selected { background: #103b77; border-color: #103b77; color: #fff; }
+.deprat-three-viewport { width: 100%; background: #f5f9fd; border: 1px solid #d3e0ee; border-radius: 8px; overflow: hidden; }
+.deprat-three-viewport[hidden] { display: none !important; }
+.deprat-three-viewport model-viewer { width: 100%; height: clamp(260px, 33vw, 420px); background: #f7f9fc; }
+.deprat-three-viewport p { margin: 8px 12px 13px; color: #5c7390; font-size: 12px; }
+.deprat-three-viewport .deprat-three-error { color: #a32b2b; font-weight: 700; }
+body.single-product .woocommerce-product-gallery.deprat-three-active > .woocommerce-product-gallery__wrapper,
+body.single-product .woocommerce-product-gallery.deprat-three-active > .flex-viewport,
+body.single-product .woocommerce-product-gallery.deprat-three-active > .flex-control-nav,
+body.single-product .woocommerce-product-gallery.deprat-three-active > .flex-control-thumbs,
+body.single-product .woocommerce-product-gallery.deprat-three-active > .woocommerce-product-gallery__trigger { display: none !important; }
