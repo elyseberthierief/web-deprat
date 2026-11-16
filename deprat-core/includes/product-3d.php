@@ -130,12 +130,12 @@ function deprat_product_3d_gallery_toggle() {
                 interaction-prompt="auto" loading="lazy" reveal="auto" touch-action="pan-y">
                 <div slot="poster">Chargement du modèle 3D…</div>
             </model-viewer>
+            <div class="deprat-three-outline" data-three-outline hidden aria-label="Vue en contours de la pièce 3D"></div>
             <div class="deprat-three-view-options" role="group" aria-label="Mode de rendu 3D">
                 <button type="button" data-render-mode="texture" class="is-selected" aria-pressed="true">Pièce texturée</button>
                 <button type="button" data-render-mode="contours" aria-pressed="false">Contours</button>
                 <button type="button" data-background-cycle aria-label="Changer le fond 3D" title="Adapter le fond à la couleur de la pièce">Fond : automatique</button>
             </div>
-            <div class="deprat-three-outline" data-three-outline hidden aria-label="Vue en contours de la pièce 3D"></div>
             <p>Faites glisser pour tourner la pièce et utilisez la molette pour zoomer.</p>
         </div>
     </div>
