@@ -99,6 +99,21 @@ function deprat_packaging_request_row( $product_id, $choice ) {
     return isset( $rows[ $index ] ) ? $rows[ $index ] : null;
 }
 
+function deprat_packaging_validate_cart_choice( $valid, $product_id, $quantity, $variation_id = 0 ) {
+    $rows = deprat_product_tech_packages( deprat_product_tech_data( $product_id ) );
+    if ( ! $rows ) { return $valid; }
+    $choice = isset( $_POST['deprat_package_choice'] ) && is_scalar( $_POST['deprat_package_choice'] )
+        ? sanitize_text_field( wp_unslash( $_POST['deprat_package_choice'] ) ) : '0';
+    if ( null === deprat_packaging_request_row( $product_id, $choice ) ) {
+        if ( function_exists( 'wc_add_notice' ) ) {
+            wc_add_notice( 'Veuillez sélectionner un conditionnement valide.', 'error' );
+        }
+        return false;
+    }
+    return $valid;
+}
+add_filter( 'woocommerce_add_to_cart_validation', 'deprat_packaging_validate_cart_choice', 10, 4 );
+
 /** L'option choisie reste attachée à la ligne du panier/devis même pour le même produit. */
 function deprat_packaging_cart_item_data( $cart_item_data, $product_id, $variation_id = 0, $quantity = 1 ) {
     $rows = deprat_product_tech_packages( deprat_product_tech_data( $product_id ) );
