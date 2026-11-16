@@ -245,7 +245,7 @@ add_action( 'admin_enqueue_scripts', 'deprat_product_tech_admin_assets' );
 
 function deprat_product_tech_front_assets() {
     if ( function_exists( 'is_product' ) && is_product() ) {
-        wp_enqueue_style( 'deprat-product-tech-front', plugins_url( 'assets/css/product-technical-front.css', dirname( __DIR__ ) . '/deprat-core.php' ), array(), '0.1.14' );
+        wp_enqueue_style( 'deprat-product-tech-front', plugins_url( 'assets/css/product-technical-front.css', dirname( __DIR__ ) . '/deprat-core.php' ), array(), '0.1.16' );
     }
 }
 add_action( 'wp_enqueue_scripts', 'deprat_product_tech_front_assets' );
