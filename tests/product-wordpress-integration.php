@@ -76,7 +76,7 @@ deprat_integration_assert( false !== has_action( 'woocommerce_after_single_produ
 ob_start();
 deprat_product_tech_render_admin( get_post( $product_id ) );
 $admin_html = ob_get_clean();
-foreach ( array( 'Caractéristiques techniques', 'Acier galvanisé', 'Normes', 'Valeurs testées', 'Conditionnement', 'Fiche technique PDF', 'Schéma dimensionnel personnalisé' ) as $expected ) {
+foreach ( array( 'Caractéristiques techniques', 'Acier galvanisé', 'Normes', 'Valeurs testées', 'Type de conditionnement', 'Fiche technique PDF', 'Schéma dimensionnel personnalisé' ) as $expected ) {
     deprat_integration_assert( false !== strpos( $admin_html, $expected ), 'Champ absent de l’administration : ' . $expected );
 }
 
