@@ -198,3 +198,17 @@ body.deprat-modal-open { overflow: hidden; }
 .deprat-three-admin .deprat-three-actions .button { min-height: 35px; }
 .deprat-three-admin .deprat-three-actions [data-glb-upload] { background: #103d80; color: #fff; border-color: #103d80; font-weight: 700; }
 .deprat-three-admin .deprat-three-actions [data-glb-upload]:hover { background: #1555a1; color: #fff; }
+
+/* Liste de propositions de conditionnement par métrage ou par pièces. */
+.deprat-package-list { display: grid; gap: 16px; margin: 16px 0; }
+.deprat-package-row { border: 1px solid #d5e2f2; border-radius: 9px; background: #fbfdff; padding: 16px; }
+.deprat-package-row-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 14px; color: #153b77; }
+.deprat-package-row-fields { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 13px; margin-bottom: 12px; }
+.deprat-package-row-fields[hidden] { display: none !important; }
+.deprat-package-row-fields > .deprat-tech-field { grid-template-columns: 1fr; gap: 7px; }
+.deprat-package-row-fields > .deprat-tech-field input,
+.deprat-package-row-fields > .deprat-tech-field select { width: 100%; min-width: 0; }
+.deprat-package-row .deprat-package-summary { margin: 10px 0 2px; }
+.deprat-package-row .deprat-package-summary.is-invalid { border-left-color: #c12d2d; background: #fff0f0; color: #8a2020; }
+.deprat-package-editor [data-package-add] { margin: 0 0 17px; }
+@media (max-width: 1080px) { .deprat-package-row-fields { grid-template-columns: 1fr; } }
