@@ -34,14 +34,23 @@ $pdf = wp_insert_attachment( array(
     'post_mime_type' => 'application/pdf',
     'post_status' => 'inherit',
 ) );
+$gallery_image = wp_insert_attachment( array( 'post_title' => 'Photo galerie', 'post_mime_type' => 'image/png', 'post_status' => 'inherit' ) );
+$pdf2 = wp_insert_attachment( array( 'post_title' => 'Notice de montage', 'post_mime_type' => 'application/pdf', 'post_status' => 'inherit' ) );
 update_post_meta( $image, '_wp_attached_file', 'integration-test/schema.png' );
+update_post_meta( $gallery_image, '_wp_attached_file', 'integration-test/galerie.png' );
+update_post_meta( $pdf2, '_wp_attached_file', 'integration-test/notice.pdf' );
 update_post_meta( $pdf, '_wp_attached_file', 'integration-test/fiche.pdf' );
 deprat_integration_assert( ! is_wp_error( $image ) && ! is_wp_error( $pdf ), 'Création des médias de test impossible.' );
 $uploads = wp_upload_dir();
 wp_mkdir_p( $uploads['basedir'] . '/integration-test' );
 file_put_contents( $uploads['basedir'] . '/integration-test/fiche.pdf', "%PDF-1.4\n%%EOF\n" );
 file_put_contents( $uploads['basedir'] . '/integration-test/schema.png', base64_decode( 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jRr0AAAAASUVORK5CYII=' ) );
+file_put_contents( $uploads['basedir'] . '/integration-test/galerie.png', file_get_contents( $uploads['basedir'] . '/integration-test/schema.png' ) );
+file_put_contents( $uploads['basedir'] . '/integration-test/notice.pdf', "%PDF-1.4\\n%%EOF\\n" );
 set_post_thumbnail( $product_id, $image );
+$product_for_gallery = wc_get_product( $product_id );
+$product_for_gallery->set_gallery_image_ids( array( $gallery_image ) );
+$product_for_gallery->save();
 
 $_POST = array(
     'deprat_product_tech_nonce' => wp_create_nonce( 'deprat_product_tech_save' ),
@@ -60,6 +69,11 @@ $_POST = array(
         'technical_image' => (string) $image,
         'dimensions_image' => (string) $image,
         'datasheet' => (string) $pdf,
+        'datasheets_present' => '1',
+        'datasheets' => array(
+            array( 'title' => 'Fiche produit', 'file' => (string) $pdf ),
+            array( 'title' => 'Notice complémentaire', 'file' => (string) $pdf2 ),
+        ),
         'diagrams_present' => '1',
         'diagrams' => array( array( 'title' => 'Schéma dimensionnel personnalisé', 'image' => (string) $image ) ),
     ),
@@ -71,12 +85,16 @@ deprat_integration_assert( isset( $saved['features'][0]['value'] ) && 'Acier gal
 deprat_integration_assert( 'Description technique \\ spéciale' === $saved['description'], 'Un caractère spécial de la description a été perdu.' );
 deprat_integration_assert( (int) $pdf === $saved['datasheet'] && (int) $image === $saved['technical_image'], 'Les médias ne s’enregistrent pas.' );
 deprat_integration_assert( 'TEST-DP62' === wc_get_product( $product_id )->get_sku(), 'La référence WooCommerce a été modifiée.' );
+deprat_integration_assert( 2 === count( deprat_product_tech_datasheets( $saved ) ), 'Les deux PDF sont enregistrés.' );
+deprat_integration_assert( '' !== get_post_meta( $image, '_wp_attachment_image_alt', true ), 'Le schéma doit recevoir un ALT automatique.' );
+deprat_integration_assert( false !== strpos( deprat_product_tech_seo_description( $product_id ), 'TEST-DP62' ), 'La méta-description doit intégrer la référence.' );
+deprat_integration_assert( (int) $gallery_image === (int) wc_get_product( $product_id )->get_gallery_image_ids()[0], 'La galerie WooCommerce doit être conservée.' );
 deprat_integration_assert( false !== has_action( 'woocommerce_after_single_product_summary', 'deprat_product_tech_render_front' ), 'L’affichage boutique n’est pas raccordé à WooCommerce.' );
 
 ob_start();
 deprat_product_tech_render_admin( get_post( $product_id ) );
 $admin_html = ob_get_clean();
-foreach ( array( 'Caractéristiques techniques', 'Acier galvanisé', 'Normes', 'Valeurs testées', 'Type de conditionnement', 'Fiche technique PDF', 'Schéma dimensionnel personnalisé' ) as $expected ) {
+foreach ( array( 'Caractéristiques techniques', 'Acier galvanisé', 'Normes', 'Valeurs testées', 'Type de conditionnement', 'Fiches techniques PDF', 'Schéma dimensionnel personnalisé' ) as $expected ) {
     deprat_integration_assert( false !== strpos( $admin_html, $expected ), 'Champ absent de l’administration : ' . $expected );
 }
 
@@ -84,10 +102,15 @@ $GLOBALS['product'] = wc_get_product( $product_id );
 ob_start();
 deprat_product_tech_render_front();
 $front_html = ob_get_clean();
-foreach ( array( 'Caractéristiques techniques', 'Acier galvanisé', '>0<', 'NF EN 12194', 'Couple de destruction', 'Longueurs de 6 m', '192 pièces', 'Schéma dimensionnel personnalisé', 'Télécharger la fiche technique PDF' ) as $expected ) {
+foreach ( array( 'Caractéristiques techniques', 'Acier galvanisé', '>0<', 'NF EN 12194', 'Couple de destruction', 'Longueurs de 6 m', '192 pièces', 'Schéma dimensionnel personnalisé', 'Notice complémentaire', 'Télécharger la fiche technique PDF' ) as $expected ) {
     deprat_integration_assert( false !== strpos( $front_html, $expected ), 'Information absente de la boutique : ' . $expected );
 }
 
+ob_start();
+$GLOBALS['product'] = wc_get_product( $product_id );
+deprat_product_single_intro();
+$header_html = ob_get_clean();
+deprat_integration_assert( strpos( $header_html, 'Référence produit' ) < strpos( $header_html, 'Tube de test' ), 'Référence avant nom du produit.' );
 $_POST['deprat_product_tech_nonce'] = 'invalide';
 $_POST['deprat_product_tech']['delivery'] = 'Ne doit pas être enregistré';
 do_action( 'save_post_product', $product_id, get_post( $product_id ), true );
