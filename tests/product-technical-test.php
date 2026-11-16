@@ -33,8 +33,9 @@ function admin_url( $path ) { return 'https://example.test/wp-admin/' . $path; }
 function expect( $condition, $message ) { if ( ! $condition ) { fwrite( STDERR, "ÉCHEC : " . $message . "\n" ); exit( 1 ); } }
 
 require __DIR__ . '/../deprat-core/includes/product-technical-data.php';
+require __DIR__ . '/../deprat-core/includes/product-single-layout.php';
 
-$GLOBALS['test_attachments'] = array( 11 => 'image/png', 12 => 'application/pdf', 13 => 'image/jpeg', 14 => 'text/html' );
+$GLOBALS['test_attachments'] = array( 11 => 'image/png', 12 => 'application/pdf', 13 => 'image/jpeg', 14 => 'text/html', 15 => 'application/pdf' );
 $GLOBALS['test_meta'][ 42 ] = array( '_sku' => 'F2000/G00' );
 $_POST = array(
     'deprat_product_tech_nonce' => 'valid',
@@ -55,6 +56,11 @@ $_POST = array(
         'technical_image' => '11',
         'dimensions_image' => '13',
         'datasheet' => '12',
+        'datasheets_present' => '1',
+        'datasheets' => array(
+            array( 'title' => 'Fiche produit DP62', 'file' => '12' ),
+            array( 'title' => 'Notice de pose DP62', 'file' => '15' ),
+        ),
         'diagrams_present' => '1',
         'diagrams' => array( array( 'title' => 'Schéma dimensionnel personnalisé', 'image' => '13' ), array( 'title' => 'Schéma technique', 'image' => '11' ) ),
     ),
@@ -69,13 +75,17 @@ expect( 2 === $saved['package_count'], 'Le nombre de conditionnements est enregi
 expect( false !== strpos( deprat_product_tech_package_summary( $saved ), '192 pièces' ), 'Le total de conditionnement est calculé.' );
 expect( 'Schéma dimensionnel personnalisé' === deprat_product_tech_diagrams( $saved )[0]['title'], 'Les schémas personnalisés gardent leur titre.' );
 expect( 11 === $saved['technical_image'] && 13 === $saved['dimensions_image'] && 12 === $saved['datasheet'], 'Les images et le PDF sont enregistrés.' );
+expect( 2 === count( deprat_product_tech_datasheets( $saved ) ), 'Deux PDF sont conservés.' );
+expect( false !== strpos( deprat_product_tech_icon( 'norms' ), '<svg' ), 'Les icônes SVG sont générées.' );
+expect( 'Notice de pose DP62' === deprat_product_tech_datasheets( $saved )[1]['title'], 'Les titres des PDF sont conservés.' );
+expect( 12 === deprat_product_tech_datasheets( array( 'datasheet' => 12 ) )[0]['file'], 'L’ancien PDF unique reste visible.' );
 
 class Deprat_Test_Product { public function get_id() { return 42; } }
 $product = new Deprat_Test_Product();
 ob_start();
 deprat_product_tech_render_front();
 $html = ob_get_clean();
-foreach ( array( 'Caractéristiques techniques', 'Acier galvanisé Z275', 'Test zéro', '>0<', 'NF EN 12194', 'Couple de destruction', '5 m.kg', 'Longueurs de 6 m', '192 pièces', 'Schéma technique', 'Schéma dimensionnel personnalisé', 'Télécharger la fiche technique PDF', 'https://example.test/media/12' ) as $fragment ) {
+foreach ( array( 'Caractéristiques techniques', 'Acier galvanisé Z275', 'Test zéro', '>0<', 'NF EN 12194', 'Couple de destruction', '5 m.kg', 'Longueurs de 6 m', '192 pièces', 'Schéma technique', 'Schéma dimensionnel personnalisé', 'Fiche produit DP62', 'Notice de pose DP62', 'Télécharger la fiche technique PDF', 'https://example.test/media/12', 'https://example.test/media/15' ) as $fragment ) {
     expect( false !== strpos( $html, $fragment ), 'Affichage boutique manquant : ' . $fragment );
 }
 expect( false === strpos( $html, 'Champ vide' ), 'Les champs sans valeur ne sont pas affichés.' );
@@ -105,9 +115,11 @@ $GLOBALS['test_autosave'] = false;
 // Un PDF ne peut pas être utilisé comme schéma, ni une page HTML comme fiche PDF.
 $_POST['deprat_product_tech']['technical_image'] = '12';
 $_POST['deprat_product_tech']['datasheet'] = '14';
+$_POST['deprat_product_tech']['datasheets'] = array( array( 'title' => 'Mauvais PDF', 'file' => '14' ) );
 $_POST['deprat_product_tech']['package_quantity'] = '-1';
 deprat_product_tech_save( 42 );
 $saved = deprat_product_tech_data( 42 );
 expect( 0 === $saved['technical_image'] && 0 === $saved['datasheet'], 'Types de médias non autorisés refusés.' );
+expect( 0 === count( deprat_product_tech_datasheets( $saved ) ), 'Les documents invalides sont refusés.' );
 expect( '' === $saved['package_quantity'], 'Quantité de conditionnement invalide ignorée.' );
 echo "Tests de sauvegarde, droits, médias et rendu boutique réussis.\n";

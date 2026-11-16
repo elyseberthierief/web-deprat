@@ -139,7 +139,7 @@
                 var row = document.createElement( 'article' );
                 row.className = 'deprat-tech-diagram-entry';
                 row.setAttribute( 'data-diagram-row', '' );
-                row.innerHTML = '<div class="deprat-tech-diagram-toolbar"><span class="deprat-tech-diagram-index"></span><div><button type="button" class="button" data-diagram-up aria-label="Monter le schéma">↑</button> <button type="button" class="button" data-diagram-down aria-label="Descendre le schéma">↓</button> <button type="button" class="button-link-delete" data-diagram-delete>Supprimer</button></div></div><label class="deprat-tech-field"><span>Titre du schéma</span><input data-diagram-title placeholder="Ex. Schéma de raccordement électrique"></label><input type="hidden" data-diagram-image><div class="deprat-tech-media-preview" data-diagram-preview>Aucun schéma sélectionné</div><button type="button" class="button" data-diagram-select>Choisir une image</button>';
+                row.innerHTML = '<div class="deprat-tech-diagram-toolbar"><span class="deprat-tech-diagram-index"></span><div><button type="button" class="button" data-diagram-up aria-label="Monter le schéma">↑</button> <button type="button" class="button" data-diagram-down aria-label="Descendre le schéma">↓</button> <button type="button" class="button-link-delete" data-diagram-delete>Supprimer</button></div></div><label class="deprat-tech-field"><span>Titre du schéma</span><input data-diagram-title placeholder="Ex. Schéma de raccordement électrique"></label><input type="hidden" data-diagram-image><div class="deprat-tech-media-preview" data-diagram-preview>Aucun schéma sélectionné</div><button type="button" class="button" data-diagram-select>Choisir une image</button> <button type="button" class="button deprat-tech-quick-upload" data-quick-upload="diagram">Importer un schéma</button>';
                 list.appendChild( row ); renumber();
                 row.querySelector( '[data-diagram-title]' ).focus();
                 return;
@@ -152,6 +152,272 @@
             if ( event.target.closest( '[data-diagram-down]' ) && row.nextElementSibling ) { list.insertBefore( row.nextElementSibling, row ); renumber(); }
         } );
         renumber();
+    }
+
+
+    function mirrorNativeGallery( value ) {
+        var original = document.getElementById ? document.getElementById( 'product_image_gallery' ) : null;
+        if ( original ) { original.value = value; }
+    }
+
+    function setupGallery( editor ) {
+        var field = editor.querySelector( '[data-gallery-ids]' );
+        var list = editor.querySelector( '[data-gallery-list]' );
+        if ( ! field || ! list ) { return; }
+
+        function syncIds() {
+            field.value = Array.prototype.map.call( list.querySelectorAll( '[data-gallery-item]' ), function ( item ) {
+                return item.getAttribute( 'data-gallery-id' );
+            } ).join( ',' );
+            mirrorNativeGallery( field.value );
+        }
+        function addFile( file ) {
+            if ( ! file || file.type !== 'image' || ! file.id ||
+                 list.querySelector( '[data-gallery-id="' + Number( file.id ) + '"]' ) ) { return; }
+            var item = document.createElement( 'article' );
+            item.className = 'deprat-product-gallery-item';
+            item.setAttribute( 'data-gallery-item', '' );
+            item.setAttribute( 'data-gallery-id', String( file.id ) );
+            var picture = document.createElement( 'img' );
+            picture.src = file.sizes && file.sizes.thumbnail ? file.sizes.thumbnail.url : file.url;
+            picture.alt = file.alt || 'Photo complémentaire du produit';
+            var remove = document.createElement( 'button' );
+            remove.type = 'button';
+            remove.className = 'button-link-delete';
+            remove.setAttribute( 'data-gallery-remove', '' );
+            remove.textContent = 'Retirer';
+            item.appendChild( picture );
+            item.appendChild( remove );
+            list.appendChild( item );
+        }
+        editor.addEventListener( 'click', function ( event ) {
+            if ( event.target.closest( '[data-gallery-remove]' ) ) {
+                var item = event.target.closest( '[data-gallery-item]' );
+                if ( item && list.contains( item ) ) { item.remove(); syncIds(); }
+                return;
+            }
+            if ( ! event.target.closest( '[data-gallery-add]' ) || ! window.wp || ! window.wp.media ) { return; }
+            var frame = window.wp.media( {
+                title: 'Photos complémentaires du produit',
+                button: { text: 'Ajouter à la galerie' },
+                library: { type: 'image' },
+                multiple: true
+            } );
+            frame.on( 'select', function () {
+                frame.state().get( 'selection' ).each( function ( attachment ) {
+                    addFile( attachment.toJSON() );
+                } );
+                syncIds();
+            } );
+            frame.open();
+        } );
+        syncIds();
+    }
+
+    function setupDatasheets( editor ) {
+        var list = editor.querySelector( '[data-datasheets-list]' );
+        if ( ! list ) { return; }
+
+        function renumber() {
+            list.querySelectorAll( '[data-datasheet-row]' ).forEach( function ( row, index ) {
+                row.querySelector( 'strong' ).textContent = 'Document ' + ( index + 1 );
+                row.querySelector( '[data-datasheet-title]' ).name = 'deprat_product_tech[datasheets][' + index + '][title]';
+                row.querySelector( '[data-datasheet-file]' ).name = 'deprat_product_tech[datasheets][' + index + '][file]';
+            } );
+        }
+
+        function choose( row ) {
+            if ( ! window.wp || ! window.wp.media ) { return; }
+            var frame = window.wp.media( {
+                title: 'Choisir une fiche technique PDF',
+                button: { text: 'Ajouter ce PDF' },
+                library: { type: 'application/pdf' },
+                multiple: false
+            } );
+            frame.on( 'select', function () {
+                var selected = frame.state().get( 'selection' ).first();
+                if ( ! selected ) { return; }
+                var file = selected.toJSON();
+                if ( file.mime !== 'application/pdf' ) {
+                    window.alert( 'Sélectionnez un fichier PDF.' );
+                    return;
+                }
+                row.querySelector( '[data-datasheet-file]' ).value = file.id;
+                var preview = row.querySelector( '[data-datasheet-preview]' );
+                preview.textContent = '';
+                var link = document.createElement( 'a' );
+                link.textContent = file.filename || file.title || 'Fiche technique PDF';
+                link.href = file.url;
+                link.target = '_blank';
+                link.rel = 'noopener noreferrer';
+                preview.appendChild( link );
+                row.querySelector( '[data-datasheet-select]' ).textContent = 'Remplacer le PDF';
+            } );
+            frame.open();
+        }
+
+        editor.addEventListener( 'click', function ( event ) {
+            if ( event.target.closest( '[data-datasheet-add]' ) ) {
+                var row = document.createElement( 'article' );
+                row.className = 'deprat-datasheet-entry';
+                row.setAttribute( 'data-datasheet-row', '' );
+                row.innerHTML = '<div class="deprat-tech-diagram-toolbar"><strong></strong><button type="button" class="button-link-delete" data-datasheet-delete>Supprimer</button></div><label class="deprat-tech-field"><span>Nom du document</span><input data-datasheet-title placeholder="Ex. Notice de montage"></label><input type="hidden" data-datasheet-file><div class="deprat-tech-media-preview" data-datasheet-preview>Aucun PDF sélectionné</div><button type="button" class="button" data-datasheet-select>Choisir un PDF</button> <button type="button" class="button deprat-tech-quick-upload" data-quick-upload="datasheet">Importer un PDF</button>';
+                list.appendChild( row );
+                renumber();
+                row.querySelector( '[data-datasheet-title]' ).focus();
+                return;
+            }
+            var row = event.target.closest( '[data-datasheet-row]' );
+            if ( ! row || ! list.contains( row ) ) { return; }
+            if ( event.target.closest( '[data-datasheet-delete]' ) ) { row.remove(); renumber(); return; }
+            if ( event.target.closest( '[data-datasheet-select]' ) ) { choose( row ); }
+        } );
+        renumber();
+    }
+
+    function setupAutoGrow( editor ) {
+        if ( ! editor.querySelectorAll ) { return; }
+        function adjust( textarea ) {
+            if ( ! textarea || ! textarea.matches || ! textarea.matches( '[data-auto-grow]' ) ) { return; }
+            textarea.style.height = 'auto';
+            textarea.style.height = Math.max( 40, textarea.scrollHeight + 3 ) + 'px';
+        }
+        editor.querySelectorAll( '[data-auto-grow]' ).forEach( adjust );
+        editor.addEventListener( 'input', function ( event ) { adjust( event.target ); } );
+        if ( window.addEventListener ) {
+            window.addEventListener( 'resize', function () {
+                editor.querySelectorAll( '[data-auto-grow]' ).forEach( adjust );
+            } );
+        }
+        editor.addEventListener( 'click', function ( event ) {
+            if ( event.target.closest( '[data-add-row="tests"]' ) ) {
+                var list = editor.querySelector( '[data-rows="tests"]' );
+                if ( list ) {
+                    // L'ajout dynamique est traité après le clic par l'autre gestionnaire.
+                    if ( window.requestAnimationFrame ) {
+                        window.requestAnimationFrame( function () {
+                            list.querySelectorAll( '[data-auto-grow]' ).forEach( adjust );
+                        } );
+                    }
+                }
+            }
+        } );
+    }
+
+
+    function setupQuickUploads( editor ) {
+        if ( ! editor || ! editor.addEventListener ) { return; }
+        function showImage( container, file, label ) {
+            container.textContent = '';
+            var img = document.createElement( 'img' );
+            img.src = file.thumb || file.url;
+            img.alt = file.alt || label || 'Image produit';
+            container.appendChild( img );
+        }
+        function galleryAdd( file ) {
+            var list = editor.querySelector( '[data-gallery-list]' );
+            var field = editor.querySelector( '[data-gallery-ids]' );
+            if ( ! list || ! field || list.querySelector( '[data-gallery-id="' + Number( file.id ) + '"]' ) ) { return; }
+            var item = document.createElement( 'article' );
+            item.className = 'deprat-product-gallery-item';
+            item.setAttribute( 'data-gallery-item', '' );
+            item.setAttribute( 'data-gallery-id', String( file.id ) );
+            var img = document.createElement( 'img' );
+            img.src = file.thumb || file.url;
+            img.alt = file.alt || 'Photo complémentaire du produit';
+            var remove = document.createElement( 'button' );
+            remove.type = 'button';
+            remove.className = 'button-link-delete';
+            remove.setAttribute( 'data-gallery-remove', '' );
+            remove.textContent = 'Retirer';
+            item.appendChild( img ); item.appendChild( remove ); list.appendChild( item );
+            field.value = Array.prototype.map.call( list.querySelectorAll( '[data-gallery-item]' ), function ( node ) {
+                return node.getAttribute( 'data-gallery-id' );
+            } ).join( ',' );
+            mirrorNativeGallery( field.value );
+        }
+        function applyUpload( purpose, button, file ) {
+            if ( purpose === 'gallery' ) { galleryAdd( file ); return; }
+            if ( purpose === 'featured' ) {
+                var native = document.querySelector( '#postimagediv > .inside' ) ||
+                    document.querySelector( '#postimagediv .inside' );
+                if ( native && file.featuredHtml ) { native.innerHTML = file.featuredHtml; }
+                var preview = editor.querySelector( '[data-featured-preview]' );
+                if ( preview ) { showImage( preview, file, 'Image principale du produit' ); }
+                var select = editor.querySelector( '[data-featured-select]' );
+                var remove = editor.querySelector( '[data-featured-remove]' );
+                if ( select ) { select.textContent = 'Modifier l’image'; }
+                if ( remove ) { remove.hidden = false; }
+                return;
+            }
+            var row = button.closest( purpose === 'diagram' ? '[data-diagram-row]' : '[data-datasheet-row]' );
+            if ( ! row ) { return; }
+            if ( purpose === 'diagram' ) {
+                row.querySelector( '[data-diagram-image]' ).value = file.id;
+                showImage( row.querySelector( '[data-diagram-preview]' ), file, 'Schéma produit' );
+            } else if ( purpose === 'datasheet' ) {
+                row.querySelector( '[data-datasheet-file]' ).value = file.id;
+                var preview = row.querySelector( '[data-datasheet-preview]' );
+                preview.textContent = '';
+                var link = document.createElement( 'a' );
+                link.href = file.url;
+                link.target = '_blank';
+                link.rel = 'noopener noreferrer';
+                link.textContent = file.filename || file.title || 'Fiche PDF';
+                preview.appendChild( link );
+            }
+        }
+        function sendFile( purpose, file ) {
+            var settings = window.depratProductEditor || {};
+            if ( ! settings.ajaxUrl || ! settings.uploadNonce || ! settings.postId ) {
+                return Promise.reject( new Error( 'Enregistrez d’abord le produit avant d’importer un fichier.' ) );
+            }
+            var form = new FormData();
+            form.append( 'action', 'deprat_product_media_upload' );
+            form.append( 'post_id', String( settings.postId ) );
+            form.append( 'nonce', settings.uploadNonce );
+            form.append( 'purpose', purpose );
+            form.append( 'file', file );
+            return fetch( settings.ajaxUrl, {
+                method: 'POST', credentials: 'same-origin', body: form
+            } ).then( function ( response ) { return response.json(); } ).then( function ( json ) {
+                if ( ! json.success || ! json.data ) {
+                    throw new Error( json.data && json.data.message ? json.data.message : 'Import impossible.' );
+                }
+                return json.data;
+            } );
+        }
+        editor.addEventListener( 'click', function ( event ) {
+            var button = event.target.closest( '[data-quick-upload]' );
+            if ( ! button || ! editor.contains( button ) ) { return; }
+            var purpose = button.getAttribute( 'data-quick-upload' );
+            var fileInput = document.createElement( 'input' );
+            fileInput.type = 'file';
+            fileInput.accept = purpose === 'datasheet' ? '.pdf,application/pdf' : 'image/jpeg,image/png,image/webp,image/gif,image/avif';
+            fileInput.multiple = purpose === 'gallery';
+            fileInput.style.display = 'none';
+            document.body.appendChild( fileInput );
+            fileInput.addEventListener( 'change', async function () {
+                var files = Array.prototype.slice.call( fileInput.files || [] );
+                fileInput.remove();
+                if ( ! files.length ) { return; }
+                var original = button.textContent;
+                button.disabled = true;
+                button.textContent = 'Import en cours…';
+                try {
+                    for ( var i = 0; i < files.length; i++ ) {
+                        var uploaded = await sendFile( purpose, files[i] );
+                        applyUpload( purpose, button, uploaded );
+                    }
+                } catch ( error ) {
+                    window.alert( error.message || 'Import du fichier impossible.' );
+                } finally {
+                    button.textContent = original;
+                    button.disabled = false;
+                }
+            } );
+            fileInput.click();
+        } );
     }
 
     function setupProductEditor( editor ) {
@@ -316,14 +582,6 @@
             }
         }
 
-        var delivery = editor.querySelector( '[name="deprat_product_tech[delivery]"]' );
-        var deliveryProxy = editor.querySelector( '[data-delivery-proxy]' );
-        var deliveryMirror = editor.querySelector( '[data-delivery-mirror]' );
-        connectText( deliveryProxy, delivery );
-        if ( delivery && deliveryProxy && deliveryMirror ) {
-            deliveryMirror.hidden = false;
-        }
-
         box.classList.remove( 'closed' );
         content.insertBefore( box, content.firstChild );
         chrome.hidden = false;
@@ -343,6 +601,10 @@
         setupPackageSummary( editor );
         setupCategoryModal( editor );
         setupDiagrams( editor );
+        setupGallery( editor );
+        setupDatasheets( editor );
+        setupAutoGrow( editor );
+        setupQuickUploads( editor );
 
         function nextIndex( container, type ) {
             var highest = -1;
