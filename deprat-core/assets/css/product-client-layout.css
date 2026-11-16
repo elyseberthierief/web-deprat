@@ -213,6 +213,7 @@ body.deprat-client-product .woocommerce div.product .deprat-client-quote form.ca
 body.deprat-client-product .woocommerce div.product .deprat-client-quote form.cart .single_add_to_cart_button:hover { background: #063778; }
 .deprat-client-quote form.cart .variations { width: 100%; margin: 0 0 12px; }
 .deprat-client-quote form.cart .single_variation_wrap { width: 100%; }
+.deprat-client-quote-no-payment { font-size: 12px; color: #667d9b; margin: -3px 0 13px; line-height: 1.45; text-align: center; }
 .deprat-client-quote-calculation {
   background: #eaf3ff; border-radius: 9px; padding: 15px 14px; color: #153e7b;
   font-size: 14px; line-height: 1.55; margin: 0 0 14px; overflow-wrap: anywhere;
