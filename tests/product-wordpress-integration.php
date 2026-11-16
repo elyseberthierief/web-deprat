@@ -137,6 +137,28 @@ $_POST['deprat_product_tech_nonce'] = 'invalide';
 $_POST['deprat_product_glb'] = '';
 $_POST['deprat_product_tech']['delivery'] = 'Ne doit pas être enregistré';
 do_action( 'save_post_product', $product_id, get_post( $product_id ), true );
+
+$GLOBALS['product'] = wc_get_product( $product_id );
+$package = deprat_client_product_package( $product_id );
+deprat_integration_assert( '2 Lots de 96 pièces chacun' === deprat_client_product_package_label( $package ), 'Le conditionnement B2B doit reprendre les données du produit.' );
+ob_start();
+deprat_client_product_intro();
+$client_intro_html = ob_get_clean();
+deprat_integration_assert( false !== strpos( $client_intro_html, 'Réf.' ) && false !== strpos( $client_intro_html, 'En stock' )
+    && false !== strpos( $client_intro_html, 'Conditionnement' ), 'Identité et disponibilité du client non affichées.' );
+ob_start();
+deprat_client_product_quote();
+$client_quote_html = ob_get_clean();
+deprat_integration_assert( false !== strpos( $client_quote_html, 'Ajouter à ma demande de devis' )
+    && false !== strpos( $client_quote_html, 'data-package-calculator' )
+    && false !== strpos( $client_quote_html, 'Contacter un conseiller' ), 'Encart devis incomplet.' );
+ob_start();
+deprat_client_product_tabs();
+$client_tabs_html = ob_get_clean();
+foreach ( array( 'Caractéristiques techniques', 'Tests &amp; normes', 'Documents &amp; schémas', 'Schéma dimensionnel personnalisé', 'Notice complémentaire' ) as $label ) {
+    deprat_integration_assert( false !== strpos( $client_tabs_html, $label ), 'Onglet DEPRAT manquant : ' . $label );
+}
+
 $unchanged = deprat_product_tech_data( $product_id );
 deprat_integration_assert( 'Longueurs de 6 m' === $unchanged['delivery'], 'Une sauvegarde sans nonce valide a été acceptée.' );
 deprat_integration_assert( (int) $model3d === deprat_product_3d_model( $product_id ), 'Un nonce invalide ne doit pas supprimer la vue 3D.' );

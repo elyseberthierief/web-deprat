@@ -148,9 +148,9 @@ const assert = require( 'assert' );
         const noOverflow = await page.locator( '.deprat-tech-editor' ).evaluate( element => element.scrollWidth <= element.clientWidth + 1 );
         assert( noOverflow, 'Le formulaire ne doit pas déborder sur mobile.' );
         await page.goto( base + '/?post_type=product&p=' + productId, { waitUntil: 'domcontentloaded' } );
-        await page.waitForSelector( '[data-deprat-3d]' );
+        await page.waitForSelector( '[data-three-mode="model"]:visible' );
         assert.strictEqual( await page.locator( '#tab-title-description, #tab-description, #tab-title-additional_information, #tab-additional_information' ).count(), 0, 'Les onglets Description et Informations complémentaires ne doivent plus faire doublon.' );
-        assert( await page.locator( '.deprat-tech-front-card' ).count() >= 2, 'Les cartes techniques personnalisées DEPRAT doivent rester visibles.' );
+        assert( await page.locator( '.deprat-client-tech-panel' ).count() === 3, 'Les trois panneaux techniques DEPRAT remplacent les anciennes cartes.' );
 
         assert( await page.locator( '[data-three-mode="model"]' ).isVisible(), 'Le bouton Vue 3D doit apparaître avec un modèle.' );
         assert( await page.locator( '.deprat-three-viewport' ).isHidden(), 'La galerie photo doit rester sélectionnée à l’ouverture.' );
@@ -159,7 +159,46 @@ const assert = require( 'assert' );
         assert( await page.locator( '.woocommerce-product-gallery.deprat-three-active' ).count() > 0, 'La galerie passe en mode 3D.' );
         await page.locator( '[data-three-mode="photos"]' ).click();
         assert( await page.locator( '.deprat-three-viewport' ).isHidden(), 'Le retour aux photos fonctionne.' );
-        console.log( 'Éditeur et boutique : données, modèle 3D, galerie et commandes testés.' );
+        // Valider la nouvelle disposition client sans créer de menu supplémentaire.
+        await page.setViewportSize( { width: 1600, height: 1000 } );
+        await page.waitForSelector( '.deprat-client-product .deprat-client-quote' );
+        const desktopLayout = await page.evaluate( () => {
+            const rect = selector => document.querySelector( selector ).getBoundingClientRect();
+            return {
+                gallery: rect( '.woocommerce-product-gallery' ).toJSON(),
+                summary: rect( 'div.product .summary .deprat-client-info' ).toJSON(),
+                quote: rect( '.deprat-client-quote' ).toJSON(),
+                tabs: rect( '.deprat-client-tech' ).toJSON()
+            };
+        } );
+        assert( desktopLayout.gallery.right <= desktopLayout.summary.left + 2, 'Images à gauche de la description.' );
+        assert( desktopLayout.summary.right <= desktopLayout.quote.left + 2, 'Demande de devis à droite de la description.' );
+        assert( desktopLayout.tabs.top >= desktopLayout.gallery.top, 'Onglets sous la partie produit.' );
+        assert( await page.locator( '.deprat-client-product .deprat-client-categories a' ).count() > 0, 'Catégories affichées.' );
+        assert( await page.locator( '.deprat-client-product [data-package-calculator]' ).count() === 1, 'Récapitulatif du conditionnement.' );
+        const quantityField = page.locator( '.deprat-client-quote form.cart input.qty' );
+        assert( await quantityField.count() === 1, 'Champ de quantité WooCommerce.' );
+        await page.locator( '.deprat-client-quote .deprat-qty-button' ).last().click();
+        assert.strictEqual( await quantityField.inputValue(), '2', 'Quantité mise à jour sans rechargement.' );
+        assert( ( await page.locator( '[data-package-calculator]' ).textContent() ).includes( '200' ), 'Deux demandes de deux cartons de 50 donnent 200 pièces.' );
+        await page.locator( '[data-tab-target="tests"]' ).click();
+        assert( await page.locator( '[data-tab-panel="tests"]' ).isVisible(), 'Tests et normes visibles.' );
+        assert( await page.locator( '[data-tab-panel="specs"]' ).isHidden(), 'Les autres onglets sont masqués.' );
+        await page.locator( '[data-tab-target="docs"]' ).click();
+        assert( await page.locator( '[data-tab-panel="docs"]' ).isVisible(), 'Schémas et PDF visibles.' );
+        await page.locator( '[data-contact-open]' ).click();
+        assert( await page.locator( '[data-contact-dialog]' ).isVisible(), 'Le popup de contact s’ouvre.' );
+        await page.locator( '.deprat-client-contact-close' ).click();
+        assert( await page.locator( '[data-contact-dialog]' ).isHidden(), 'Le popup se ferme.' );
+        await page.screenshot( { path: process.env.RUNNER_TEMP + '/deprat-fiche-client-desktop.png', fullPage: true } );
+        const pageUrl = page.url();
+        await page.locator( '.deprat-client-quote .single_add_to_cart_button' ).click();
+        await page.locator( '[data-quote-feedback].is-success' ).waitFor( { timeout: 20000 } );
+        assert.strictEqual( page.url(), pageUrl, 'Ajouter à ma demande ne doit pas changer de page.' );
+        await page.setViewportSize( { width: 390, height: 844 } );
+        await page.screenshot( { path: process.env.RUNNER_TEMP + '/deprat-fiche-client-mobile.png', fullPage: true } );
+        assert( await page.locator( '.deprat-client-quote' ).isVisible(), 'Demande de devis visible sur mobile.' );
+        console.log( 'Éditeur et fiche client : disposition, quantités, onglets, demande AJAX et popup validés.' );
     } catch ( error ) {
         await page.screenshot( { path: process.env.RUNNER_TEMP + '/deprat-editor-error.png', fullPage: true } ).catch( () => {} );
         throw error;
