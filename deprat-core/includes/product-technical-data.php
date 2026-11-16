@@ -438,8 +438,8 @@ function deprat_product_tech_admin_assets( $hook ) {
         return;
     }
     wp_enqueue_media();
-    wp_enqueue_style( 'deprat-product-tech-admin', plugins_url( 'assets/css/product-technical-admin.css', dirname( __DIR__ ) . '/deprat-core.php' ), array(), '0.1.18' );
-    wp_enqueue_script( 'deprat-product-tech-admin', plugins_url( 'assets/js/product-technical-admin.js', dirname( __DIR__ ) . '/deprat-core.php' ), array( 'jquery', 'media-views' ), '0.1.18', true );
+    wp_enqueue_style( 'deprat-product-tech-admin', plugins_url( 'assets/css/product-technical-admin.css', dirname( __DIR__ ) . '/deprat-core.php' ), array(), '0.1.19' );
+    wp_enqueue_script( 'deprat-product-tech-admin', plugins_url( 'assets/js/product-technical-admin.js', dirname( __DIR__ ) . '/deprat-core.php' ), array( 'jquery', 'media-views' ), '0.1.19', true );
     wp_localize_script( 'deprat-product-tech-admin', 'depratProductEditor', array(
         'ajaxUrl' => admin_url( 'admin-ajax.php' ),
         'categoryNonce' => wp_create_nonce( 'deprat_create_product_category' ),
@@ -451,7 +451,7 @@ add_action( 'admin_enqueue_scripts', 'deprat_product_tech_admin_assets' );
 
 function deprat_product_tech_front_assets() {
     if ( function_exists( 'is_product' ) && is_product() ) {
-        wp_enqueue_style( 'deprat-product-tech-front', plugins_url( 'assets/css/product-technical-front.css', dirname( __DIR__ ) . '/deprat-core.php' ), array(), '0.1.18' );
+        wp_enqueue_style( 'deprat-product-tech-front', plugins_url( 'assets/css/product-technical-front.css', dirname( __DIR__ ) . '/deprat-core.php' ), array(), '0.1.19' );
     }
 }
 add_action( 'wp_enqueue_scripts', 'deprat_product_tech_front_assets' );
