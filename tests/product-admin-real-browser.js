@@ -17,6 +17,7 @@ const assert = require( 'assert' );
         await page.waitForSelector( 'body.deprat-product-editor-ready [data-editor-chrome]:visible' );
 
         assert.strictEqual( await page.locator( '[data-product-name]' ).inputValue(), 'Tube de test' );
+        await page.waitForFunction( () => document.querySelector( '[data-product-save]' ).getAttribute( 'data-floating' ) === 'false' );
         assert.strictEqual( await page.locator( '[data-product-save]' ).getAttribute( 'data-floating' ), 'false', 'Le bouton est d’abord à son emplacement normal.' );
         await page.evaluate( () => window.scrollTo( 0, document.documentElement.scrollHeight ) );
         await page.waitForFunction( () => document.querySelector( '[data-product-save]' ).getAttribute( 'data-floating' ) === 'true' );
