@@ -139,6 +139,16 @@ function deprat_product_tech_save_gallery( $product ) {
     if ( $featured_id ) { deprat_product_tech_enrich_image( $featured_id, $id, 'featured' ); }
 }
 add_action( 'woocommerce_admin_process_product_object', 'deprat_product_tech_save_gallery', 20 );
+/** Sauvegarde après les autres panneaux WooCommerce pour éviter l'écrasement des photos. */
+function deprat_product_tech_gallery_after_woocommerce( $post_id ) {
+    if ( ! function_exists( 'wc_get_product' ) || ! isset( $_POST['deprat_product_gallery'] ) ) { return; }
+    $product = wc_get_product( $post_id );
+    if ( ! $product ) { return; }
+    deprat_product_tech_save_gallery( $product );
+    $product->save();
+}
+add_action( 'woocommerce_process_product_meta', 'deprat_product_tech_gallery_after_woocommerce', 100 );
+
 
 
 /**
