@@ -20,6 +20,8 @@ jobs:
           php -l deprat-core/includes/product-single-layout.php
           php -l deprat-core/includes/product-3d.php
           php -l deprat-core/includes/product-client-layout.php
+          php -l deprat-core/includes/product-packaging.php
+          php -l deprat-core/includes/product-autosave.php
           php -l deprat-core/templates/product-technical-admin.php
           php -l deprat-core/templates/product-technical-front.php
       - name: Vérifier la sauvegarde et le rendu
@@ -29,6 +31,8 @@ jobs:
           node --check deprat-core/assets/js/product-technical-admin.js
           node --check deprat-core/assets/js/product-3d-front.js
           node --check deprat-core/assets/js/product-client-layout.js
+          node --check deprat-core/assets/js/product-autosave-admin.js
+          node --check deprat-core/assets/js/product-3d-contours.js
           node tests/product-technical-browser-test.js
 
   wordpress-integration:

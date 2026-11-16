@@ -358,3 +358,12 @@ body.deprat-client-product .deprat-client-quote .added_to_cart { display: none !
   }
   body.deprat-client-product div.product .deprat-client-quote form.cart.variations_form { flex-wrap: wrap; }
 }
+
+/* Le choix du conditionnement s'affiche au-dessus de quantité + devis. */
+.deprat-client-package-choice { display: grid; gap: 8px; width: 100%; margin-bottom: 12px; color: #173e79; font-weight: 750; font-size: 13px; }
+.deprat-client-package-choice select {
+  width: 100%; min-width: 0; max-width: 100%; padding: 12px 32px 12px 11px;
+  color: #153c74; background: #f7fafe; border: 1px solid #cddbed; border-radius: 8px;
+  font-size: 13px; font-weight: 600; white-space: normal;
+}
+.deprat-client-packaging > div p + p { margin-top: 8px; padding-top: 8px; border-top: 1px solid #e1e9f4; }

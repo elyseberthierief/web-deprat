@@ -7,6 +7,7 @@ $seo_description = isset( $data['seo_description'] ) && is_scalar( $data['seo_de
 $description = isset( $data['description'] ) && is_scalar( $data['description'] ) ? (string) $data['description'] : '';
 $delivery = isset( $data['delivery'] ) && is_scalar( $data['delivery'] ) ? (string) $data['delivery'] : '';
 $packaging = isset( $data['packaging'] ) && is_scalar( $data['packaging'] ) ? (string) $data['packaging'] : '';
+$all_packages = deprat_product_tech_packages( $data );
 $package_count = isset( $data['package_count'] ) && is_scalar( $data['package_count'] ) ? (string) $data['package_count'] : '';
 $all_diagrams = deprat_product_tech_diagrams( $data );
 $package_quantity = isset( $data['package_quantity'] ) && is_scalar( $data['package_quantity'] ) ? (string) $data['package_quantity'] : '';
@@ -18,10 +19,11 @@ $gallery_ids = $gallery_product ? $gallery_product->get_gallery_image_ids() : ar
     <div class="deprat-tech-chrome" data-editor-chrome hidden>
         <div class="deprat-tech-breadcrumb"><a href="<?php echo esc_url( admin_url( 'edit.php?post_type=product' ) ); ?>">Produits</a><span>/</span><span>Modifier un produit</span></div>
         <header class="deprat-tech-page-header">
-            <div class="deprat-tech-heading"><h1>Modifier le produit</h1><span class="deprat-tech-status" data-product-status></span></div>
+            <div class="deprat-tech-heading"><h1>Modifier le produit</h1><span class="deprat-tech-status" data-product-status></span></div><p class="deprat-autosave-status" data-autosave-status role="status" aria-live="polite">Préparation de la sauvegarde automatique…</p>
             <div class="deprat-tech-page-actions">
                 <button type="button" class="deprat-tech-preview" data-product-preview><span class="dashicons dashicons-visibility" aria-hidden="true"></span> Prévisualiser</button>
-                <button type="button" class="deprat-tech-save" data-product-save><span class="dashicons dashicons-saved" aria-hidden="true"></span> Enregistrer les modifications</button>
+                <button type="button" class="deprat-tech-save" data-product-save><span class="dashicons dashicons-saved" aria-hidden="true"></span> Enregistrer le brouillon</button>
+                <button type="button" class="button button-primary deprat-tech-publish" data-product-publish hidden>Publier après validation</button>
             </div>
         </header>
         <section class="deprat-tech-identity" aria-label="Informations du produit">
@@ -103,25 +105,63 @@ $gallery_ids = $gallery_product ? $gallery_product->get_gallery_image_ids() : ar
             </section>
 
 
-            <section class="deprat-tech-card deprat-package-editor">
-                <h3><span class="dashicons dashicons-archive" aria-hidden="true"></span> Livraison et conditionnement</h3>
-                <div class="deprat-tech-package-fields">
-                    <label class="deprat-tech-field"><span>Quantité de conditionnements</span>
-                        <input type="number" min="1" max="999999" step="1" name="deprat_product_tech[package_count]" value="<?php echo esc_attr( $package_count ); ?>" placeholder="Ex. 2" data-package-count>
-                    </label>
-                    <label class="deprat-tech-field"><span>Type de conditionnement</span>
-                        <input type="text" list="deprat-packaging-suggestions" autocomplete="off" name="deprat_product_tech[packaging]" value="<?php echo esc_attr( $packaging ); ?>" placeholder="Ex. carton" data-package-type>
-                        <datalist id="deprat-packaging-suggestions"><?php foreach ( deprat_product_tech_packaging_suggestions() as $suggestion ) : ?><option value="<?php echo esc_attr( $suggestion ); ?>"></option><?php endforeach; ?></datalist>
-                    </label>
-                    <label class="deprat-tech-field"><span>Nombre de pièces par conditionnement</span>
-                        <input type="number" min="1" max="99999999" step="1" name="deprat_product_tech[package_quantity]" value="<?php echo esc_attr( $package_quantity ); ?>" placeholder="Ex. 50" data-package-pieces>
-                    </label>
+            <section class="deprat-tech-card deprat-package-editor" data-package-editor>
+                <h3><span class="dashicons dashicons-archive" aria-hidden="true"></span> Livraison et conditionnements</h3>
+                <p class="deprat-tech-help">Ajoutez plusieurs propositions : <strong>en pièces</strong> (ex. 2 cartons de 50) ou <strong>au mètre</strong> (ex. 504 m livrés en longueurs de 6 m). Chaque conditionnement est sélectionnable par le client lors de sa demande de devis.</p>
+                <input type="hidden" name="deprat_product_tech[packages_present]" value="1">
+                <div data-package-list class="deprat-package-list">
+                    <?php foreach ( $all_packages as $index => $package ) :
+                        $mode = $package['mode'];
+                        $prefix = 'deprat_product_tech[packages][' . $index . ']'; ?>
+                        <article class="deprat-package-row" data-package-row>
+                            <header class="deprat-package-row-head">
+                                <strong data-package-index>Conditionnement <?php echo esc_html( $index + 1 ); ?></strong>
+                                <button type="button" class="button-link-delete" data-package-delete>Supprimer</button>
+                            </header>
+                            <div class="deprat-package-row-fields">
+                                <label class="deprat-tech-field"><span>Mode de calcul</span>
+                                    <select data-package-mode name="<?php echo esc_attr( $prefix . '[mode]' ); ?>">
+                                        <option value="pieces" <?php selected( $mode, 'pieces' ); ?>>À la pièce</option>
+                                        <option value="length" <?php selected( $mode, 'length' ); ?>>Au mètre</option>
+                                    </select>
+                                </label>
+                                <label class="deprat-tech-field"><span>Nom du conditionnement (facultatif)</span>
+                                    <input data-package-title type="text" name="<?php echo esc_attr( $prefix . '[title]' ); ?>" value="<?php echo esc_attr( $package['title'] ); ?>" placeholder="Ex. Lot pro, grande longueur">
+                                </label>
+                            </div>
+                            <div class="deprat-package-row-fields" data-package-fields="pieces" <?php echo 'length' === $mode ? 'hidden' : ''; ?>>
+                                <label class="deprat-tech-field"><span>Nombre de conditionnements</span>
+                                    <input type="number" min="1" max="999999" step="1" data-package-count name="<?php echo esc_attr( $prefix . '[count]' ); ?>" value="<?php echo esc_attr( isset( $package['count'] ) ? $package['count'] : '' ); ?>" placeholder="Ex. 2">
+                                </label>
+                                <label class="deprat-tech-field"><span>Type (libre avec suggestions)</span>
+                                    <input type="text" list="deprat-packaging-suggestions" data-package-type name="<?php echo esc_attr( $prefix . '[type]' ); ?>" value="<?php echo esc_attr( isset( $package['type'] ) ? $package['type'] : '' ); ?>" placeholder="Ex. carton, lot, unité">
+                                </label>
+                                <label class="deprat-tech-field"><span>Pièces par conditionnement</span>
+                                    <input type="number" min="1" max="99999999" step="1" data-package-pieces name="<?php echo esc_attr( $prefix . '[pieces]' ); ?>" value="<?php echo esc_attr( isset( $package['pieces'] ) ? $package['pieces'] : '' ); ?>" placeholder="Ex. 50">
+                                </label>
+                            </div>
+                            <div class="deprat-package-row-fields" data-package-fields="length" <?php echo 'pieces' === $mode ? 'hidden' : ''; ?>>
+                                <label class="deprat-tech-field"><span>Nombre de mètres par conditionnement</span>
+                                    <input type="number" min="0.001" step="0.001" data-package-total-m name="<?php echo esc_attr( $prefix . '[total_m]' ); ?>" value="<?php echo esc_attr( isset( $package['total_m'] ) ? $package['total_m'] : '' ); ?>" placeholder="Ex. 504">
+                                </label>
+                                <label class="deprat-tech-field"><span>Longueur de chaque barre (m)</span>
+                                    <input type="number" min="0.001" step="0.001" data-package-length-m name="<?php echo esc_attr( $prefix . '[length_m]' ); ?>" value="<?php echo esc_attr( isset( $package['length_m'] ) ? $package['length_m'] : '' ); ?>" placeholder="Ex. 6">
+                                </label>
+                            </div>
+                            <div class="deprat-package-summary" data-package-preview aria-live="polite"></div>
+                        </article>
+                    <?php endforeach; ?>
                 </div>
-                <div class="deprat-package-summary" aria-live="polite" data-package-summary>Renseignez les trois champs pour afficher le récapitulatif.</div>
+                <datalist id="deprat-packaging-suggestions">
+                    <?php foreach ( deprat_product_tech_packaging_suggestions() as $suggestion ) : ?>
+                        <option value="<?php echo esc_attr( $suggestion ); ?>"></option>
+                    <?php endforeach; ?>
+                </datalist>
+                <button type="button" class="button deprat-tech-add" data-package-add>+ Ajouter un conditionnement</button>
                 <label class="deprat-tech-field deprat-package-delivery"><span>Informations complémentaires de livraison</span>
-                    <input name="deprat_product_tech[delivery]" value="<?php echo esc_attr( $delivery ); ?>" placeholder="Ex. longueur de 6 m, transport sur palette">
+                    <input name="deprat_product_tech[delivery]" value="<?php echo esc_attr( $delivery ); ?>" placeholder="Ex. transport sur palette">
                 </label>
-                <p class="deprat-tech-help">Le récapitulatif se calcule automatiquement à partir des valeurs enregistrées. Les quantités de la demande de devis restent indépendantes.</p>
+                <p class="deprat-tech-help">La quantité commandée par le client multiplie le conditionnement choisi. Une répartition en longueurs doit tomber juste (504 ÷ 6 = 84).</p>
             </section>
         </div>
 
