@@ -22,9 +22,6 @@ function deprat_packaging_clean_row( $row ) {
     if ( ! is_array( $row ) ) { return null; }
     $mode = isset( $row['mode'] ) && is_scalar( $row['mode'] ) ? sanitize_key( $row['mode'] ) : '';
     $title = isset( $row['title'] ) && is_scalar( $row['title'] ) ? substr( sanitize_text_field( $row['title'] ), 0, 110 ) : '';
-    if ( 'unitary' === $mode ) {
-        return array( 'mode' => 'unitary', 'title' => 'À l’unité – quantité libre' );
-    }
     if ( 'length' === $mode ) {
         $total = deprat_packaging_decimal( isset( $row['total_m'] ) ? $row['total_m'] : 0 );
         $length = deprat_packaging_decimal( isset( $row['length_m'] ) ? $row['length_m'] : 0 );
@@ -194,7 +191,9 @@ add_filter( 'woocommerce_add_cart_item_data', 'deprat_packaging_cart_item_data',
 
 function deprat_packaging_cart_item_display( $item_data, $cart_item ) {
     if ( ! empty( $cart_item['deprat_package'] ) && is_array( $cart_item['deprat_package'] ) ) {
-        $row = deprat_packaging_clean_row( $cart_item['deprat_package'] );
+        $row = isset( $cart_item['deprat_package']['mode'] ) && 'unitary' === $cart_item['deprat_package']['mode']
+            ? deprat_packaging_unitary_row()
+            : deprat_packaging_clean_row( $cart_item['deprat_package'] );
         if ( $row ) {
             $item_data[] = array( 'key' => 'Conditionnement', 'value' => deprat_packaging_label( $row ) );
             $item_data[] = array( 'key' => 'Total demandé', 'value' => deprat_packaging_total_text( $row, isset( $cart_item['quantity'] ) ? $cart_item['quantity'] : 1 ) );
@@ -210,7 +209,9 @@ add_filter( 'woocommerce_get_item_data', 'deprat_packaging_cart_item_display', 1
 /** Métadonnées du devis / commande si les demandes sont transformées en commandes. */
 function deprat_packaging_order_item( $item, $cart_item_key, $values, $order ) {
     if ( empty( $values['deprat_package'] ) || ! is_array( $values['deprat_package'] ) ) { return; }
-    $row = deprat_packaging_clean_row( $values['deprat_package'] );
+    $row = isset( $values['deprat_package']['mode'] ) && 'unitary' === $values['deprat_package']['mode']
+        ? deprat_packaging_unitary_row()
+        : deprat_packaging_clean_row( $values['deprat_package'] );
     if ( ! $row ) { return; }
     $item->add_meta_data( 'Conditionnement', deprat_packaging_label( $row ) );
     $item->add_meta_data( 'Total demandé', deprat_packaging_total_text( $row, isset( $values['quantity'] ) ? $values['quantity'] : 1 ) );
