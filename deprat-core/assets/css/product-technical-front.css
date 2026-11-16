@@ -26,3 +26,6 @@
 .deprat-tech-front .deprat-tech-package-generated { margin: 0 0 14px; padding: 14px 16px; background: #f1f6fc; border-left: 4px solid #d8a631; border-radius: 5px; color: #103262; font-size: 1.05em; font-weight: 700; line-height: 1.5; }
 .deprat-tech-front .deprat-tech-images { grid-template-columns: repeat(2,minmax(0,1fr)); }
 @media (max-width: 767px) { .deprat-tech-front .deprat-tech-images { grid-template-columns: 1fr; } }
+
+.deprat-tech-front .deprat-tech-documents { display: grid; gap: 10px; }
+.deprat-tech-front .deprat-tech-documents a.deprat-tech-download { display: block; width: fit-content; min-width: min(100%, 260px); }
