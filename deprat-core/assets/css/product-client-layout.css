@@ -383,3 +383,14 @@ body.deprat-client-product .deprat-client-quote .added_to_cart { display: none !
 .deprat-client-unitary-warning[hidden] { display: none !important; }
 .deprat-client-unitary-warning > span { font-size: 17px; line-height: 1; font-weight: 900; }
 .deprat-client-package-choice option[value="unitary"] { font-weight: 700; }
+
+/* La paire de boutons +/- DEPRAT remplace les commandes natives ajoutées par Astra.
+ * Évite les deux "+" signalés sur la quantité de conditionnements. */
+body.deprat-client-product .deprat-client-quote form.cart .quantity .plus:not(.deprat-qty-button),
+body.deprat-client-product .deprat-client-quote form.cart .quantity .minus:not(.deprat-qty-button),
+body.deprat-client-product .deprat-client-quote form.cart .quantity .qty-plus,
+body.deprat-client-product .deprat-client-quote form.cart .quantity .qty-minus,
+body.deprat-client-product .deprat-client-quote form.cart .quantity .quantity-plus,
+body.deprat-client-product .deprat-client-quote form.cart .quantity .quantity-minus {
+    display: none !important;
+}
