@@ -19,10 +19,11 @@ $gallery_ids = $gallery_product ? $gallery_product->get_gallery_image_ids() : ar
     <div class="deprat-tech-chrome" data-editor-chrome hidden>
         <div class="deprat-tech-breadcrumb"><a href="<?php echo esc_url( admin_url( 'edit.php?post_type=product' ) ); ?>">Produits</a><span>/</span><span>Modifier un produit</span></div>
         <header class="deprat-tech-page-header">
-            <div class="deprat-tech-heading"><h1>Modifier le produit</h1><span class="deprat-tech-status" data-product-status></span></div>
+            <div class="deprat-tech-heading"><h1>Modifier le produit</h1><span class="deprat-tech-status" data-product-status></span></div><p class="deprat-autosave-status" data-autosave-status role="status" aria-live="polite">Préparation de la sauvegarde automatique…</p>
             <div class="deprat-tech-page-actions">
                 <button type="button" class="deprat-tech-preview" data-product-preview><span class="dashicons dashicons-visibility" aria-hidden="true"></span> Prévisualiser</button>
-                <button type="button" class="deprat-tech-save" data-product-save><span class="dashicons dashicons-saved" aria-hidden="true"></span> Enregistrer les modifications</button>
+                <button type="button" class="deprat-tech-save" data-product-save><span class="dashicons dashicons-saved" aria-hidden="true"></span> Enregistrer le brouillon</button>
+                <button type="button" class="button button-primary deprat-tech-publish" data-product-publish hidden>Publier après validation</button>
             </div>
         </header>
         <section class="deprat-tech-identity" aria-label="Informations du produit">
