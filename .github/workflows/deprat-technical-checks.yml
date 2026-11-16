@@ -1,0 +1,28 @@
+name: Vérifier DEPRAT Core
+
+on:
+  push:
+    branches:
+      - "feature/deprat-core"
+      - "feature/fiche-technique-produit"
+  pull_request:
+    branches:
+      - "feature/deprat-core"
+
+jobs:
+  product-technical:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Vérifier la syntaxe PHP
+        run: |
+          php -l deprat-core/deprat-core.php
+          php -l deprat-core/includes/product-technical-data.php
+          php -l deprat-core/templates/product-technical-admin.php
+          php -l deprat-core/templates/product-technical-front.php
+      - name: Vérifier la sauvegarde et le rendu
+        run: php tests/product-technical-test.php
+      - name: Vérifier la syntaxe JavaScript
+        run: |
+          node --check deprat-core/assets/js/product-technical-admin.js
+          node tests/product-technical-browser-test.js
