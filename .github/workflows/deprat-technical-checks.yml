@@ -51,6 +51,8 @@ jobs:
           php /tmp/wp-cli.phar core download --locale=fr_FR --path=/tmp/deprat-wp
           php /tmp/wp-cli.phar config create --dbname=wordpress --dbuser=root --dbpass=test --dbhost=127.0.0.1:3306 --path=/tmp/deprat-wp
           php /tmp/wp-cli.phar core install --url=http://127.0.0.1:8099 --title=DEPRAT --admin_user=deprat-test --admin_password=deprat-test --admin_email=test@example.test --skip-email --path=/tmp/deprat-wp
+          php /tmp/wp-cli.phar option update siteurl http://127.0.0.1:8099 --path=/tmp/deprat-wp
+          php /tmp/wp-cli.phar option update home http://127.0.0.1:8099 --path=/tmp/deprat-wp
           php /tmp/wp-cli.phar plugin install woocommerce --version=11.2.1 --activate --path=/tmp/deprat-wp
           php /tmp/wp-cli.phar theme install astra --activate --path=/tmp/deprat-wp
           cp -R deprat-core /tmp/deprat-wp/wp-content/plugins/deprat-core
