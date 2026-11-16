@@ -149,6 +149,9 @@ const assert = require( 'assert' );
         assert( noOverflow, 'Le formulaire ne doit pas déborder sur mobile.' );
         await page.goto( base + '/?post_type=product&p=' + productId, { waitUntil: 'domcontentloaded' } );
         await page.waitForSelector( '[data-deprat-3d]' );
+        assert.strictEqual( await page.locator( '#tab-title-description, #tab-description, #tab-title-additional_information, #tab-additional_information' ).count(), 0, 'Les onglets Description et Informations complémentaires ne doivent plus faire doublon.' );
+        assert( await page.locator( '.deprat-tech-front-card' ).count() >= 2, 'Les cartes techniques personnalisées DEPRAT doivent rester visibles.' );
+
         assert( await page.locator( '[data-three-mode="model"]' ).isVisible(), 'Le bouton Vue 3D doit apparaître avec un modèle.' );
         assert( await page.locator( '.deprat-three-viewport' ).isHidden(), 'La galerie photo doit rester sélectionnée à l’ouverture.' );
         await page.locator( '[data-three-mode="model"]' ).click();
