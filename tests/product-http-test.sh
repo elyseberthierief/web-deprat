@@ -26,6 +26,8 @@ if [ "$status" != 302 ]; then
     grep -E 'login_error|message|Erreur|error' /tmp/deprat-login.html | head -5 >&2 || true
     exit 1
 fi
+# L’assistant de première installation ne concerne pas un site déjà configuré.
+$wp transient delete _wc_activation_redirect --path="$wp_path" >/dev/null 2>&1 || true
 admin_status="$(curl -sS -b /tmp/deprat-cookies -D /tmp/deprat-admin-headers -o /tmp/deprat-admin.html -w '%{http_code}' "$base/wp-admin/post.php?post=$product_id&action=edit")"
 if [ "$admin_status" != 200 ]; then
     echo "Page d’administration : réponse HTTP $admin_status." >&2
