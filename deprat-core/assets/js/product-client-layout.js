@@ -12,25 +12,36 @@
             var n = Number( quantity.value );
             return Number.isSafeInteger( n ) && n > 0 ? n : 1;
         }
-        function displayCalc() {
-            if ( ! calculator ) { return; }
-            var qty = readQuantity();
-            var pieces = Number( calculator.dataset.pieces );
-            var count = Number( calculator.dataset.count ) || 1;
-            var type = ( calculator.dataset.type || '' ).trim();
-            if ( ! type || pieces < 1 ) { return; }
-            var cartons = qty * count;
-            var name = type + ( cartons > 1 && ! /[sxz]$/i.test( type ) ? 's' : '' );
-            var total = cartons * pieces;
-            calculator.textContent = '';
-            var sentence = document.createElement( 'span' );
-            sentence.textContent = 'Votre demande : ' + qty + ' × ' + count + ' ' + name +
-                ' de ' + pieces + ' ' + ( pieces > 1 ? 'pièces' : 'pièce' ) + ', soit ';
-            var strong = document.createElement( 'strong' );
-            strong.textContent = total.toLocaleString( 'fr-FR' ) + ' pièces';
-            calculator.append( sentence, strong );
-            calculator.appendChild( document.createTextNode( '.' ) );
+        var packageChoice = card ? card.querySelector( '[data-package-choice]' ) : null;
+        var packageRows = [];
+        if ( calculator && calculator.dataset.packages ) {
+            try { packageRows = JSON.parse( calculator.dataset.packages ); }
+            catch ( error ) { packageRows = []; }
         }
+        function displayCalc() {
+            if ( ! calculator || ! packageRows.length ) { return; }
+            var qty = readQuantity();
+            var index = packageChoice ? Number( packageChoice.value ) : 0;
+            var row = packageRows[index] || packageRows[0];
+            calculator.textContent = '';
+            var strong = document.createElement( 'strong' );
+            var number = value => new Intl.NumberFormat( 'fr-FR', { maximumFractionDigits: 3 } ).format( value );
+            if ( row.mode === 'length' ) {
+                strong.textContent = number( row.total_m * qty ) + ' m';
+                calculator.appendChild( document.createTextNode( 'Votre demande : ' + qty + ' × ' + number( row.total_m ) + ' m, soit ' ) );
+                calculator.appendChild( strong );
+                calculator.appendChild( document.createTextNode( ' livrés en ' + ( row.sections * qty ) + ' longueurs de ' + number( row.length_m ) + ' m.' ) );
+            } else {
+                var cartons = qty * row.count;
+                var label = row.type + ( cartons > 1 && ! /[sxz]$/i.test( row.type ) ? 's' : '' );
+                strong.textContent = number( cartons * row.pieces ) + ' pièces';
+                calculator.appendChild( document.createTextNode( 'Votre demande : ' + qty + ' × ' + row.count + ' ' + label + ' de ' + row.pieces + ' pièces, soit ' ) );
+                calculator.appendChild( strong );
+                calculator.appendChild( document.createTextNode( '.' ) );
+            }
+        }
+        if ( packageChoice ) { packageChoice.addEventListener( 'change', displayCalc ); }
+        displayCalc();
 
         if ( quantity ) {
             var wrap = quantity.closest( '.quantity' );
@@ -82,6 +93,7 @@
                     var body = new URLSearchParams();
                     body.set( 'product_id', String( productId ) );
                     body.set( 'quantity', String( readQuantity() ) );
+                    if ( packageChoice ) { body.set( 'deprat_package_choice', packageChoice.value ); }
                     feedback.hidden = true;
                     button.disabled = true;
                     var previous = button.textContent;
