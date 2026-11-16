@@ -16,8 +16,8 @@ function deprat_client_product_setup() {
     add_action( 'woocommerce_single_product_summary', 'deprat_client_product_intro', 4 );
     add_filter( 'woocommerce_product_single_add_to_cart_text', 'deprat_client_quote_button_text', 20 );
 
-    // Placement : galerie native à gauche, résumé au centre, formulaire de demande à droite.
-    add_action( 'woocommerce_after_single_product_summary', 'deprat_client_product_quote', 3 );
+    // La demande est dans le résumé WooCommerce, pour résister aux wrappers Astra.
+    add_action( 'woocommerce_single_product_summary', 'deprat_client_product_quote', 35 );
     remove_action( 'woocommerce_after_single_product_summary', 'woocommerce_output_product_data_tabs', 10 );
     remove_action( 'woocommerce_after_single_product_summary', 'woocommerce_upsell_display', 15 );
     remove_action( 'woocommerce_after_single_product_summary', 'woocommerce_output_related_products', 20 );
