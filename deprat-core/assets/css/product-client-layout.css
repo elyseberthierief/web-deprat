@@ -367,3 +367,19 @@ body.deprat-client-product .deprat-client-quote .added_to_cart { display: none !
   font-size: 13px; font-weight: 600; white-space: normal;
 }
 .deprat-client-packaging > div p + p { margin-top: 8px; padding-top: 8px; border-top: 1px solid #e1e9f4; }
+
+/* DEPRAT : commande standard par lot ou quantité libre à l'unité selon catégorie. */
+.deprat-client-quantity-label {
+  display: block; width: 100%; flex: 0 0 100%;
+  color: #173e79; font-size: 13px; font-weight: 750;
+  margin: 2px 0 -4px; line-height: 1.5;
+}
+.deprat-client-unitary-warning {
+  display: flex; align-items: flex-start; gap: 10px; margin: 0 0 16px;
+  padding: 13px 14px; border: 1px solid #edc46c; border-left: 4px solid #cf8510;
+  background: #fff8e8; border-radius: 8px; font-size: 13px;
+  color: #7a4b0c; font-weight: 700; line-height: 1.5;
+}
+.deprat-client-unitary-warning[hidden] { display: none !important; }
+.deprat-client-unitary-warning > span { font-size: 17px; line-height: 1; font-weight: 900; }
+.deprat-client-package-choice option[value="unitary"] { font-weight: 700; }
