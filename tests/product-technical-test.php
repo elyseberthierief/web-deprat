@@ -75,7 +75,7 @@ $product = new Deprat_Test_Product();
 ob_start();
 deprat_product_tech_render_front();
 $html = ob_get_clean();
-foreach ( array( 'Caractéristiques techniques', 'Acier galvanisé Z275', 'Test zéro', '>0<', 'NF EN 12194', 'Couple de destruction', '5 m.kg', 'Longueurs de 6 m', 'Pièces par conditionnement', '>96<', 'Schéma technique', 'Schéma dimensionnel personnalisé', 'Télécharger la fiche technique PDF', 'https://example.test/media/12' ) as $fragment ) {
+foreach ( array( 'Caractéristiques techniques', 'Acier galvanisé Z275', 'Test zéro', '>0<', 'NF EN 12194', 'Couple de destruction', '5 m.kg', 'Longueurs de 6 m', '192 pièces', 'Schéma technique', 'Schéma dimensionnel personnalisé', 'Télécharger la fiche technique PDF', 'https://example.test/media/12' ) as $fragment ) {
     expect( false !== strpos( $html, $fragment ), 'Affichage boutique manquant : ' . $fragment );
 }
 expect( false === strpos( $html, 'Champ vide' ), 'Les champs sans valeur ne sont pas affichés.' );
