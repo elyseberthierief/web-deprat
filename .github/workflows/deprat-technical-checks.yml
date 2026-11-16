@@ -75,6 +75,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: apercu-editeur-produit
-          path: ${{ runner.temp }}/deprat-editor-*.png
+          path: |
+            ${{ runner.temp }}/deprat-editor-*.png
+            ${{ runner.temp }}/deprat-fiche-client-*.png
           if-no-files-found: ignore
           retention-days: 3
