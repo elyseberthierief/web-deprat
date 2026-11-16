@@ -10,7 +10,7 @@ php -S 127.0.0.1:8099 -t "$wp_path" >/tmp/deprat-wp-server.log 2>&1 &
 server_pid=$!
 trap 'kill "$server_pid" 2>/dev/null || true' EXIT
 curl -fsS --retry 12 --retry-delay 1 --retry-connrefused "$base/?post_type=product&p=$product_id" -o /tmp/deprat-product.html
-for expected in "Informations techniques" "Acier galvanisé" "NF EN 12194" "Couple de destruction" "Pièces par conditionnement" "Schéma des dimensions" "Télécharger la fiche technique PDF" "product-technical-front.css"; do
+for expected in "Informations techniques" "Acier galvanisé" "NF EN 12194" "Couple de destruction" "192 pièces" "Schéma dimensionnel personnalisé" "Télécharger la fiche technique PDF" "product-technical-front.css"; do
     grep -Fq "$expected" /tmp/deprat-product.html || { echo "Boutique : élément manquant : $expected" >&2; exit 1; }
 done
 echo "La page produit Astra contient les informations techniques."
@@ -34,7 +34,7 @@ if [ "$admin_status" != 200 ]; then
     grep -i '^location:' /tmp/deprat-admin-headers >&2 || true
     exit 1
 fi
-for expected in "Fiche technique DEPRAT" "Acier galvanisé" "Conditionnement" "Fiche technique PDF" "product-technical-admin.js" "product-technical-admin.css"; do
+for expected in "Fiche technique DEPRAT" "Acier galvanisé" "Type de conditionnement" "Fiche technique PDF" "product-technical-admin.js" "product-technical-admin.css"; do
     grep -Fq "$expected" /tmp/deprat-admin.html || { echo "Administration : élément manquant : $expected" >&2; exit 1; }
 done
 echo "Pages Astra de la boutique et de l’administration, et téléchargement du PDF vérifiés."
