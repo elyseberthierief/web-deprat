@@ -4,7 +4,9 @@ wp="php /tmp/wp-cli.phar"
 wp_path="/tmp/deprat-wp"
 base="http://127.0.0.1:8099"
 product_id="$($wp post list --post_type=product --name=tube-de-test --field=ID --path="$wp_path")"
+piece_id="$($wp post list --post_type=product --name=embout-deprat-de-test --field=ID --path="$wp_path")"
 test -n "$product_id"
+test -n "$piece_id"
 
 php -S 127.0.0.1:8099 -t "$wp_path" >/tmp/deprat-wp-server.log 2>&1 &
 server_pid=$!
@@ -38,4 +40,4 @@ for expected in "Fiche technique DEPRAT" "Acier galvanisé" "Mode de calcul" "Fi
     grep -Fq "$expected" /tmp/deprat-admin.html || { echo "Administration : élément manquant : $expected" >&2; exit 1; }
 done
 echo "Pages Astra de la boutique et de l’administration, et téléchargement du PDF vérifiés."
-node "$GITHUB_WORKSPACE/tests/product-admin-real-browser.js" "$product_id"
+node "$GITHUB_WORKSPACE/tests/product-admin-real-browser.js" "$product_id" "$piece_id"

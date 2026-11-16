@@ -23,6 +23,28 @@ $tube_category = wp_insert_term( 'Tubes', 'product_cat' );
 $end_category = wp_insert_term( 'Embouts', 'product_cat' );
 deprat_integration_assert( ! is_wp_error( $tube_category ) && ! is_wp_error( $end_category ), 'Création des catégories de test impossible.' );
 wp_set_object_terms( $product_id, array( (int) $tube_category['term_id'], (int) $end_category['term_id'] ), 'product_cat' );
+deprat_integration_assert( deprat_packaging_is_tube_product( $product_id ), 'Un produit de la catégorie Tubes doit être reconnu comme tube.' );
+deprat_integration_assert( ! deprat_packaging_allow_unitary( $product_id ), 'La catégorie Tubes doit interdire le conditionnement unitaire.' );
+
+// Un véritable produit pièce pour tester le second parcours dans le navigateur.
+$piece_product = new WC_Product_Simple();
+$piece_product->set_name( 'Embout DEPRAT de test' );
+$piece_product->set_sku( 'TEST-EMBOUT' );
+$piece_product->set_regular_price( '0' );
+$piece_product->set_status( 'publish' );
+$piece_id = $piece_product->save();
+wp_set_object_terms( $piece_id, array( (int) $end_category['term_id'] ), 'product_cat' );
+update_post_meta( $piece_id, '_deprat_product_technical', array(
+    'description' => 'Pièce détachée pour volet roulant.',
+    'packages' => array(
+        array( 'mode' => 'pieces', 'title' => 'Conditionnement professionnel',
+            'count' => 1, 'type' => 'carton', 'pieces' => 50 ),
+    ),
+) );
+deprat_integration_assert( deprat_packaging_allow_unitary( $piece_id ), 'La catégorie pièces doit autoriser la quantité libre.' );
+deprat_integration_assert( null === deprat_packaging_request_row( $product_id, 'unitary' ), 'Le tube ne peut jamais recevoir le mode unitaire.' );
+deprat_integration_assert( 'unitary' === deprat_packaging_request_row( $piece_id, 'unitary' )['mode'], 'La pièce propose la vente unitaire.' );
+
 
 $image = wp_insert_attachment( array(
     'post_title' => 'Schéma de test',
@@ -162,4 +184,31 @@ foreach ( array( 'Caractéristiques techniques', 'Tests &amp; normes', 'Document
 $unchanged = deprat_product_tech_data( $product_id );
 deprat_integration_assert( 'Longueurs de 6 m' === $unchanged['delivery'], 'Une sauvegarde sans nonce valide a été acceptée.' );
 deprat_integration_assert( (int) $model3d === deprat_product_3d_model( $product_id ), 'Un nonce invalide ne doit pas supprimer la vue 3D.' );
+
+$GLOBALS['product'] = wc_get_product( $product_id );
+ob_start();
+deprat_client_product_package_selector();
+$tube_selector = ob_get_clean();
+deprat_integration_assert( false === strpos( $tube_selector, 'value="unitary"' ), 'Aucun choix de conditionnement unitaire pour les tubes.' );
+$GLOBALS['product'] = wc_get_product( $piece_id );
+ob_start();
+deprat_client_product_package_selector();
+$piece_selector = ob_get_clean();
+deprat_integration_assert( false !== strpos( $piece_selector, 'value="unitary"' ), 'Le sélecteur de pièces doit offrir la quantité libre.' );
+ob_start();
+deprat_client_product_quote();
+$piece_quote = ob_get_clean();
+deprat_integration_assert( false !== strpos( $piece_quote, 'data-unitary-warning' ), 'L’avertissement de plus-value doit être présent.' );
+
+$_POST = array( 'deprat_package_choice' => 'unitary' );
+deprat_integration_assert( true === deprat_packaging_validate_cart_choice( true, $piece_id, 7 ), 'La demande libre doit être autorisée sur une pièce.' );
+$unit_cart_data = deprat_packaging_cart_item_data( array(), $piece_id, 0, 7 );
+deprat_integration_assert( ! empty( $unit_cart_data['deprat_nonstandard_packaging'] ) && 'unitary' === $unit_cart_data['deprat_package_index'], 'Le panier doit mémoriser le caractère non standard.' );
+$unit_cart_display = deprat_packaging_cart_item_display( array(), array_merge( $unit_cart_data, array( 'quantity' => 7 ) ) );
+$unit_cart_values = implode( ' ', array_column( $unit_cart_display, 'value' ) );
+deprat_integration_assert( false !== strpos( $unit_cart_values, '7 pièces' ) && false !== strpos( $unit_cart_values, 'plus-value' ), 'La quantité libre et la plus-value doivent être visibles dans la demande.' );
+$_POST = array( 'deprat_package_choice' => '0' );
+$standard_cart_data = deprat_packaging_cart_item_data( array(), $piece_id, 0, 2 );
+deprat_integration_assert( 'pieces' === $standard_cart_data['deprat_package']['mode'] && empty( $standard_cart_data['deprat_nonstandard_packaging'] ), 'La commande standard ne doit pas inclure de plus-value.' );
+
 WP_CLI::success( 'WordPress et WooCommerce : sauvegarde, médias et affichages vérifiés.' );

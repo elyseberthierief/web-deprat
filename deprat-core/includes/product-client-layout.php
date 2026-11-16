@@ -40,8 +40,8 @@ add_filter( 'body_class', 'deprat_client_product_body_class' );
 
 function deprat_client_product_assets() {
     if ( ! function_exists( 'is_product' ) || ! is_product() ) { return; }
-    wp_enqueue_style( 'deprat-client-product', plugins_url( 'assets/css/product-client-layout.css', dirname( __DIR__ ) . '/deprat-core.php' ), array( 'deprat-product-tech-front' ), '0.1.21' );
-    wp_enqueue_script( 'deprat-client-product', plugins_url( 'assets/js/product-client-layout.js', dirname( __DIR__ ) . '/deprat-core.php' ), array(), '0.1.21', true );
+    wp_enqueue_style( 'deprat-client-product', plugins_url( 'assets/css/product-client-layout.css', dirname( __DIR__ ) . '/deprat-core.php' ), array( 'deprat-product-tech-front' ), '0.1.24' );
+    wp_enqueue_script( 'deprat-client-product', plugins_url( 'assets/js/product-client-layout.js', dirname( __DIR__ ) . '/deprat-core.php' ), array(), '0.1.24', true );
     wp_localize_script( 'deprat-client-product', 'depratClientProduct', array(
         'ajaxUrl' => class_exists( 'WC_AJAX' ) ? WC_AJAX::get_endpoint( 'add_to_cart' ) : '',
         'cartUrl' => function_exists( 'wc_get_cart_url' ) ? wc_get_cart_url() : '',
@@ -72,7 +72,8 @@ function deprat_client_product_package_selector() {
     global $product;
     if ( ! $product || ! is_callable( array( $product, 'get_id' ) ) ) { return; }
     $packages = deprat_product_tech_packages( deprat_product_tech_data( $product->get_id() ) );
-    if ( ! $packages ) { return; }
+    $allow_unitary = deprat_packaging_allow_unitary( $product->get_id() );
+    if ( ! $packages && ! $allow_unitary ) { return; }
     ?>
     <label class="deprat-client-package-choice">
         <span>Choisissez votre conditionnement</span>
@@ -82,6 +83,9 @@ function deprat_client_product_package_selector() {
                 <?php echo esc_html( ( $package['title'] ? $package['title'] . ' — ' : '' ) . deprat_packaging_label( $package ) ); ?>
             </option>
         <?php endforeach; ?>
+        <?php if ( $allow_unitary ) : ?>
+            <option value="unitary">À l’unité — quantité libre (conditionnement non standard)</option>
+        <?php endif; ?>
         </select>
     </label>
     <?php
@@ -140,6 +144,7 @@ function deprat_client_product_quote() {
     global $product;
     if ( ! $product || ! is_callable( array( $product, 'get_id' ) ) ) { return; }
     $packages = deprat_product_tech_packages( deprat_product_tech_data( $product->get_id() ) );
+    $allow_unitary = deprat_packaging_allow_unitary( $product->get_id() );
     // Les coordonnées peuvent être configurées dans WordPress via ces deux options.
     $phone = (string) get_option( 'deprat_contact_phone', '03 20 89 68 00' );
     $email = sanitize_email( (string) get_option( 'deprat_contact_email', 'contact@deprat.com' ) );
@@ -147,17 +152,22 @@ function deprat_client_product_quote() {
     <aside class="deprat-client-quote" aria-label="Demande de devis">
         <h2><span aria-hidden="true">▤</span> Ajouter à ma demande de devis</h2>
         <div class="deprat-client-quote-form">
-            <?php if ( $product->is_purchasable() && $product->is_in_stock() ) : ?>
+            <?php if ( $product->is_purchasable() && $product->is_in_stock() && ( $packages || $allow_unitary ) ) : ?>
                 <?php woocommerce_template_single_add_to_cart(); ?>
             <?php else : ?>
                 <p class="deprat-client-quote-unavailable">Ce produit ne peut pas être ajouté à la demande actuellement. Contactez un conseiller.</p>
             <?php endif; ?>
         </div>
         <p class="deprat-client-quote-no-payment">Sans paiement en ligne — demande de devis uniquement.</p>
-        <?php if ( $packages ) : ?>
+        <?php if ( $packages || $allow_unitary ) : ?>
             <div class="deprat-client-quote-calculation" data-package-calculator data-packages="<?php echo esc_attr( wp_json_encode( $packages ) ); ?>" aria-live="polite">
-                Votre demande : <?php echo esc_html( deprat_packaging_total_text( $packages[0], 1 ) ); ?>.
+                Votre demande : <?php echo esc_html( deprat_packaging_total_text( $packages ? $packages[0] : deprat_packaging_unitary_row(), 1 ) ); ?>.
             </div>
+            <?php if ( $allow_unitary ) : ?>
+                <p class="deprat-client-unitary-warning" data-unitary-warning role="note" hidden>
+                    <span aria-hidden="true">!</span> <?php echo esc_html( deprat_packaging_surcharge_warning() ); ?>
+                </p>
+            <?php endif; ?>
         <?php endif; ?>
         <p class="deprat-client-quote-feedback" data-quote-feedback aria-live="polite" hidden></p>
         <div class="deprat-client-quote-help">

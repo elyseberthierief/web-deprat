@@ -64,12 +64,56 @@ function deprat_product_tech_packages( $data ) {
     return $result;
 }
 
+/**
+ * Un produit est un tube si sa catégorie ou l'un de ses parents correspond
+ * à « Tubes » / « Tubes acier » / « Tubes volets roulants ».
+ * Les autres pièces peuvent aussi être demandées en quantité libre.
+ */
+function deprat_packaging_is_tube_product( $product_id ) {
+    if ( ! function_exists( 'get_the_terms' ) || ! function_exists( 'get_term' ) ) { return false; }
+    $terms = get_the_terms( $product_id, 'product_cat' );
+    if ( ! is_array( $terms ) || ! $terms ) { return false; }
+    foreach ( $terms as $term ) {
+        $lineage = array( $term );
+        if ( function_exists( 'get_ancestors' ) ) {
+            foreach ( get_ancestors( $term->term_id, 'product_cat' ) as $ancestor_id ) {
+                $ancestor = get_term( $ancestor_id, 'product_cat' );
+                if ( $ancestor && ! is_wp_error( $ancestor ) ) { $lineage[] = $ancestor; }
+            }
+        }
+        foreach ( $lineage as $category ) {
+            $slug = isset( $category->slug ) ? strtolower( (string) $category->slug ) : '';
+            $name = isset( $category->name ) ? strtolower( (string) $category->name ) : '';
+            if ( preg_match( '/^tubes?(?:$|[-_ ])/', $slug ) ||
+                preg_match( '/^tubes?(?:$|[-_ ])/', $name ) ) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+function deprat_packaging_allow_unitary( $product_id ) {
+    return ! deprat_packaging_is_tube_product( $product_id );
+}
+
+function deprat_packaging_unitary_row() {
+    return array( 'mode' => 'unitary', 'title' => 'À l’unité – quantité libre' );
+}
+
+function deprat_packaging_surcharge_warning() {
+    return 'Une plus-value sera appliquée au prix car le conditionnement est non standard.';
+}
+
 function deprat_packaging_plural( $type, $count ) {
     return $type . ( $count > 1 && ! preg_match( '/[sxz]$/iu', $type ) ? 's' : '' );
 }
 
 /** Texte exact d'une unité de commande, utilisé en admin, dans la boutique et le devis. */
 function deprat_packaging_label( $row ) {
+    if ( 'unitary' === $row['mode'] ) {
+        return 'Conditionnement unitaire, quantité libre (non standard)';
+    }
     if ( 'length' === $row['mode'] ) {
         return sprintf( '%s m livrés en %d longueurs de %s m', deprat_packaging_number( $row['total_m'] ),
             $row['sections'], deprat_packaging_number( $row['length_m'] ) );
@@ -81,6 +125,9 @@ function deprat_packaging_label( $row ) {
 
 function deprat_packaging_total_text( $row, $quantity ) {
     $quantity = max( 1, absint( $quantity ) );
+    if ( 'unitary' === $row['mode'] ) {
+        return sprintf( '%d %s à l’unité (conditionnement non standard)', $quantity, $quantity > 1 ? 'pièces' : 'pièce' );
+    }
     if ( 'length' === $row['mode'] ) {
         return sprintf( '%s m, soit %d longueurs de %s m',
             deprat_packaging_number( $quantity * $row['total_m'] ), $quantity * $row['sections'],
@@ -93,6 +140,9 @@ function deprat_packaging_total_text( $row, $quantity ) {
 }
 
 function deprat_packaging_request_row( $product_id, $choice ) {
+    if ( 'unitary' === $choice && deprat_packaging_allow_unitary( $product_id ) ) {
+        return deprat_packaging_unitary_row();
+    }
     $rows = deprat_product_tech_packages( deprat_product_tech_data( $product_id ) );
     if ( ! is_scalar( $choice ) || ! ctype_digit( (string) $choice ) ) { return null; }
     $index = (int) $choice;
@@ -101,9 +151,14 @@ function deprat_packaging_request_row( $product_id, $choice ) {
 
 function deprat_packaging_validate_cart_choice( $valid, $product_id, $quantity, $variation_id = 0 ) {
     $rows = deprat_product_tech_packages( deprat_product_tech_data( $product_id ) );
-    if ( ! $rows ) { return $valid; }
+    $is_tube = deprat_packaging_is_tube_product( $product_id );
+    // Tubes : aucun conditionnement non standard n'est autorisé.
+    if ( ! $rows && $is_tube ) {
+        if ( function_exists( 'wc_add_notice' ) ) { wc_add_notice( 'Le conditionnement standard de ce tube doit être renseigné.', 'error' ); }
+        return false;
+    }
     $choice = isset( $_POST['deprat_package_choice'] ) && is_scalar( $_POST['deprat_package_choice'] )
-        ? sanitize_text_field( wp_unslash( $_POST['deprat_package_choice'] ) ) : '0';
+        ? sanitize_text_field( wp_unslash( $_POST['deprat_package_choice'] ) ) : ( $rows ? '0' : 'unitary' );
     if ( null === deprat_packaging_request_row( $product_id, $choice ) ) {
         if ( function_exists( 'wc_add_notice' ) ) {
             wc_add_notice( 'Veuillez sélectionner un conditionnement valide.', 'error' );
@@ -117,13 +172,18 @@ add_filter( 'woocommerce_add_to_cart_validation', 'deprat_packaging_validate_car
 /** L'option choisie reste attachée à la ligne du panier/devis même pour le même produit. */
 function deprat_packaging_cart_item_data( $cart_item_data, $product_id, $variation_id = 0, $quantity = 1 ) {
     $rows = deprat_product_tech_packages( deprat_product_tech_data( $product_id ) );
-    if ( ! $rows ) { return $cart_item_data; }
+    if ( ! $rows && ! deprat_packaging_allow_unitary( $product_id ) ) { return $cart_item_data; }
     $choice = isset( $_POST['deprat_package_choice'] ) && is_scalar( $_POST['deprat_package_choice'] )
-        ? sanitize_text_field( wp_unslash( $_POST['deprat_package_choice'] ) ) : '0';
+        ? sanitize_text_field( wp_unslash( $_POST['deprat_package_choice'] ) ) : ( $rows ? '0' : 'unitary' );
     $row = deprat_packaging_request_row( $product_id, $choice );
     if ( $row ) {
         $cart_item_data['deprat_package'] = $row;
-        $cart_item_data['deprat_package_index'] = (int) $choice;
+        $cart_item_data['deprat_package_index'] = 'unitary' === $choice ? 'unitary' : (int) $choice;
+        if ( 'unitary' === $row['mode'] ) {
+            // Marquer explicitement ce cas pour l'ADV / le devis.
+            // Aucun montant de supplément n'est inventé ou appliqué automatiquement.
+            $cart_item_data['deprat_nonstandard_packaging'] = true;
+        }
     }
     return $cart_item_data;
 }
@@ -131,10 +191,15 @@ add_filter( 'woocommerce_add_cart_item_data', 'deprat_packaging_cart_item_data',
 
 function deprat_packaging_cart_item_display( $item_data, $cart_item ) {
     if ( ! empty( $cart_item['deprat_package'] ) && is_array( $cart_item['deprat_package'] ) ) {
-        $row = deprat_packaging_clean_row( $cart_item['deprat_package'] );
+        $row = isset( $cart_item['deprat_package']['mode'] ) && 'unitary' === $cart_item['deprat_package']['mode']
+            ? deprat_packaging_unitary_row()
+            : deprat_packaging_clean_row( $cart_item['deprat_package'] );
         if ( $row ) {
             $item_data[] = array( 'key' => 'Conditionnement', 'value' => deprat_packaging_label( $row ) );
             $item_data[] = array( 'key' => 'Total demandé', 'value' => deprat_packaging_total_text( $row, isset( $cart_item['quantity'] ) ? $cart_item['quantity'] : 1 ) );
+            if ( 'unitary' === $row['mode'] ) {
+                $item_data[] = array( 'key' => 'Plus-value', 'value' => deprat_packaging_surcharge_warning() );
+            }
         }
     }
     return $item_data;
@@ -144,9 +209,14 @@ add_filter( 'woocommerce_get_item_data', 'deprat_packaging_cart_item_display', 1
 /** Métadonnées du devis / commande si les demandes sont transformées en commandes. */
 function deprat_packaging_order_item( $item, $cart_item_key, $values, $order ) {
     if ( empty( $values['deprat_package'] ) || ! is_array( $values['deprat_package'] ) ) { return; }
-    $row = deprat_packaging_clean_row( $values['deprat_package'] );
+    $row = isset( $values['deprat_package']['mode'] ) && 'unitary' === $values['deprat_package']['mode']
+        ? deprat_packaging_unitary_row()
+        : deprat_packaging_clean_row( $values['deprat_package'] );
     if ( ! $row ) { return; }
     $item->add_meta_data( 'Conditionnement', deprat_packaging_label( $row ) );
     $item->add_meta_data( 'Total demandé', deprat_packaging_total_text( $row, isset( $values['quantity'] ) ? $values['quantity'] : 1 ) );
+    if ( 'unitary' === $row['mode'] ) {
+        $item->add_meta_data( 'Plus-value', deprat_packaging_surcharge_warning() );
+    }
 }
 add_action( 'woocommerce_checkout_create_order_line_item', 'deprat_packaging_order_item', 10, 4 );

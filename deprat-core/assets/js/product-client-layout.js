@@ -13,14 +13,31 @@
             return Number.isSafeInteger( n ) && n > 0 ? n : 1;
         }
         var packageChoice = card ? card.querySelector( '[data-package-choice]' ) : null;
+        var unitaryWarning = card ? card.querySelector( '[data-unitary-warning]' ) : null;
+        var quantityLabel = null;
         var packageRows = [];
         if ( calculator && calculator.dataset.packages ) {
             try { packageRows = JSON.parse( calculator.dataset.packages ); }
             catch ( error ) { packageRows = []; }
         }
         function displayCalc() {
-            if ( ! calculator || ! packageRows.length ) { return; }
+            if ( ! calculator ) { return; }
             var qty = readQuantity();
+            var unitary = !!( packageChoice && packageChoice.value === 'unitary' );
+            if ( unitaryWarning ) { unitaryWarning.hidden = ! unitary; }
+            if ( quantityLabel ) {
+                quantityLabel.textContent = unitary ? 'Nombre de pièces souhaitées' : 'Quantité de conditionnements';
+            }
+            if ( unitary ) {
+                calculator.textContent = '';
+                calculator.appendChild( document.createTextNode( 'Votre demande : ' ) );
+                var unitaryStrong = document.createElement( 'strong' );
+                unitaryStrong.textContent = qty.toLocaleString( 'fr-FR' ) + ( qty > 1 ? ' pièces à l’unité' : ' pièce à l’unité' );
+                calculator.appendChild( unitaryStrong );
+                calculator.appendChild( document.createTextNode( ' (conditionnement non standard).' ) );
+                return;
+            }
+            if ( ! packageRows.length ) { return; }
             var index = packageChoice ? Number( packageChoice.value ) : 0;
             var row = packageRows[index] || packageRows[0];
             calculator.textContent = '';
@@ -46,6 +63,11 @@
         if ( quantity ) {
             var wrap = quantity.closest( '.quantity' );
             if ( wrap ) {
+                quantityLabel = document.createElement( 'label' );
+                quantityLabel.className = 'deprat-client-quantity-label';
+                if ( ! quantity.id ) { quantity.id = 'deprat-quote-quantity'; }
+                quantityLabel.setAttribute( 'for', quantity.id );
+                wrap.parentNode.insertBefore( quantityLabel, wrap );
                 var minus = document.createElement( 'button' );
                 minus.type = 'button';
                 minus.className = 'deprat-qty-button';
