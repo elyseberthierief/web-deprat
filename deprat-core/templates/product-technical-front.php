@@ -25,26 +25,31 @@ if ( ! defined( 'ABSPATH' ) ) {
                 <dl><?php foreach ( $tests as $row ) : ?><div><dt><?php echo esc_html( $row['label'] ); ?></dt><dd><?php echo esc_html( $row['value'] ); ?></dd></div><?php endforeach; ?></dl>
             </section>
         <?php endif; ?>
-        <?php if ( '' !== $delivery || '' !== $packaging || $package_quantity ) : ?>
+        <?php if ( '' !== $delivery || '' !== $packaging || $package_quantity || $package_summary ) : ?>
             <section class="deprat-tech-front-card">
                 <h3>Livraison et conditionnement</h3>
+                <?php if ( $package_summary ) : ?><p class="deprat-tech-package-generated"><?php echo esc_html( $package_summary ); ?></p><?php endif; ?>
                 <dl>
                     <?php if ( '' !== $delivery ) : ?><div><dt>Livraison</dt><dd><?php echo esc_html( $delivery ); ?></dd></div><?php endif; ?>
-                    <?php if ( '' !== $packaging ) : ?><div><dt>Conditionnement</dt><dd><?php echo esc_html( $packaging ); ?></dd></div><?php endif; ?>
-                    <?php if ( $package_quantity ) : ?><div><dt>Pièces par conditionnement</dt><dd><?php echo esc_html( $package_quantity ); ?></dd></div><?php endif; ?>
+                    <?php if ( '' !== $packaging && ! $package_summary ) : ?><div><dt>Conditionnement</dt><dd><?php echo esc_html( $packaging ); ?></dd></div><?php endif; ?>
+                    <?php if ( $package_quantity && ! $package_summary ) : ?><div><dt>Pièces par conditionnement</dt><dd><?php echo esc_html( $package_quantity ); ?></dd></div><?php endif; ?>
                 </dl>
             </section>
         <?php endif; ?>
-        <?php if ( $technical_image || $dimensions_image ) : ?>
+        <?php if ( $diagrams ) : ?>
             <section class="deprat-tech-front-card deprat-tech-schematics">
                 <h3>Schémas et dimensions</h3>
                 <div class="deprat-tech-images">
-                    <?php foreach ( array( 'Schéma technique' => $technical_image, 'Schéma des dimensions' => $dimensions_image ) as $label => $attachment_id ) :
-                        if ( ! $attachment_id ) { continue; }
-                        $image_url = wp_get_attachment_url( $attachment_id );
+                    <?php foreach ( $diagrams as $diagram ) :
+                        $image_url = wp_get_attachment_url( $diagram['image'] );
                         if ( ! $image_url ) { continue; }
                         ?>
-                        <figure><a href="<?php echo esc_url( $image_url ); ?>" target="_blank" rel="noopener noreferrer"><?php echo wp_get_attachment_image( $attachment_id, 'large', false, array( 'alt' => $label, 'loading' => 'lazy' ) ); ?></a><figcaption><?php echo esc_html( $label ); ?></figcaption></figure>
+                        <figure>
+                            <a href="<?php echo esc_url( $image_url ); ?>" target="_blank" rel="noopener noreferrer">
+                                <?php echo wp_get_attachment_image( $diagram['image'], 'large', false, array( 'alt' => $diagram['title'], 'loading' => 'lazy' ) ); ?>
+                            </a>
+                            <figcaption><?php echo esc_html( $diagram['title'] ); ?></figcaption>
+                        </figure>
                     <?php endforeach; ?>
                 </div>
             </section>
