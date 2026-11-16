@@ -111,7 +111,7 @@ deprat_integration_assert( isset( $tabs['reviews'] ), 'Les autres onglets person
 ob_start();
 deprat_product_tech_render_admin( get_post( $product_id ) );
 $admin_html = ob_get_clean();
-foreach ( array( 'Caractéristiques techniques', 'Acier galvanisé', 'Normes', 'Valeurs testées', 'Type de conditionnement', 'Fiches techniques PDF', 'Visualisation 3D', 'Fichier 3D SolidWorks (.GLB)', 'Schéma dimensionnel personnalisé' ) as $expected ) {
+foreach ( array( 'Caractéristiques techniques', 'Acier galvanisé', 'Normes', 'Valeurs testées', 'Mode de calcul', 'Fiches techniques PDF', 'Visualisation 3D', 'Fichier 3D SolidWorks (.GLB)', 'Schéma dimensionnel personnalisé' ) as $expected ) {
     deprat_integration_assert( false !== strpos( $admin_html, $expected ), 'Champ absent de l’administration : ' . $expected );
 }
 
