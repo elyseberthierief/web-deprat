@@ -195,7 +195,7 @@ const assert = require( 'assert' );
         await page.locator( '.deprat-client-quote .deprat-qty-button' ).last().click();
         assert.strictEqual( await quantityField.inputValue(), '2', 'Quantité mise à jour sans rechargement.' );
         assert( ( await page.locator( '[data-package-calculator]' ).textContent() ).includes( '200' ), 'Deux demandes de deux cartons de 50 donnent 200 pièces.' );
-        await page.locator( '[data-package-choice]' ).selectOption( '1' );
+        await page.locator( '.deprat-client-quote [data-package-choice]' ).selectOption( '1' );
         assert( ( await page.locator( '[data-package-calculator]' ).textContent() ).includes( '1 008' ), 'Deux lots de 504 m donnent 1 008 m.' );
         assert( ( await page.locator( '[data-package-calculator]' ).textContent() ).includes( '168 longueurs' ), 'Deux conditionnements contiennent 168 longueurs de 6 m.' );
         await page.locator( '[data-tab-target="tests"]' ).click();
