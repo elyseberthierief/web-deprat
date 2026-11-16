@@ -6,6 +6,8 @@ $GLOBALS['test_permissions'] = true;
 $GLOBALS['test_autosave'] = false;
 $GLOBALS['test_revision'] = false;
 function add_action() {}
+function add_filter() {}
+function delete_post_meta( $id, $key ) { unset( $GLOBALS['test_meta'][$id][$key] ); }
 function add_meta_box() {}
 function get_post_meta( $id, $key, $single = true ) { return isset( $GLOBALS['test_meta'][ $id ][ $key ] ) ? $GLOBALS['test_meta'][ $id ][ $key ] : ''; }
 function update_post_meta( $id, $key, $value ) { $GLOBALS['test_meta'][ $id ][ $key ] = $value; }
@@ -34,8 +36,9 @@ function expect( $condition, $message ) { if ( ! $condition ) { fwrite( STDERR, 
 
 require __DIR__ . '/../deprat-core/includes/product-technical-data.php';
 require __DIR__ . '/../deprat-core/includes/product-single-layout.php';
+require __DIR__ . '/../deprat-core/includes/product-3d.php';
 
-$GLOBALS['test_attachments'] = array( 11 => 'image/png', 12 => 'application/pdf', 13 => 'image/jpeg', 14 => 'text/html', 15 => 'application/pdf' );
+$GLOBALS['test_attachments'] = array( 11 => 'image/png', 12 => 'application/pdf', 13 => 'image/jpeg', 14 => 'text/html', 15 => 'application/pdf', 16 => 'model/gltf-binary' );
 $GLOBALS['test_meta'][ 42 ] = array( '_sku' => 'F2000/G00' );
 $_POST = array(
     'deprat_product_tech_nonce' => 'valid',
@@ -64,10 +67,14 @@ $_POST = array(
         'diagrams_present' => '1',
         'diagrams' => array( array( 'title' => 'Schéma dimensionnel personnalisé', 'image' => '13' ), array( 'title' => 'Schéma technique', 'image' => '11' ) ),
     ),
+    'deprat_product_glb' => '16',
 );
 deprat_product_tech_save( 42 );
+deprat_product_3d_save( 42 );
 $saved = deprat_product_tech_data( 42 );
 expect( 'F2000/G00' === $GLOBALS['test_meta'][ 42 ]['_sku'], 'La référence existante doit rester inchangée.' );
+expect( 16 === deprat_product_3d_model( 42 ), 'Le modèle 3D associé est conservé.' );
+expect( 0 === deprat_product_3d_attachment( 12 ), 'Un PDF ne peut pas être un modèle GLB.' );
 expect( 'Épaisseur' === $saved['features'][2]['label'], 'Les champs sont nettoyés avant sauvegarde.' );
 expect( 2 === count( $saved['norms'] ), 'Les normes vides sont ignorées.' );
 expect( 96 === $saved['package_quantity'], 'Le nombre de pièces est enregistré.' );
@@ -122,4 +129,17 @@ $saved = deprat_product_tech_data( 42 );
 expect( 0 === $saved['technical_image'] && 0 === $saved['datasheet'], 'Types de médias non autorisés refusés.' );
 expect( 0 === count( deprat_product_tech_datasheets( $saved ) ), 'Les documents invalides sont refusés.' );
 expect( '' === $saved['package_quantity'], 'Quantité de conditionnement invalide ignorée.' );
+
+$valid_gltf_json = '{"asset":{"version":"2.0"}}';
+$padding = ( 4 - strlen( $valid_gltf_json ) % 4 ) % 4;
+$valid_gltf_json .= str_repeat( ' ', $padding );
+$valid_glb = 'glTF' . pack( 'V', 2 ) . pack( 'V', 20 + strlen( $valid_gltf_json ) )
+    . pack( 'V', strlen( $valid_gltf_json ) ) . 'JSON' . $valid_gltf_json;
+$tmp_glb = tempnam( sys_get_temp_dir(), 'deprat-glb-' );
+file_put_contents( $tmp_glb, $valid_glb );
+expect( deprat_product_3d_valid_binary( $tmp_glb, strlen( $valid_glb ) ), 'Un GLB 2.0 valide est reconnu.' );
+expect( ! deprat_product_3d_valid_binary( $tmp_glb, strlen( $valid_glb ) + 1 ), 'La taille annoncée du fichier GLB doit correspondre.' );
+file_put_contents( $tmp_glb, "%PDF-1.4\n" );
+expect( ! deprat_product_3d_valid_binary( $tmp_glb, filesize( $tmp_glb ) ), 'Un PDF renommé en GLB est refusé.' );
+unlink( $tmp_glb );
 echo "Tests de sauvegarde, droits, médias et rendu boutique réussis.\n";
