@@ -99,6 +99,14 @@ deprat_integration_assert( '' !== get_post_meta( $image, '_wp_attachment_image_a
 deprat_integration_assert( false !== strpos( deprat_product_tech_seo_description( $product_id ), 'TEST-DP62' ), 'La méta-description doit intégrer la référence.' );
 deprat_integration_assert( (int) $gallery_image === (int) wc_get_product( $product_id )->get_gallery_image_ids()[0], 'La galerie WooCommerce doit être conservée.' );
 deprat_integration_assert( false !== has_action( 'woocommerce_after_single_product_summary', 'deprat_product_tech_render_front' ), 'L’affichage boutique n’est pas raccordé à WooCommerce.' );
+$tabs = apply_filters( 'woocommerce_product_tabs', array(
+    'description' => array( 'title' => 'Description' ),
+    'additional_information' => array( 'title' => 'Informations complémentaires' ),
+    'reviews' => array( 'title' => 'Avis' ),
+) );
+deprat_integration_assert( ! isset( $tabs['description'] ) && ! isset( $tabs['additional_information'] ), 'Les deux onglets WooCommerce en doublon doivent disparaître.' );
+deprat_integration_assert( isset( $tabs['reviews'] ), 'Les autres onglets personnalisés ou avis doivent être conservés.' );
+
 
 ob_start();
 deprat_product_tech_render_admin( get_post( $product_id ) );
