@@ -15,6 +15,7 @@ function deprat_client_product_setup() {
     remove_action( 'woocommerce_single_product_summary', 'woocommerce_template_single_add_to_cart', 30 );
     add_action( 'woocommerce_single_product_summary', 'deprat_client_product_intro', 4 );
     add_filter( 'woocommerce_product_single_add_to_cart_text', 'deprat_client_quote_button_text', 20 );
+    add_action( 'woocommerce_before_add_to_cart_button', 'deprat_client_product_package_selector', 8 );
 
     // La demande est dans le résumé WooCommerce, pour résister aux wrappers Astra.
     add_action( 'woocommerce_single_product_summary', 'deprat_client_product_quote', 35 );
@@ -66,6 +67,26 @@ function deprat_client_product_package_label( $package ) {
         : sprintf( '1 %s de %d %s', $type, $package['pieces'], $package['pieces'] > 1 ? 'pièces' : 'pièce' );
 }
 
+/** Sélection d'un conditionnement dans le formulaire WooCommerce avant la quantité. */
+function deprat_client_product_package_selector() {
+    global $product;
+    if ( ! $product || ! is_callable( array( $product, 'get_id' ) ) ) { return; }
+    $packages = deprat_product_tech_packages( deprat_product_tech_data( $product->get_id() ) );
+    if ( ! $packages ) { return; }
+    ?>
+    <label class="deprat-client-package-choice">
+        <span>Choisissez votre conditionnement</span>
+        <select name="deprat_package_choice" data-package-choice>
+        <?php foreach ( $packages as $index => $package ) : ?>
+            <option value="<?php echo esc_attr( $index ); ?>">
+                <?php echo esc_html( ( $package['title'] ? $package['title'] . ' — ' : '' ) . deprat_packaging_label( $package ) ); ?>
+            </option>
+        <?php endforeach; ?>
+        </select>
+    </label>
+    <?php
+}
+
 function deprat_client_product_intro() {
     global $product;
     if ( ! $product || ! is_callable( array( $product, 'get_id' ) ) ) { return; }
@@ -75,8 +96,7 @@ function deprat_client_product_intro() {
     $description = isset( $data['description'] ) && is_scalar( $data['description'] ) && '' !== trim( (string) $data['description'] )
         ? trim( (string) $data['description'] ) : trim( wp_strip_all_tags( $product->get_short_description() ) );
     $terms = get_the_terms( $id, 'product_cat' );
-    $package = deprat_client_product_package( $id );
-    $pack_label = deprat_client_product_package_label( $package );
+    $packages = deprat_product_tech_packages( $data );
     $status = $product->get_stock_status();
     ?>
     <section class="deprat-client-info" aria-label="Présentation du produit">
@@ -101,11 +121,14 @@ function deprat_client_product_intro() {
                 <span class="deprat-client-stock-pill is-unavailable">Indisponible</span>
             <?php endif; ?>
         </div>
-        <?php if ( $pack_label ) : ?>
+        <?php if ( $packages ) : ?>
             <div class="deprat-client-packaging">
                 <span class="deprat-client-pack-icon" aria-hidden="true"><?php echo deprat_product_tech_icon( 'package' ); ?></span>
-                <div><strong>Conditionnement</strong>
-                    <p>Le produit est conditionné en <b><?php echo esc_html( $pack_label ); ?>.</b></p>
+                <div><strong>Conditionnements disponibles</strong>
+                <?php foreach ( $packages as $pack ) : ?>
+                    <p><?php if ( $pack['title'] ) : ?><strong><?php echo esc_html( $pack['title'] ); ?> : </strong><?php endif; ?>
+                        <?php echo esc_html( deprat_packaging_label( $pack ) ); ?></p>
+                <?php endforeach; ?>
                 </div>
             </div>
         <?php endif; ?>
@@ -116,8 +139,7 @@ function deprat_client_product_intro() {
 function deprat_client_product_quote() {
     global $product;
     if ( ! $product || ! is_callable( array( $product, 'get_id' ) ) ) { return; }
-    $package = deprat_client_product_package( $product->get_id() );
-    $single = deprat_client_product_package_label( $package );
+    $packages = deprat_product_tech_packages( deprat_product_tech_data( $product->get_id() ) );
     // Les coordonnées peuvent être configurées dans WordPress via ces deux options.
     $phone = (string) get_option( 'deprat_contact_phone', '03 20 89 68 00' );
     $email = sanitize_email( (string) get_option( 'deprat_contact_email', 'contact@deprat.com' ) );
@@ -132,14 +154,9 @@ function deprat_client_product_quote() {
             <?php endif; ?>
         </div>
         <p class="deprat-client-quote-no-payment">Sans paiement en ligne — demande de devis uniquement.</p>
-        <?php if ( $single ) : ?>
-            <div class="deprat-client-quote-calculation" data-package-calculator
-                data-type="<?php echo esc_attr( $package['type'] ); ?>"
-                data-count="<?php echo esc_attr( $package['count'] ); ?>"
-                data-pieces="<?php echo esc_attr( $package['pieces'] ); ?>"
-                aria-live="polite">
-                Pour 1 unité demandée : <?php echo esc_html( $single ); ?>,
-                soit <strong><?php echo esc_html( $package['count'] * $package['pieces'] ); ?> pièces</strong>.
+        <?php if ( $packages ) : ?>
+            <div class="deprat-client-quote-calculation" data-package-calculator data-packages="<?php echo esc_attr( wp_json_encode( $packages ) ); ?>" aria-live="polite">
+                Votre demande : <?php echo esc_html( deprat_packaging_total_text( $packages[0], 1 ) ); ?>.
             </div>
         <?php endif; ?>
         <p class="deprat-client-quote-feedback" data-quote-feedback aria-live="polite" hidden></p>
