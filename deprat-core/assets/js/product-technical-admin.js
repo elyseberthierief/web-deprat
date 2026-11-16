@@ -761,9 +761,11 @@
         editor.addEventListener( 'click', function ( event ) {
             var save = event.target.closest( '[data-product-save]' );
             if ( save && editor.contains( save ) ) {
-                var originalSave = document.getElementById( 'publish' );
-                if ( originalSave ) {
-                    originalSave.click();
+                if ( window.depratDraftAutosave && window.depratDraftAutosave.saveNow ) {
+                    window.depratDraftAutosave.saveNow();
+                } else {
+                    var originalSave = document.getElementById( 'publish' );
+                    if ( originalSave ) { originalSave.click(); }
                 }
                 return;
             }
