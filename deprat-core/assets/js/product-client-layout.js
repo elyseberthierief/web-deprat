@@ -1,7 +1,7 @@
 ( function () {
     'use strict';
     function initProduct() {
-        var product = document.querySelector( '.deprat-client-product .woocommerce div.product' );
+        var product = document.querySelector( 'body.deprat-client-product div.product' );
         if ( ! product ) { return; }
         var card = product.querySelector( '.deprat-client-quote' );
         var quantity = card ? card.querySelector( 'form.cart input.qty' ) : null;
