@@ -18,8 +18,7 @@ curl -fsS "$base/wp-content/uploads/integration-test/fiche.pdf" -o /tmp/deprat-t
 test "$(head -c 4 /tmp/deprat-test.pdf)" = "%PDF" || { echo "Le PDF téléchargé ne correspond pas au fichier attendu." >&2; exit 1; }
 echo "Le PDF est téléchargeable."
 
-curl -fsS -c /tmp/deprat-cookies "$base/wp-login.php" -o /dev/null
-status="$(curl -sS -b /tmp/deprat-cookies -c /tmp/deprat-cookies -o /tmp/deprat-login.html -w '%{http_code}' \
+status="$(curl -sS -b 'wordpress_test_cookie=WP%20Cookie%20check' -c /tmp/deprat-cookies -o /tmp/deprat-login.html -w '%{http_code}' \
     --data-urlencode 'log=deprat-test' --data-urlencode 'pwd=deprat-test' --data-urlencode 'wp-submit=Log In' \
     --data-urlencode "redirect_to=$base/wp-admin/" --data-urlencode 'testcookie=1' "$base/wp-login.php")"
 if [ "$status" != 302 ]; then

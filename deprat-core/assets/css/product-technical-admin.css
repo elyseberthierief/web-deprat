@@ -1,7 +1,7 @@
 #deprat-product-technical { border: 1px solid #d3e0f0; border-radius: 10px; overflow: hidden; }
 #deprat-product-technical > .postbox-header { color: #102d5c; background: #f8fbff; border-bottom: 1px solid #dce6f3; }
 #deprat-product-technical > .inside { margin: 0; padding: 18px; background: #edf3f9; }
-.deprat-tech-editor { color: #142d56; font-family: inherit; }
+.deprat-tech-editor { color: #142d56; font-family: "Agenda", "Agenda Std", Arial, sans-serif; }
 .deprat-tech-editor *, .deprat-tech-editor *::before, .deprat-tech-editor *::after { box-sizing: border-box; }
 .deprat-tech-intro { margin: 0 0 16px; color: #526782; }
 .deprat-tech-layout { display: grid; grid-template-columns: minmax(0, 2fr) minmax(240px, 1fr); gap: 16px; align-items: start; }
