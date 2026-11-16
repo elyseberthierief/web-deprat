@@ -33,6 +33,10 @@ $pdf = wp_insert_attachment( array(
 update_post_meta( $image, '_wp_attached_file', 'integration-test/schema.png' );
 update_post_meta( $pdf, '_wp_attached_file', 'integration-test/fiche.pdf' );
 deprat_integration_assert( ! is_wp_error( $image ) && ! is_wp_error( $pdf ), 'Création des médias de test impossible.' );
+$uploads = wp_upload_dir();
+wp_mkdir_p( $uploads['basedir'] . '/integration-test' );
+file_put_contents( $uploads['basedir'] . '/integration-test/fiche.pdf', "%PDF-1.4\n%%EOF\n" );
+file_put_contents( $uploads['basedir'] . '/integration-test/schema.png', base64_decode( 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jRr0AAAAASUVORK5CYII=' ) );
 
 $_POST = array(
     'deprat_product_tech_nonce' => wp_create_nonce( 'deprat_product_tech_save' ),
