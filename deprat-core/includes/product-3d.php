@@ -130,6 +130,12 @@ function deprat_product_3d_gallery_toggle() {
                 interaction-prompt="auto" loading="lazy" reveal="auto" touch-action="pan-y">
                 <div slot="poster">Chargement du modèle 3D…</div>
             </model-viewer>
+            <div class="deprat-three-view-options" role="group" aria-label="Mode de rendu 3D">
+                <button type="button" data-render-mode="texture" class="is-selected" aria-pressed="true">Pièce texturée</button>
+                <button type="button" data-render-mode="contours" aria-pressed="false">Contours</button>
+                <button type="button" data-background-cycle aria-label="Changer le fond 3D" title="Adapter le fond à la couleur de la pièce">Fond : automatique</button>
+            </div>
+            <div class="deprat-three-outline" data-three-outline hidden aria-label="Vue en contours de la pièce 3D"></div>
             <p>Faites glisser pour tourner la pièce et utilisez la molette pour zoomer.</p>
         </div>
     </div>
@@ -141,9 +147,22 @@ function deprat_product_3d_front_assets() {
     if ( ! function_exists( 'is_product' ) || ! is_product() || ! deprat_product_3d_model( get_queried_object_id() ) ) { return; }
     // Version figée pour une présentation stable du modèle GLB.
     wp_enqueue_script( 'deprat-model-viewer', 'https://ajax.googleapis.com/ajax/libs/model-viewer/4.4.0/model-viewer.min.js', array(), '4.4.0', true );
-    wp_enqueue_script( 'deprat-model-switch', plugins_url( 'assets/js/product-3d-front.js', dirname( __DIR__ ) . '/deprat-core.php' ), array(), '0.1.19', true );
+    wp_enqueue_script( 'deprat-model-switch', plugins_url( 'assets/js/product-3d-front.js', dirname( __DIR__ ) . '/deprat-core.php' ), array(), '0.1.22', true );
+    wp_localize_script( 'deprat-model-switch', 'deprat3DConfig', array(
+        'contoursUrl' => plugins_url( 'assets/js/product-3d-contours.js', dirname( __DIR__ ) . '/deprat-core.php' ),
+    ) );
 }
 add_action( 'wp_enqueue_scripts', 'deprat_product_3d_front_assets' );
+/**
+ * Imports Three.js uniquement quand le client choisit la vue en contours.
+ * Un importmap assure que le chargeur GLB et les contrôles utilisent la même version.
+ */
+function deprat_product_3d_importmap() {
+    if ( ! function_exists( 'is_product' ) || ! is_product() || ! deprat_product_3d_model( get_queried_object_id() ) ) { return; }
+    echo '<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.175.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.175.0/examples/jsm/"}}</script>' . "\n";
+}
+add_action( 'wp_head', 'deprat_product_3d_importmap', 2 );
+
 function deprat_product_3d_script_module( $tag, $handle ) {
     if ( 'deprat-model-viewer' !== $handle ) { return $tag; }
     return str_replace( '<script ', '<script type="module" ', $tag );
