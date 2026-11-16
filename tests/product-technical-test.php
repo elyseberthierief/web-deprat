@@ -50,10 +50,13 @@ $_POST = array(
         'tests' => array( array( 'label' => 'Couple de destruction', 'value' => '5 m.kg' ) ),
         'delivery' => 'Longueurs de 6 m',
         'packaging' => 'Lot',
+        'package_count' => '2',
         'package_quantity' => '96',
         'technical_image' => '11',
         'dimensions_image' => '13',
         'datasheet' => '12',
+        'diagrams_present' => '1',
+        'diagrams' => array( array( 'title' => 'Schéma dimensionnel personnalisé', 'image' => '13' ), array( 'title' => 'Schéma technique', 'image' => '11' ) ),
     ),
 );
 deprat_product_tech_save( 42 );
@@ -62,6 +65,9 @@ expect( 'F2000/G00' === $GLOBALS['test_meta'][ 42 ]['_sku'], 'La référence exi
 expect( 'Épaisseur' === $saved['features'][2]['label'], 'Les champs sont nettoyés avant sauvegarde.' );
 expect( 2 === count( $saved['norms'] ), 'Les normes vides sont ignorées.' );
 expect( 96 === $saved['package_quantity'], 'Le nombre de pièces est enregistré.' );
+expect( 2 === $saved['package_count'], 'Le nombre de conditionnements est enregistré.' );
+expect( false !== strpos( deprat_product_tech_package_summary( $saved ), '192 pièces' ), 'Le total de conditionnement est calculé.' );
+expect( 'Schéma dimensionnel personnalisé' === deprat_product_tech_diagrams( $saved )[0]['title'], 'Les schémas personnalisés gardent leur titre.' );
 expect( 11 === $saved['technical_image'] && 13 === $saved['dimensions_image'] && 12 === $saved['datasheet'], 'Les images et le PDF sont enregistrés.' );
 
 class Deprat_Test_Product { public function get_id() { return 42; } }
@@ -69,7 +75,7 @@ $product = new Deprat_Test_Product();
 ob_start();
 deprat_product_tech_render_front();
 $html = ob_get_clean();
-foreach ( array( 'Caractéristiques techniques', 'Acier galvanisé Z275', 'Test zéro', '>0<', 'NF EN 12194', 'Couple de destruction', '5 m.kg', 'Longueurs de 6 m', 'Pièces par conditionnement', '>96<', 'Schéma technique', 'Schéma des dimensions', 'Télécharger la fiche technique PDF', 'https://example.test/media/12' ) as $fragment ) {
+foreach ( array( 'Caractéristiques techniques', 'Acier galvanisé Z275', 'Test zéro', '>0<', 'NF EN 12194', 'Couple de destruction', '5 m.kg', 'Longueurs de 6 m', 'Pièces par conditionnement', '>96<', 'Schéma technique', 'Schéma dimensionnel personnalisé', 'Télécharger la fiche technique PDF', 'https://example.test/media/12' ) as $fragment ) {
     expect( false !== strpos( $html, $fragment ), 'Affichage boutique manquant : ' . $fragment );
 }
 expect( false === strpos( $html, 'Champ vide' ), 'Les champs sans valeur ne sont pas affichés.' );
