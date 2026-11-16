@@ -3,6 +3,7 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 wp_nonce_field( 'deprat_product_tech_save', 'deprat_product_tech_nonce' );
+$seo_description = isset( $data['seo_description'] ) && is_scalar( $data['seo_description'] ) ? (string) $data['seo_description'] : '';
 $description = isset( $data['description'] ) && is_scalar( $data['description'] ) ? (string) $data['description'] : '';
 $delivery = isset( $data['delivery'] ) && is_scalar( $data['delivery'] ) ? (string) $data['delivery'] : '';
 $packaging = isset( $data['packaging'] ) && is_scalar( $data['packaging'] ) ? (string) $data['packaging'] : '';
@@ -26,7 +27,7 @@ $gallery_ids = $gallery_product ? $gallery_product->get_gallery_image_ids() : ar
         <section class="deprat-tech-identity" aria-label="Informations du produit">
             <div class="deprat-tech-identity-photo" data-featured-panel hidden>
                 <div class="deprat-featured-preview" data-featured-preview></div>
-                <div class="deprat-tech-media-actions"><button type="button" class="button" data-featured-select>Modifier l’image</button><button type="button" class="button-link-delete" data-featured-remove hidden>Retirer</button></div>
+                <div class="deprat-tech-media-actions"><button type="button" class="button" data-featured-select>Médiathèque</button><button type="button" class="button deprat-tech-quick-upload" data-quick-upload="featured">Importer une image</button><button type="button" class="button-link-delete" data-featured-remove hidden>Retirer</button></div>
             </div>
             <div class="deprat-tech-identity-fields">
             <label class="deprat-tech-field"><span>Nom du produit</span><input type="text" data-product-name autocomplete="off"></label>
@@ -43,6 +44,13 @@ $gallery_ids = $gallery_product ? $gallery_product->get_gallery_image_ids() : ar
         <label class="deprat-tech-field"><span>Présentation et utilisation du produit</span>
             <textarea name="deprat_product_tech[description]" rows="5" placeholder="Décrivez le produit, son utilisation et ses avantages."><?php echo esc_textarea( $description ); ?></textarea>
         </label>
+        <details class="deprat-seo-options">
+            <summary>Référencement SEO : description automatique et personnalisable</summary>
+            <label class="deprat-tech-field"><span>Description SEO personnalisée (facultatif)</span>
+                <textarea name="deprat_product_tech[seo_description]" rows="2" maxlength="240" placeholder="Laisser vide pour une description générée à partir du produit et de sa référence"><?php echo esc_textarea( $seo_description ); ?></textarea>
+            </label>
+            <p class="deprat-tech-help">Si ce champ est vide, une description courte sera générée automatiquement. Les textes ALT des images importées le seront également et resteront modifiables dans les médias.</p>
+        </details>
     </section>
     <div class="deprat-tech-layout">
         <div class="deprat-tech-main">
@@ -132,7 +140,8 @@ $gallery_ids = $gallery_product ? $gallery_product->get_gallery_image_ids() : ar
                         </article>
                     <?php endforeach; ?>
                 </div>
-                <button type="button" class="button deprat-tech-add" data-gallery-add>+ Ajouter des images</button>
+                <button type="button" class="button deprat-tech-add" data-gallery-add>+ Médiathèque</button>
+                <button type="button" class="button deprat-tech-add deprat-tech-quick-upload" data-quick-upload="gallery">+ Importer des photos</button>
             </section>
 
             <section class="deprat-tech-card deprat-tech-pdf-panel">
@@ -149,7 +158,8 @@ $gallery_ids = $gallery_product ? $gallery_product->get_gallery_image_ids() : ar
                             </label>
                             <input type="hidden" data-datasheet-file name="deprat_product_tech[datasheets][<?php echo esc_attr( $index ); ?>][file]" value="<?php echo esc_attr( $sheet['file'] ); ?>">
                             <div class="deprat-tech-media-preview" data-datasheet-preview><?php if ( $url ) : ?><a target="_blank" rel="noopener noreferrer" href="<?php echo esc_url( $url ); ?>"><?php echo esc_html( get_the_title( $sheet['file'] ) ); ?></a><?php endif; ?></div>
-                            <button type="button" class="button" data-datasheet-select>Remplacer le PDF</button>
+                            <button type="button" class="button" data-datasheet-select>Médiathèque</button>
+                            <button type="button" class="button deprat-tech-quick-upload" data-quick-upload="datasheet">Importer un PDF</button>
                         </article>
                     <?php endforeach; ?>
                 </div>
@@ -171,7 +181,8 @@ $gallery_ids = $gallery_product ? $gallery_product->get_gallery_image_ids() : ar
                         <label class="deprat-tech-field"><span>Titre du schéma</span><input data-diagram-title name="deprat_product_tech[diagrams][<?php echo esc_attr( $index ); ?>][title]" value="<?php echo esc_attr( $diagram['title'] ); ?>" placeholder="Ex. Schéma de montage"></label>
                         <input type="hidden" data-diagram-image name="deprat_product_tech[diagrams][<?php echo esc_attr( $index ); ?>][image]" value="<?php echo esc_attr( $diagram['image'] ); ?>">
                         <div class="deprat-tech-media-preview" data-diagram-preview><?php echo wp_get_attachment_image( $diagram['image'], 'medium', false, array( 'alt' => $diagram['title'] ) ); ?></div>
-                        <button type="button" class="button" data-diagram-select>Modifier le schéma</button>
+                        <button type="button" class="button" data-diagram-select>Médiathèque</button>
+                        <button type="button" class="button deprat-tech-quick-upload" data-quick-upload="diagram">Importer un schéma</button>
                     </article>
                 <?php endforeach; ?>
                 </div>
