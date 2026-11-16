@@ -26,7 +26,12 @@ if [ "$status" != 302 ]; then
     grep -E 'login_error|message|Erreur|error' /tmp/deprat-login.html | head -5 >&2 || true
     exit 1
 fi
-curl -fsS -b /tmp/deprat-cookies "$base/wp-admin/post.php?post=$product_id&action=edit" -o /tmp/deprat-admin.html
+admin_status="$(curl -sS -b /tmp/deprat-cookies -D /tmp/deprat-admin-headers -o /tmp/deprat-admin.html -w '%{http_code}' "$base/wp-admin/post.php?post=$product_id&action=edit")"
+if [ "$admin_status" != 200 ]; then
+    echo "Page d’administration : réponse HTTP $admin_status." >&2
+    grep -i '^location:' /tmp/deprat-admin-headers >&2 || true
+    exit 1
+fi
 for expected in "Fiche technique DEPRAT" "Acier galvanisé" "Conditionnement" "Fiche technique PDF" "product-technical-admin.js" "product-technical-admin.css"; do
     grep -Fq "$expected" /tmp/deprat-admin.html || { echo "Administration : élément manquant : $expected" >&2; exit 1; }
 done
