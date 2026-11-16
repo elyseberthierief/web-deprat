@@ -212,3 +212,9 @@ body.deprat-modal-open { overflow: hidden; }
 .deprat-package-row .deprat-package-summary.is-invalid { border-left-color: #c12d2d; background: #fff0f0; color: #8a2020; }
 .deprat-package-editor [data-package-add] { margin: 0 0 17px; }
 @media (max-width: 1080px) { .deprat-package-row-fields { grid-template-columns: 1fr; } }
+
+/* Etat de sauvegarde d'un brouillon et publication volontaire. */
+.deprat-autosave-status { margin: 3px 0 12px; font-size: 13px; font-weight: 650; color: #2e6b52; }
+.deprat-autosave-status.is-error { color: #9f2626; }
+.deprat-tech-page-actions .deprat-tech-publish { background: #146336; border-color: #146336; color: #fff; font-weight: 700; min-height: 36px; }
+.deprat-tech-page-actions .deprat-tech-publish:hover { background: #0f4d28; border-color: #0f4d28; }
