@@ -1,0 +1,24 @@
+.deprat-tech-front { clear: both; padding: 28px 0 36px; color: #102d5c; }
+.deprat-tech-front *, .deprat-tech-front *::before, .deprat-tech-front *::after { box-sizing: border-box; }
+.deprat-tech-front-header { border-left: 4px solid #dca730; padding-left: 14px; margin-bottom: 20px; }
+.deprat-tech-front .deprat-tech-front-header h2 { color: #102d5c; font-size: 1.65em; line-height: 1.2; margin: 0; }
+.deprat-tech-description { color: #435a78; margin: 0 0 18px; white-space: normal; }
+.deprat-tech-front-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: start; }
+.deprat-tech-front-card { min-width: 0; padding: 20px; border: 1px solid #d6e2f0; border-radius: 10px; background: #fff; box-shadow: 0 3px 12px rgba(13, 43, 80, .05); }
+.deprat-tech-front .deprat-tech-front-card h3 { margin: 0 0 14px; padding-bottom: 10px; border-bottom: 1px solid #dca730; color: #102d5c; font-size: 1.15em; line-height: 1.25; }
+.deprat-tech-front-card dl { margin: 0; }
+.deprat-tech-front-card dl div { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); gap: 14px; padding: 8px 0; border-bottom: 1px solid #edf1f6; }
+.deprat-tech-front-card dl div:last-child { border-bottom: 0; }
+.deprat-tech-front-card dt { font-weight: 600; }
+.deprat-tech-front-card dd { margin: 0; color: #425b78; overflow-wrap: anywhere; }
+.deprat-tech-front .deprat-tech-norms { display: flex; flex-wrap: wrap; gap: 8px; padding: 0; margin: 0; list-style: none; }
+.deprat-tech-norms li { padding: 5px 10px; border: 1px solid #c8d9ec; border-radius: 6px; background: #f1f6fc; }
+.deprat-tech-schematics { grid-column: 1 / -1; }
+.deprat-tech-images { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.deprat-tech-front .deprat-tech-images figure { margin: 0; padding: 12px; border: 1px solid #e1e9f2; border-radius: 7px; text-align: center; }
+.deprat-tech-images img { display: inline-block; max-width: 100%; width: auto; max-height: 280px; height: auto; object-fit: contain; }
+.deprat-tech-images figcaption { margin-top: 8px; font-weight: 600; }
+.deprat-tech-document p { margin: 0 0 14px; color: #526782; }
+.deprat-tech-front a.deprat-tech-download { display: inline-block; max-width: 100%; padding: 10px 15px; border: 1px solid #0b59ad; border-radius: 6px; color: #0758ad; background: #fff; text-decoration: none; font-weight: 600; }
+.deprat-tech-front a.deprat-tech-download:hover, .deprat-tech-front a.deprat-tech-download:focus { background: #edf5ff; color: #063a76; }
+@media (max-width: 767px) { .deprat-tech-front-grid, .deprat-tech-images { grid-template-columns: 1fr; } .deprat-tech-schematics { grid-column: auto; } .deprat-tech-front-card dl div { grid-template-columns: 1fr; gap: 3px; } }
