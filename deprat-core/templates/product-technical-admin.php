@@ -107,7 +107,8 @@ $gallery_ids = $gallery_product ? $gallery_product->get_gallery_image_ids() : ar
 
             <section class="deprat-tech-card deprat-package-editor" data-package-editor>
                 <h3><span class="dashicons dashicons-archive" aria-hidden="true"></span> Livraison et conditionnements</h3>
-                <p class="deprat-tech-help">Ajoutez plusieurs propositions : <strong>en pièces</strong> (ex. 2 cartons de 50) ou <strong>au mètre</strong> (ex. 504 m livrés en longueurs de 6 m). Chaque conditionnement est sélectionnable par le client lors de sa demande de devis.</p>
+                <p class="deprat-tech-help">Définissez ici les <strong>conditionnements standard</strong> du produit : en pièces (ex. 2 cartons de 50) ou au mètre (ex. 504 m en longueurs de 6 m). Vous pouvez en proposer plusieurs.</p>
+                <p class="deprat-tech-help"><strong>Règle boutique :</strong> dans la catégorie <strong>Tubes</strong> et ses sous-catégories, seuls ces conditionnements sont proposés. Pour les autres pièces, le client peut également choisir une <strong>quantité libre à l’unité</strong>, avec un avertissement indiquant qu’une plus-value sera appliquée au prix pour conditionnement non standard.</p>
                 <input type="hidden" name="deprat_product_tech[packages_present]" value="1">
                 <div data-package-list class="deprat-package-list">
                     <?php foreach ( $all_packages as $index => $package ) :
