@@ -33,6 +33,7 @@ function admin_url( $path ) { return 'https://example.test/wp-admin/' . $path; }
 function expect( $condition, $message ) { if ( ! $condition ) { fwrite( STDERR, "ÉCHEC : " . $message . "\n" ); exit( 1 ); } }
 
 require __DIR__ . '/../deprat-core/includes/product-technical-data.php';
+require __DIR__ . '/../deprat-core/includes/product-single-layout.php';
 
 $GLOBALS['test_attachments'] = array( 11 => 'image/png', 12 => 'application/pdf', 13 => 'image/jpeg', 14 => 'text/html', 15 => 'application/pdf' );
 $GLOBALS['test_meta'][ 42 ] = array( '_sku' => 'F2000/G00' );
@@ -75,6 +76,7 @@ expect( false !== strpos( deprat_product_tech_package_summary( $saved ), '192 pi
 expect( 'Schéma dimensionnel personnalisé' === deprat_product_tech_diagrams( $saved )[0]['title'], 'Les schémas personnalisés gardent leur titre.' );
 expect( 11 === $saved['technical_image'] && 13 === $saved['dimensions_image'] && 12 === $saved['datasheet'], 'Les images et le PDF sont enregistrés.' );
 expect( 2 === count( deprat_product_tech_datasheets( $saved ) ), 'Deux PDF sont conservés.' );
+expect( false !== strpos( deprat_product_tech_icon( 'norms' ), '<svg' ), 'Les icônes SVG sont générées.' );
 expect( 'Notice de pose DP62' === deprat_product_tech_datasheets( $saved )[1]['title'], 'Les titres des PDF sont conservés.' );
 expect( 12 === deprat_product_tech_datasheets( array( 'datasheet' => 12 ) )[0]['file'], 'L’ancien PDF unique reste visible.' );
 
