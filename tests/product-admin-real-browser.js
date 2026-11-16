@@ -215,7 +215,25 @@ const assert = require( 'assert' );
         await page.setViewportSize( { width: 390, height: 844 } );
         await page.screenshot( { path: process.env.RUNNER_TEMP + '/deprat-fiche-client-mobile.png', fullPage: true } );
         assert( await page.locator( '.deprat-client-quote' ).isVisible(), 'Demande de devis visible sur mobile.' );
-        console.log( 'Éditeur et fiche client : disposition, quantités, onglets, demande AJAX et popup validés.' );
+        // Création d'une nouvelle fiche : l'autosave reste strictement en brouillon.
+        await page.goto( base + '/wp-admin/post-new.php?post_type=product', { waitUntil: 'load' } );
+        await page.waitForSelector( 'body.deprat-product-editor-ready [data-editor-chrome]:visible' );
+        assert( await page.locator( '[data-product-publish]' ).isVisible(), 'La publication doit être un bouton manuel distinct.' );
+        const newDraftId = await page.locator( '#post_ID' ).inputValue();
+        assert( Number( newDraftId ) > 0, 'La création doit avoir un brouillon initial WordPress.' );
+        await page.locator( '[data-product-name]' ).fill( 'Produit auto-brouillon DEPRAT test' );
+        await page.locator( '[name="deprat_product_tech[description]"]' ).fill( 'Sauvegarde automatique non publiée.' );
+        await page.waitForFunction( () => {
+            const label = document.querySelector( '[data-autosave-status]' );
+            return label && label.textContent.includes( 'Brouillon enregistré automatiquement' );
+        }, { timeout: 20000 } );
+        assert.strictEqual( await page.locator( '#post_status' ).inputValue(), 'draft', 'La sauvegarde ne doit jamais publier le produit.' );
+        await page.goto( base + '/wp-admin/post.php?post=' + newDraftId + '&action=edit', { waitUntil: 'load' } );
+        await page.waitForSelector( 'body.deprat-product-editor-ready [data-editor-chrome]:visible' );
+        assert.strictEqual( await page.locator( '[data-product-name]' ).inputValue(), 'Produit auto-brouillon DEPRAT test', 'Le nom est retrouvé après réouverture.' );
+        assert.strictEqual( await page.locator( '[name="deprat_product_tech[description]"]' ).inputValue(), 'Sauvegarde automatique non publiée.', 'La description est retrouvée.' );
+        assert( await page.locator( '[data-product-publish]' ).isVisible(), 'Le brouillon reste soumis à une publication volontaire.' );
+        console.log( 'Éditeur, conditionnements, 3D, devis AJAX et autosave brouillon validés.' );
     } catch ( error ) {
         await page.screenshot( { path: process.env.RUNNER_TEMP + '/deprat-editor-error.png', fullPage: true } ).catch( () => {} );
         throw error;
