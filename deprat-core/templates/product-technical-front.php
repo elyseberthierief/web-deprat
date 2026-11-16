@@ -54,11 +54,19 @@ if ( ! defined( 'ABSPATH' ) ) {
                 </div>
             </section>
         <?php endif; ?>
-        <?php if ( $datasheet && wp_get_attachment_url( $datasheet ) ) : ?>
+        <?php if ( $datasheets ) : ?>
             <section class="deprat-tech-front-card deprat-tech-document">
-                <h3>Fiche technique</h3>
-                <p>Retrouvez la fiche technique de ce produit au format PDF.</p>
-                <a class="deprat-tech-download" href="<?php echo esc_url( wp_get_attachment_url( $datasheet ) ); ?>" download>Télécharger la fiche technique PDF</a>
+                <h3>Fiches techniques</h3>
+                <p>Consultez ou téléchargez les documents techniques du produit au format PDF.</p>
+                <div class="deprat-tech-documents">
+                    <?php foreach ( $datasheets as $sheet ) :
+                        $url = wp_get_attachment_url( $sheet['file'] );
+                        if ( ! $url ) { continue; } ?>
+                        <a class="deprat-tech-download" href="<?php echo esc_url( $url ); ?>" download>
+                            <?php echo esc_html( $sheet['title'] ); ?> — Télécharger la fiche technique PDF
+                        </a>
+                    <?php endforeach; ?>
+                </div>
             </section>
         <?php endif; ?>
     </div>
