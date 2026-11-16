@@ -180,7 +180,7 @@ const assert = require( 'assert' );
         assert( await quantityField.count() === 1, 'Champ de quantité WooCommerce.' );
         await page.locator( '.deprat-client-quote .deprat-qty-button' ).last().click();
         assert.strictEqual( await quantityField.inputValue(), '2', 'Quantité mise à jour sans rechargement.' );
-        assert( ( await page.locator( '[data-package-calculator]' ).textContent() ).includes( '384' ), 'Deux demandes de deux lots de 96 donnent 384 pièces.' );
+        assert( ( await page.locator( '[data-package-calculator]' ).textContent() ).includes( '200' ), 'Deux demandes de deux cartons de 50 donnent 200 pièces.' );
         await page.locator( '[data-tab-target="tests"]' ).click();
         assert( await page.locator( '[data-tab-panel="tests"]' ).isVisible(), 'Tests et normes visibles.' );
         assert( await page.locator( '[data-tab-panel="specs"]' ).isHidden(), 'Les autres onglets sont masqués.' );
