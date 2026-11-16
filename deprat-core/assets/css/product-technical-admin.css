@@ -176,3 +176,17 @@ body.deprat-modal-open { overflow: hidden; }
     .deprat-tech-identity-fields { grid-template-columns: 1fr; }
     .deprat-tech-identity-photo { max-width: 250px; width: 100%; }
 }
+
+/* Référencement et import direct en arrière-plan. */
+.deprat-seo-options { margin-top: 16px; border-top: 1px solid #e2eaf4; padding-top: 11px; }
+.deprat-seo-options summary { color: #1c528b; font-weight: 700; cursor: pointer; }
+.deprat-seo-options .deprat-tech-field { margin-top: 14px; }
+#deprat-product-technical .deprat-tech-quick-upload { border-color: #184a83; background: #103c79; color: white; font-weight: 700; }
+#deprat-product-technical .deprat-tech-quick-upload:hover { background: #164e91; color: white; }
+#deprat-product-technical .deprat-tech-quick-upload:disabled { opacity: .6; cursor: progress; }
+.deprat-tech-identity-photo .deprat-tech-media-actions { align-items: center; }
+.deprat-tech-pdf-panel .deprat-tech-quick-upload,
+.deprat-tech-diagrams-panel .deprat-tech-quick-upload { margin-left: 7px; margin-top: 7px; }
+@media (max-width: 600px) {
+  #deprat-product-technical .deprat-tech-quick-upload { max-width: 100%; white-space: normal; }
+}
