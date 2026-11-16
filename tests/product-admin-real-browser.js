@@ -203,6 +203,8 @@ const assert = require( 'assert' );
         assert( await page.locator( '.deprat-client-product [data-package-calculator]' ).count() === 1, 'Récapitulatif du conditionnement.' );
         const quantityField = page.locator( '.deprat-client-quote form.cart input.qty' );
         assert( await quantityField.count() === 1, 'Champ de quantité WooCommerce.' );
+        assert.strictEqual( await page.locator( '.deprat-client-quote-unavailable' ).count(), 0, 'Le produit sans prix ne doit plus afficher le message d’indisponibilité.' );
+        assert( await page.locator( '.deprat-client-quote .single_add_to_cart_button' ).isVisible(), 'Le bouton de demande est visible sans prix commercial.' );
         assert.strictEqual( await page.locator( '.deprat-client-quote .quantity .deprat-qty-button' ).count(), 2, 'Une seule paire de boutons quantité.' );
         await page.evaluate( () => {
             const quantity = document.querySelector( '.deprat-client-quote .quantity' );
@@ -265,6 +267,7 @@ const assert = require( 'assert' );
         await page.goto( base + '/?post_type=product&p=' + pieceProductId, { waitUntil: 'domcontentloaded' } );
         await page.waitForSelector( '.deprat-client-quote [data-package-choice]' );
         const pieceSelect = page.locator( '.deprat-client-quote [data-package-choice]' );
+        assert.strictEqual( await page.locator( '.deprat-client-quote-unavailable' ).count(), 0, 'La pièce sans prix reste ajoutable.' );
         assert.strictEqual( await pieceSelect.locator( 'option' ).count(), 2, 'Une pièce propose le conditionnement standard et le choix unitaire.' );
         assert( await page.locator( '[data-unitary-warning]' ).isHidden(), 'Pas de plus-value sur le conditionnement standard.' );
         await pieceSelect.selectOption( 'unitary' );

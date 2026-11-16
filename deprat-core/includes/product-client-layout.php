@@ -40,8 +40,8 @@ add_filter( 'body_class', 'deprat_client_product_body_class' );
 
 function deprat_client_product_assets() {
     if ( ! function_exists( 'is_product' ) || ! is_product() ) { return; }
-    wp_enqueue_style( 'deprat-client-product', plugins_url( 'assets/css/product-client-layout.css', dirname( __DIR__ ) . '/deprat-core.php' ), array( 'deprat-product-tech-front' ), '0.1.25' );
-    wp_enqueue_script( 'deprat-client-product', plugins_url( 'assets/js/product-client-layout.js', dirname( __DIR__ ) . '/deprat-core.php' ), array(), '0.1.25', true );
+    wp_enqueue_style( 'deprat-client-product', plugins_url( 'assets/css/product-client-layout.css', dirname( __DIR__ ) . '/deprat-core.php' ), array( 'deprat-product-tech-front' ), '0.1.26' );
+    wp_enqueue_script( 'deprat-client-product', plugins_url( 'assets/js/product-client-layout.js', dirname( __DIR__ ) . '/deprat-core.php' ), array(), '0.1.26', true );
     wp_localize_script( 'deprat-client-product', 'depratClientProduct', array(
         'ajaxUrl' => class_exists( 'WC_AJAX' ) ? WC_AJAX::get_endpoint( 'add_to_cart' ) : '',
         'cartUrl' => function_exists( 'wc_get_cart_url' ) ? wc_get_cart_url() : '',
@@ -155,7 +155,13 @@ function deprat_client_product_quote() {
             <?php if ( $product->is_purchasable() && $product->is_in_stock() && ( $packages || $allow_unitary ) ) : ?>
                 <?php woocommerce_template_single_add_to_cart(); ?>
             <?php else : ?>
-                <p class="deprat-client-quote-unavailable">Ce produit ne peut pas être ajouté à la demande actuellement. Contactez un conseiller.</p>
+                <?php if ( ! $product->is_in_stock() ) : ?>
+                    <p class="deprat-client-quote-unavailable">Ce produit est actuellement indisponible. Contactez un conseiller.</p>
+                <?php elseif ( ! $packages && ! $allow_unitary ) : ?>
+                    <p class="deprat-client-quote-unavailable">Le conditionnement standard de ce tube doit encore être renseigné par DEPRAT. Contactez un conseiller.</p>
+                <?php else : ?>
+                    <p class="deprat-client-quote-unavailable">Ce produit ne peut pas encore être ajouté à la demande. Contactez un conseiller.</p>
+                <?php endif; ?>
             <?php endif; ?>
         </div>
         <p class="deprat-client-quote-no-payment">Sans paiement en ligne — demande de devis uniquement.</p>

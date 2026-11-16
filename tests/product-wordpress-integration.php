@@ -15,10 +15,15 @@ wp_set_current_user( $admin->ID );
 $product = new WC_Product_Simple();
 $product->set_name( 'Tube de test' );
 $product->set_sku( 'TEST-DP62' );
-$product->set_regular_price( '0' );
 $product->set_status( 'publish' );
 $product_id = $product->save();
 deprat_integration_assert( (bool) $product_id, 'Création du produit de test impossible.' );
+$no_price_tube = wc_get_product( $product_id );
+deprat_integration_assert( '' === $no_price_tube->get_price( 'edit' ), 'Aucun prix ne doit être enregistré pour le tube de test.' );
+deprat_integration_assert( '0' === (string) $no_price_tube->get_price(), 'WooCommerce doit utiliser un zéro technique uniquement dans les calculs.' );
+deprat_integration_assert( $no_price_tube->is_purchasable(), 'Un tube publié sans prix doit rester ajoutable au devis.' );
+deprat_integration_assert( '' === $no_price_tube->get_price_html(), 'Aucun 0 € ne doit être visible dans le catalogue.' );
+
 $tube_category = wp_insert_term( 'Tubes', 'product_cat' );
 $end_category = wp_insert_term( 'Embouts', 'product_cat' );
 deprat_integration_assert( ! is_wp_error( $tube_category ) && ! is_wp_error( $end_category ), 'Création des catégories de test impossible.' );
@@ -30,9 +35,13 @@ deprat_integration_assert( ! deprat_packaging_allow_unitary( $product_id ), 'La 
 $piece_product = new WC_Product_Simple();
 $piece_product->set_name( 'Embout DEPRAT de test' );
 $piece_product->set_sku( 'TEST-EMBOUT' );
-$piece_product->set_regular_price( '0' );
 $piece_product->set_status( 'publish' );
 $piece_id = $piece_product->save();
+$no_price_piece = wc_get_product( $piece_id );
+deprat_integration_assert( '' === $no_price_piece->get_price( 'edit' ), 'La pièce sans prix doit rester sans tarif enregistré.' );
+deprat_integration_assert( $no_price_piece->is_purchasable(), 'La pièce sans prix doit pouvoir être ajoutée au devis.' );
+deprat_integration_assert( 'Sur devis' === deprat_quote_cart_price_label( '0 €', array( 'data' => $no_price_piece ) ), 'Le panier affiche Sur devis, jamais 0 €.' );
+
 wp_set_object_terms( $piece_id, array( (int) $end_category['term_id'] ), 'product_cat' );
 update_post_meta( $piece_id, '_deprat_product_technical', array(
     'description' => 'Pièce détachée pour volet roulant.',
@@ -45,6 +54,22 @@ deprat_integration_assert( deprat_packaging_allow_unitary( $piece_id ), 'La cat�
 deprat_integration_assert( null === deprat_packaging_request_row( $product_id, 'unitary' ), 'Le tube ne peut jamais recevoir le mode unitaire.' );
 deprat_integration_assert( 'unitary' === deprat_packaging_request_row( $piece_id, 'unitary' )['mode'], 'La pièce propose la vente unitaire.' );
 
+
+// Un tarif réel, s'il existe, ne doit pas être modifié par le mode sans prix.
+$priced_product = new WC_Product_Simple();
+$priced_product->set_name( 'Référence avec prix explicite' );
+$priced_product->set_regular_price( '24.90' );
+$priced_product->set_status( 'publish' );
+$priced_id = $priced_product->save();
+deprat_integration_assert( '24.90' === (string) wc_get_product( $priced_id )->get_price(), 'Un prix réellement renseigné ne doit pas devenir zéro.' );
+
+// Un produit hors stock ne doit pas réapparaître comme disponible.
+$unavailable_product = new WC_Product_Simple();
+$unavailable_product->set_name( 'Produit sans stock et sans prix' );
+$unavailable_product->set_status( 'publish' );
+$unavailable_product->set_stock_status( 'outofstock' );
+$unavailable_id = $unavailable_product->save();
+deprat_integration_assert( ! wc_get_product( $unavailable_id )->is_in_stock(), 'Le mode devis ne doit pas contourner la disponibilité du stock.' );
 
 $image = wp_insert_attachment( array(
     'post_title' => 'Schéma de test',
