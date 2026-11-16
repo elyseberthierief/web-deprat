@@ -148,7 +148,7 @@ const assert = require( 'assert' );
         const noOverflow = await page.locator( '.deprat-tech-editor' ).evaluate( element => element.scrollWidth <= element.clientWidth + 1 );
         assert( noOverflow, 'Le formulaire ne doit pas déborder sur mobile.' );
         await page.goto( base + '/?post_type=product&p=' + productId, { waitUntil: 'domcontentloaded' } );
-        await page.waitForSelector( '[data-deprat-3d]' );
+        await page.waitForSelector( '[data-three-mode="model"]:visible' );
         assert.strictEqual( await page.locator( '#tab-title-description, #tab-description, #tab-title-additional_information, #tab-additional_information' ).count(), 0, 'Les onglets Description et Informations complémentaires ne doivent plus faire doublon.' );
         assert( await page.locator( '.deprat-client-tech-panel' ).count() === 3, 'Les trois panneaux techniques DEPRAT remplacent les anciennes cartes.' );
 
