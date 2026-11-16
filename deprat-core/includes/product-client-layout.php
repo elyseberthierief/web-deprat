@@ -40,8 +40,8 @@ add_filter( 'body_class', 'deprat_client_product_body_class' );
 
 function deprat_client_product_assets() {
     if ( ! function_exists( 'is_product' ) || ! is_product() ) { return; }
-    wp_enqueue_style( 'deprat-client-product', plugins_url( 'assets/css/product-client-layout.css', dirname( __DIR__ ) . '/deprat-core.php' ), array( 'deprat-product-tech-front' ), '0.1.24' );
-    wp_enqueue_script( 'deprat-client-product', plugins_url( 'assets/js/product-client-layout.js', dirname( __DIR__ ) . '/deprat-core.php' ), array(), '0.1.24', true );
+    wp_enqueue_style( 'deprat-client-product', plugins_url( 'assets/css/product-client-layout.css', dirname( __DIR__ ) . '/deprat-core.php' ), array( 'deprat-product-tech-front' ), '0.1.25' );
+    wp_enqueue_script( 'deprat-client-product', plugins_url( 'assets/js/product-client-layout.js', dirname( __DIR__ ) . '/deprat-core.php' ), array(), '0.1.25', true );
     wp_localize_script( 'deprat-client-product', 'depratClientProduct', array(
         'ajaxUrl' => class_exists( 'WC_AJAX' ) ? WC_AJAX::get_endpoint( 'add_to_cart' ) : '',
         'cartUrl' => function_exists( 'wc_get_cart_url' ) ? wc_get_cart_url() : '',

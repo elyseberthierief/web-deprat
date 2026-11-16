@@ -731,12 +731,41 @@
         document.body.classList.add( 'deprat-product-editor-ready' );
     }
 
+    /**
+     * Le bouton d'enregistrement est le MEME élément en haut et en mode flottant.
+     * Il ne déclenche donc pas une seconde sauvegarde ni une publication involontaire.
+     */
+    function setupFloatingSave( editor ) {
+        var save = editor.querySelector( '[data-product-save]' );
+        var header = editor.querySelector( '.deprat-tech-page-header' );
+        if ( ! save || ! header ) { return; }
+        var ticking = false;
+        function refresh() {
+            ticking = false;
+            // À l'ouverture, le bouton garde sa position normale dans l'en-tête.
+            // En descendant dans la fiche, il reste accessible en bas à droite.
+            var floating = !editor.querySelector( '[data-editor-chrome]' ).hidden &&
+                header.getBoundingClientRect().bottom < 0;
+            save.classList.toggle( 'deprat-tech-save-floating', floating );
+            save.setAttribute( 'data-floating', floating ? 'true' : 'false' );
+        }
+        function schedule() {
+            if ( ticking ) { return; }
+            ticking = true;
+            window.requestAnimationFrame( refresh );
+        }
+        window.addEventListener( 'scroll', schedule, { passive: true } );
+        window.addEventListener( 'resize', schedule, { passive: true } );
+        schedule();
+    }
+
     function start() {
         var editor = document.querySelector( '.deprat-tech-editor' );
         if ( ! editor ) {
             return;
         }
         setupProductEditor( editor );
+        setupFloatingSave( editor );
         setupPackageSummary( editor );
         setupCategoryModal( editor );
         setupDiagrams( editor );

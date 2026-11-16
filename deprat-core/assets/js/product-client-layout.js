@@ -63,6 +63,21 @@
         if ( quantity ) {
             var wrap = quantity.closest( '.quantity' );
             if ( wrap ) {
+                // Certains thèmes (Astra notamment) ajoutent leurs propres + / −
+                // après le chargement de WooCommerce. Garder une seule paire DEPRAT.
+                function clearThemeQuantityButtons() {
+                    wrap.querySelectorAll( 'button, input[type="button"], a' ).forEach( function (control) {
+                        if ( control.classList.contains( 'deprat-qty-button' ) ) { return; }
+                        var text = ( control.value || control.textContent || '' ).trim();
+                        var nativeQuantity = control.matches( '.plus, .minus, .qty-plus, .qty-minus, .quantity-plus, .quantity-minus' ) ||
+                            ( /^[+−-]$/.test( text ) && ! control.classList.contains( 'single_add_to_cart_button' ) );
+                        if ( nativeQuantity ) { control.remove(); }
+                    } );
+                }
+                clearThemeQuantityButtons();
+                if ( window.MutationObserver ) {
+                    new MutationObserver( clearThemeQuantityButtons ).observe( wrap, { childList: true, subtree: true } );
+                }
                 quantityLabel = document.createElement( 'label' );
                 quantityLabel.className = 'deprat-client-quantity-label';
                 if ( ! quantity.id ) { quantity.id = 'deprat-quote-quantity'; }
