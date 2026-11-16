@@ -57,6 +57,10 @@
                         advancedToggle.setAttribute( 'aria-expanded', 'true' );
                         advancedToggle.textContent = 'Masquer les autres options WooCommerce';
                     }
+                    var productData = document.getElementById( 'woocommerce-product-data' );
+                    if ( productData && productData.scrollIntoView ) {
+                        productData.scrollIntoView( { block: 'start', behavior: 'auto' } );
+                    }
                 }
                 nativeType.value = type.value;
                 nativeType.dispatchEvent( new Event( 'change', { bubbles: true } ) );
