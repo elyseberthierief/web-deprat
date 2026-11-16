@@ -2,6 +2,12 @@
     'use strict';
     function setupViewer( widget ) {
         var gallery = widget.closest( '.woocommerce-product-gallery' ) || widget.parentElement;
+        // WooCommerce émet ce bloc à l'intérieur du conteneur des photos.
+        // Le déplacer à la racine de la galerie évite qu'il disparaisse
+        // avec les photos lors de l'ouverture de la vue 3D.
+        if ( gallery && gallery.classList.contains( 'woocommerce-product-gallery' ) && widget.parentElement !== gallery ) {
+            gallery.appendChild( widget );
+        }
         var panel = widget.querySelector( '.deprat-three-viewport' );
         var model = widget.querySelector( 'model-viewer' );
         widget.querySelectorAll( '[data-three-mode]' ).forEach( function ( button ) {
