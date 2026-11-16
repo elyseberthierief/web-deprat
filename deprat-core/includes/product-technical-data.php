@@ -134,6 +134,9 @@ function deprat_product_tech_save_gallery( $product ) {
         if ( $image && ! in_array( $image, $ids, true ) ) { $ids[] = $image; }
     }
     $product->set_gallery_image_ids( $ids );
+    foreach ( $ids as $image_id ) { deprat_product_tech_enrich_image( $image_id, $id, 'gallery' ); }
+    $featured_id = (int) $product->get_image_id();
+    if ( $featured_id ) { deprat_product_tech_enrich_image( $featured_id, $id, 'featured' ); }
 }
 add_action( 'woocommerce_admin_process_product_object', 'deprat_product_tech_save_gallery', 20 );
 
@@ -238,7 +241,10 @@ function deprat_product_tech_ajax_media_upload() {
         wp_delete_attachment( $id, true );
         wp_send_json_error( array( 'message' => 'Format de fichier non pris en charge.' ), 400 );
     }
-    if ( ! $is_pdf ) { deprat_product_tech_enrich_image( $id, $product_id, $purpose ); }
+    if ( ! $is_pdf ) {
+        deprat_product_tech_enrich_image( $id, $product_id, $purpose );
+        wp_update_post( array( 'ID' => $id, 'post_title' => deprat_product_tech_image_alt( $product_id, $purpose ) ) );
+    }
     if ( 'featured' === $purpose ) { set_post_thumbnail( $product_id, $id ); }
     $url = wp_get_attachment_url( $id );
     $data = array(
@@ -404,6 +410,9 @@ function deprat_product_tech_save( $post_id ) {
         'datasheet' => deprat_product_tech_attachment( isset( $input['datasheet'] ) ? $input['datasheet'] : 0, 'pdf' ),
     );
     if ( isset( $input['diagrams_present'] ) ) { $clean['diagrams'] = $diagrams; }
+    if ( function_exists( 'wp_update_post' ) ) {
+        foreach ( $diagrams as $diagram ) { deprat_product_tech_enrich_image( $diagram['image'], $post_id, 'diagram', $diagram['title'] ); }
+    }
     if ( isset( $input['datasheets_present'] ) ) {
         $clean['datasheets'] = $datasheets;
         $clean['datasheet'] = $datasheets ? $datasheets[0]['file'] : 0;
