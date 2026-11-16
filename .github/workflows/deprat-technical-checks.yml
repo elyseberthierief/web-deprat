@@ -17,6 +17,7 @@ jobs:
         run: |
           php -l deprat-core/deprat-core.php
           php -l deprat-core/includes/product-technical-data.php
+          php -l deprat-core/includes/product-single-layout.php
           php -l deprat-core/templates/product-technical-admin.php
           php -l deprat-core/templates/product-technical-front.php
       - name: Vérifier la sauvegarde et le rendu
