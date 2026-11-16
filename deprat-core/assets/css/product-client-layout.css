@@ -344,3 +344,17 @@ body.deprat-client-product div.product .summary > .deprat-client-quote { grid-co
   body.deprat-client-product div.product .summary > .deprat-client-info { grid-column: 1; grid-row: 1; }
   body.deprat-client-product div.product .summary > .deprat-client-quote { grid-column: 1; grid-row: 2; }
 }
+
+/* Le retour AJAX reste discret : le client est déjà informé sans quitter la page. */
+body.deprat-client-product .deprat-client-quote .added_to_cart { display: none !important; }
+/* Quantité et action sur la même ligne, même sur téléphone. */
+@media (max-width: 480px) {
+  body.deprat-client-product div.product .deprat-client-quote form.cart { gap: 7px; flex-wrap: nowrap; }
+  body.deprat-client-product div.product .deprat-client-quote form.cart .quantity { flex: 0 0 106px; height: 44px; }
+  body.deprat-client-product div.product .deprat-client-quote form.cart .quantity input.qty { width: 38px; min-width: 30px; height: 42px; }
+  body.deprat-client-product div.product .deprat-client-quote .deprat-qty-button { width: 34px; height: 42px; }
+  body.deprat-client-product div.product .deprat-client-quote form.cart .single_add_to_cart_button {
+    flex: 1 1 0; min-width: 0; font-size: 12px; padding: 8px 7px; line-height: 1.2;
+  }
+  body.deprat-client-product div.product .deprat-client-quote form.cart.variations_form { flex-wrap: wrap; }
+}
