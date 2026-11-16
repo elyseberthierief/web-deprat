@@ -48,6 +48,11 @@ const assert = require( 'assert' );
         assert.strictEqual( await page.locator( '#_sku' ).inputValue(), 'TEST-DP62-MODIF' );
         await page.locator( '[data-product-type]' ).selectOption( 'variable' );
         assert.strictEqual( await page.locator( '#product-type' ).inputValue(), 'variable' );
+        assert( await page.locator( '#woocommerce-product-data' ).isVisible(), 'Les réglages des variations doivent être ouverts.' );
+        const gotIt = page.getByRole( 'button', { name: 'Got it' } );
+        if ( await gotIt.count() && await gotIt.isVisible() ) {
+            await gotIt.click();
+        }
         await page.locator( '[data-product-type]' ).selectOption( 'simple' );
         await page.fill( '[data-delivery-proxy]', 'Longueurs de 4 m' );
         assert.strictEqual( await page.locator( '[name="deprat_product_tech[delivery]"]' ).inputValue(), 'Longueurs de 4 m' );

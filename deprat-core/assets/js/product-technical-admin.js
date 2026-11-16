@@ -50,6 +50,14 @@
             } );
             type.value = nativeType.value;
             type.addEventListener( 'change', function () {
+                if ( type.value !== 'simple' ) {
+                    document.body.classList.add( 'deprat-product-editor-advanced' );
+                    var advancedToggle = editor.querySelector( '[data-native-toggle]' );
+                    if ( advancedToggle ) {
+                        advancedToggle.setAttribute( 'aria-expanded', 'true' );
+                        advancedToggle.textContent = 'Masquer les autres options WooCommerce';
+                    }
+                }
                 nativeType.value = type.value;
                 nativeType.dispatchEvent( new Event( 'change', { bubbles: true } ) );
                 if ( nativeSku && sku ) {
