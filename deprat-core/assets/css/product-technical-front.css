@@ -29,3 +29,75 @@
 
 .deprat-tech-front .deprat-tech-documents { display: grid; gap: 10px; }
 .deprat-tech-front .deprat-tech-documents a.deprat-tech-download { display: block; width: fit-content; min-width: min(100%, 260px); }
+
+/* DEPRAT — présentation professionnelle de la fiche produit */
+body.single-product .woocommerce .deprat-product-breadcrumb,
+body.single-product .deprat-product-breadcrumb {
+  clear: both; display: flex; flex-wrap: wrap; align-items: center; gap: 9px;
+  color: #657792; font-size: 13px; line-height: 1.5; margin: 2px 0 27px;
+}
+.deprat-product-breadcrumb a { color: #315b8e; text-decoration: none; }
+.deprat-product-breadcrumb a:hover { color: #0c3770; text-decoration: underline; }
+.deprat-breadcrumb-current { color: #102d5c; font-weight: 600; }
+/* Masquer uniquement le fil d'Ariane natif lorsqu'il coexiste avec le nôtre. */
+body.single-product .woocommerce-breadcrumb { display: none; }
+body.single-product .woocommerce div.product div.images,
+body.single-product .woocommerce div.product .woocommerce-product-gallery {
+  width: 34%; float: left; max-width: 450px;
+  padding: 16px; border: 1px solid #d8e2ef; border-radius: 13px;
+  background: #fff; box-shadow: 0 5px 20px rgba(13,48,93,.05);
+}
+body.single-product .woocommerce div.product div.summary {
+  width: 62%; float: right; margin-top: 0;
+}
+body.single-product .woocommerce div.product .woocommerce-product-gallery__image img {
+  width: 100%; max-height: 360px; object-fit: contain;
+}
+body.single-product .woocommerce div.product .flex-control-thumbs img {
+  max-height: 92px; object-fit: contain; border-radius: 6px;
+}
+.deprat-product-intro { color: #13315c; margin-bottom: 20px; }
+.deprat-product-ref { margin: 0 0 10px; display: flex; flex-direction: column; gap: 3px; }
+.deprat-product-ref span { font-size: 12px; font-weight: 700; color: #69809c; text-transform: uppercase; letter-spacing: .075em; }
+.deprat-product-ref strong { font-size: clamp(24px, 2.7vw, 36px); font-weight: 800; color: #0c2e66; overflow-wrap: anywhere; line-height: 1.18; }
+body.single-product .woocommerce div.product h1.product_title {
+  color: #123864; font-size: clamp(21px, 2.25vw, 28px); font-weight: 650; line-height: 1.3;
+  margin: 0 0 16px; padding: 0 0 14px; border-bottom: 2px solid #d9a638;
+}
+.deprat-product-intro-description { font-size: 15px; line-height: 1.65; color: #455f7c; margin-bottom: 17px; }
+.deprat-product-categories { display: flex; align-items: baseline; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; }
+.deprat-product-categories > span { font-size: 13px; font-weight: 700; color: #627b9b; }
+.deprat-product-categories > div { display: flex; flex-wrap: wrap; gap: 7px; }
+.deprat-product-categories a { display: inline-flex; align-items: center; border: 1px solid #d5e2f3; background: #eff5fc; padding: 4px 11px; border-radius: 99px; color: #144a8d; text-decoration: none; font-size: 13px; font-weight: 600; }
+.deprat-product-categories a:hover { border-color: #98b6dc; background: #e4f0ff; }
+.deprat-tech-front { clear: both; width: 100%; padding-top: 32px; border-top: 1px solid #dce6f2; }
+.deprat-tech-front-header { margin-bottom: 24px; }
+.deprat-tech-front .deprat-tech-front-header h2 { font-size: clamp(21px, 2.6vw, 29px); font-weight: 750; }
+.deprat-tech-front-grid { gap: 18px; align-items: stretch; }
+.deprat-tech-front-card { background: #fff; border: 1px solid #dce5f1; border-radius: 12px; box-shadow: 0 5px 18px rgba(17,45,81,.04); padding: 23px; }
+.deprat-tech-front .deprat-tech-front-card h3 { display: flex; align-items: center; gap: 11px; margin: 0 0 15px; padding-bottom: 14px; border-bottom: 1px solid #dfb553; color: #103364; font-size: 18px; font-weight: 750; }
+.deprat-tech-section-icon { width: 38px; height: 38px; display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto; border: 1px solid #d6e4f4; border-radius: 10px; background: #f0f6ff; color: #155296; }
+.deprat-tech-front-card dl div { grid-template-columns: minmax(0, .95fr) minmax(0, 1.5fr); padding: 11px 0; border-bottom: 1px solid #edf1f7; }
+.deprat-tech-front-card dt { color: #24466f; font-weight: 700; }
+.deprat-tech-front-card dd { line-height: 1.55; color: #3d536f; white-space: pre-line; }
+.deprat-tech-norms li { background: #f1f6fc; color: #15477c; border-color: #d3e2f2; font-weight: 600; }
+.deprat-tech-images { gap: 15px; }
+.deprat-tech-front .deprat-tech-images figure { background: #fbfdff; border-color: #dfe9f5; }
+.deprat-tech-images img { max-height: 230px; }
+.deprat-tech-front .deprat-tech-images figcaption { font-size: 13px; color: #1e4272; }
+.deprat-tech-front .deprat-tech-documents a.deprat-tech-download {
+   display: inline-flex; width: fit-content; align-items: center; border: 1px solid #d3e3f8;
+   background: #f1f6ff; color: #103e82; line-height: 1.45; padding: 12px 15px;
+}
+.deprat-tech-front .deprat-tech-documents a.deprat-tech-download:hover { background: #e0edff; border-color: #8fb4e2; }
+@media (max-width: 840px) {
+  body.single-product .woocommerce div.product div.images,
+  body.single-product .woocommerce div.product .woocommerce-product-gallery,
+  body.single-product .woocommerce div.product div.summary { width: 100%; max-width: none; float: none; }
+  body.single-product .woocommerce div.product div.summary { margin-top: 18px; }
+}
+@media (max-width: 767px) {
+  .deprat-tech-front-card { padding: 18px; }
+  .deprat-tech-front .deprat-tech-front-card h3 { font-size: 17px; }
+  .deprat-tech-front-card dl div { grid-template-columns: 1fr; }
+}
