@@ -384,7 +384,7 @@ deprat_integration_assert( count( $groups ) === 1 && isset( $groups['tubes'] )
 deprat_integration_assert( deprat_catalog_section_for_term( $tubes_term ) === 'tubes',
     'Les catégories existantes sont regroupées sans en créer de nouvelles.' );
 update_term_meta( (int) $end_category['term_id'], '_deprat_catalog_section', 'liaison' );
-deprat_integration_assert( deprat_catalog_section_for_term( $end_category ) === 'liaison'
+deprat_integration_assert( deprat_catalog_section_for_term( $embouts_term ) === 'liaison'
     && isset( deprat_catalog_grouped_roots()['liaison'] ),
     'Le choix d’une rubrique visuelle doit prévaloir sur le classement automatique.' );
 delete_term_meta( (int) $end_category['term_id'], '_deprat_catalog_section' );
