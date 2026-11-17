@@ -10,6 +10,23 @@ if ( ! defined( 'ABSPATH' ) ) { exit; }
 function deprat_catalog_all_products_url() {
     return add_query_arg( 'deprat_all', '1', wc_get_page_permalink( 'shop' ) );
 }
+/**
+ * WordPress sans permaliens personnalisés : conserver le paramètre de routage
+ * du magasin (page_id, post_type, pagename) lors des formulaires GET.
+ */
+function deprat_catalog_shop_route_params() {
+    $query_string = wp_parse_url( wc_get_page_permalink( 'shop' ), PHP_URL_QUERY );
+    if ( ! is_string( $query_string ) || '' === $query_string ) { return array(); }
+    parse_str( $query_string, $parts );
+    $allowed = array( 'page_id', 'post_type', 'pagename' );
+    $params = array();
+    foreach ( $allowed as $key ) {
+        if ( isset( $parts[ $key ] ) && is_scalar( $parts[ $key ] ) ) {
+            $params[ $key ] = sanitize_text_field( (string) $parts[ $key ] );
+        }
+    }
+    return $params;
+}
 function deprat_catalog_show_all_products() {
     return function_exists( 'is_shop' ) && is_shop()
         && isset( $_GET['deprat_all'] ) && is_scalar( $_GET['deprat_all'] )
