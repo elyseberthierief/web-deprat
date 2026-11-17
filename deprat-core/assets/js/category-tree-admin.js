@@ -22,6 +22,13 @@
         var saveButtons = app.querySelectorAll( '[data-tree-save]' );
         var dirty = false;
         var saving = false;
+        app.addEventListener( 'click', function ( event ) {
+            var exportLink = event.target.closest( '[data-tree-export-pdf]' );
+            if ( exportLink && ( dirty || saving ) ) {
+                event.preventDefault();
+                message( 'Enregistrez d’abord l’arborescence pour que le PDF reflète vos dernières modifications.', true );
+            }
+        } );
 
         function message( value, error ) {
             status.textContent = value || '';
