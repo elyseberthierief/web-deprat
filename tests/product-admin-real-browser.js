@@ -416,6 +416,57 @@ const assert = require( 'assert' );
         assert( await page.locator( '[data-catalog-card]' ).count() >= 2,
             'Le tri doit conserver les références multi-catégories.' );
         await page.screenshot( { path: process.env.RUNNER_TEMP + '/deprat-catalogue-toutes-pieces.png', fullPage: true } );
+        // Éditeur visuel : catégories racines, création imbriquée sur trois niveaux
+        // et enregistrement de la hiérarchie native WooCommerce.
+        await page.goto( base + '/wp-admin/edit.php?post_type=product&page=deprat-categories-tree', { waitUntil: 'domcontentloaded' } );
+        await page.waitForSelector( '[data-deprat-category-tree] .deprat-tree-root' );
+        assert( await page.locator( '[data-tree-item]' ).count() >= 2, 'Les catégories déjà présentes sont visibles dans l’arborescence.' );
+        assert( await page.locator( '[data-tree-item] [data-drag-handle]' ).first().isVisible(), 'La poignée drag-and-drop est visible.' );
+        assert( await page.locator( '.deprat-tree-root' ).evaluate( list => !!window.jQuery( list ).data( 'ui-sortable' ) ),
+            'Le déplacement à la souris doit être activé via jQuery UI Sortable.' );
+        await page.locator( '[data-tree-create-root]' ).click();
+        await page.locator( '[data-tree-create-name]' ).fill( 'Supports DEPRAT test' );
+        await page.locator( '[data-tree-create-submit]' ).click();
+        await page.locator( '.deprat-tree-root > [data-tree-item]', { hasText: 'Supports DEPRAT test' } ).waitFor();
+        const supports = page.locator( '.deprat-tree-root > [data-tree-item]' ).filter( { hasText: 'Supports DEPRAT test' } ).first();
+        await supports.locator( ':scope > .deprat-tree-row [data-tree-add-child]' ).click();
+        await page.locator( '[data-tree-create-name]' ).fill( 'Supports moteurs test' );
+        await page.locator( '[data-tree-create-submit]' ).click();
+        const motors = supports.locator( ':scope > .deprat-tree-list > [data-tree-item]' ).filter( { hasText: 'Supports moteurs test' } ).first();
+        await motors.waitFor();
+        await motors.locator( ':scope > .deprat-tree-row [data-tree-add-child]' ).click();
+        await page.locator( '[data-tree-create-name]' ).fill( 'Plaques fixation test' );
+        await page.locator( '[data-tree-create-submit]' ).click();
+        const plates = motors.locator( ':scope > .deprat-tree-list > [data-tree-item]' ).filter( { hasText: 'Plaques fixation test' } ).first();
+        await plates.waitFor();
+        assert.strictEqual( await supports.locator( ':scope > .deprat-tree-list > [data-tree-item]' ).count(), 1,
+            'Une catégorie peut contenir une sous-catégorie.' );
+        assert.strictEqual( await motors.locator( ':scope > .deprat-tree-list > [data-tree-item]' ).count(), 1,
+            'La sous-catégorie peut à son tour contenir un troisième niveau.' );
+        // Les commandes ↑ / ↓ sont un complément accessible au glisser-déposer.
+        await plates.locator( ':scope > .deprat-tree-row [data-tree-outdent]' ).click();
+        assert.strictEqual( await supports.locator( ':scope > .deprat-tree-list > [data-tree-item]' ).count(), 2,
+            'Le bouton Remonter déplace effectivement la catégorie au niveau supérieur.' );
+        await page.locator( '.deprat-tree-root > [data-tree-item]' ).filter( { hasText: 'Supports DEPRAT test' } )
+            .locator( ':scope > .deprat-tree-list > [data-tree-item]' ).filter( { hasText: 'Plaques fixation test' } )
+            .locator( ':scope > .deprat-tree-row [data-tree-indent]' ).click();
+        assert.strictEqual( await motors.locator( ':scope > .deprat-tree-list > [data-tree-item]' ).count(), 1,
+            'Le bouton Imbriquer restaure un troisième niveau de catégorie.' );
+        await page.locator( '[data-tree-save]' ).first().click();
+        await page.waitForFunction( () => {
+            const status = document.querySelector( '[data-tree-status]' );
+            return status && status.textContent.includes( 'enregistrée' );
+        }, { timeout: 25000 } );
+        await page.reload( { waitUntil: 'domcontentloaded' } );
+        assert( await page.locator( '.deprat-tree-root > [data-tree-item]' ).filter( { hasText: 'Supports DEPRAT test' } )
+            .locator( ':scope > .deprat-tree-list > [data-tree-item] > .deprat-tree-list > [data-tree-item]' )
+            .filter( { hasText: 'Plaques fixation test' } ).count() === 1,
+            'La nouvelle arborescence doit être sauvegardée définitivement dans WooCommerce.' );
+        await page.screenshot( { path: process.env.RUNNER_TEMP + '/deprat-arborescence-admin.png', fullPage: true } );
+        await page.goto( base + '/?product_cat=tubes', { waitUntil: 'domcontentloaded' } );
+        assert( ( await page.locator( '.deprat-mega-panel' ).first().textContent() ).includes( 'Plaques fixation test' ),
+            'Le méga-menu reprend toutes les sous-catégories de la nouvelle arborescence.' );
+
         // Un visiteur non connecté ne voit pas et ne peut pas ouvrir son historique.
         const guest = await browser.newPage();
         try {

@@ -36,7 +36,9 @@ $gallery_ids = $gallery_product ? $gallery_product->get_gallery_image_ids() : ar
             <label class="deprat-tech-field"><span>Référence du produit</span><input type="text" data-product-sku autocomplete="off"></label>
             <label class="deprat-tech-field"><span>Type de produit</span><select data-product-type></select></label>
             <div class="deprat-tech-field"><span>Catégorie</span><details class="deprat-tech-category" data-category-picker><summary data-category-summary>Choisir une catégorie</summary><div class="deprat-tech-category-options" data-category-options></div></details>
-                <button class="button deprat-category-create-button" type="button" data-category-open>+ Nouvelle catégorie / sous-catégorie</button></div>
+                <button class="button deprat-category-create-button" type="button" data-category-open>+ Nouvelle catégorie / sous-catégorie</button>
+                <a class="button deprat-category-organize-button" href="<?php echo esc_url( deprat_category_tree_page_url() ); ?>">⠿ Organiser l’arborescence des catégories</a>
+                </div>
             </div>
         </section>
     </div>

@@ -2,7 +2,7 @@
 /**
  * Plugin Name: DEPRAT Core
  * Description: Fonctionnalités du portail professionnel DEPRAT et de l’interface ADV.
- * Version: 0.1.30
+ * Version: 0.1.31
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -18,6 +18,7 @@ require_once __DIR__ . '/includes/product-autosave.php';
 require_once __DIR__ . '/includes/product-single-layout.php';
 require_once __DIR__ . '/includes/product-3d.php';
 require_once __DIR__ . '/includes/product-client-layout.php';
+require_once __DIR__ . '/includes/category-tree-admin.php';
 require_once __DIR__ . '/includes/catalogue-archives.php';
 
 add_action( 'plugins_loaded', static function () {
