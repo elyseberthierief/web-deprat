@@ -338,9 +338,9 @@ $shop_item = (object) array(
     'classes' => array(), 'menu_item_parent' => 0,
 );
 $menu_items = deprat_catalog_relabel_menu( array( $shop_item ) );
-deprat_integration_assert( 'Pièces détachées' === $menu_items[0]->title, 'Le menu Boutique doit devenir Pièces détachées.' );
+deprat_integration_assert( 'Nos composants' === $menu_items[0]->title, 'Le menu Boutique doit devenir Nos composants.' );
 ob_start();
-$mega_html = deprat_catalog_mega_menu( '<a href="#">Pièces détachées</a>', $menu_items[0], 0,
+$mega_html = deprat_catalog_mega_menu( '<a href="#">Nos composants</a>', $menu_items[0], 0,
     (object) array( 'theme_location' => 'primary' ) );
 $extra_html = ob_get_clean();
 // Ordre défini par l'admin : aucune priorité codée en dur (Tubes, Embouts...).
@@ -376,14 +376,35 @@ deprat_integration_assert( false !== strpos( $tree_editor_html, 'data-drag-handl
     && false !== strpos( $tree_editor_html, 'data-term-id="' . (int) $tube_category['term_id'] . '"' ),
     'Le gestionnaire admin doit afficher les familles existantes et les poignées de déplacement.' );
 
+// Les titres de section sont purement visuels. Aucun terme n'est créé par le rendu.
+$terms_before = wp_count_terms( array( 'taxonomy' => 'product_cat', 'hide_empty' => false ) );
+$groups = deprat_catalog_grouped_roots();
+deprat_integration_assert( count( $groups ) === 1 && isset( $groups['tubes'] )
+    && count( $groups['tubes'] ) === 2, 'Tubes et Embouts doivent partager une section, sans section vide.' );
+deprat_integration_assert( deprat_catalog_section_for_term( $tubes_term ) === 'tubes',
+    'Les catégories existantes sont regroupées sans en créer de nouvelles.' );
+update_term_meta( (int) $end_category['term_id'], '_deprat_catalog_section', 'liaison' );
+deprat_integration_assert( deprat_catalog_section_for_term( $end_category ) === 'liaison'
+    && isset( deprat_catalog_grouped_roots()['liaison'] ),
+    'Le choix d’une rubrique visuelle doit prévaloir sur le classement automatique.' );
+delete_term_meta( (int) $end_category['term_id'], '_deprat_catalog_section' );
+deprat_integration_assert( wp_count_terms( array( 'taxonomy' => 'product_cat', 'hide_empty' => false ) ) === $terms_before,
+    'Ni les rubriques ni leurs icônes ne doivent créer de catégories WooCommerce.' );
 deprat_integration_assert( false !== strpos( $mega_html, 'deprat-mega-panel' )
     && false !== strpos( $mega_html, 'Tubes' ) && false !== strpos( $mega_html, 'Embouts' ),
     'Le méga-menu doit reprendre les catégories WooCommerce sans liens inventés.' );
+deprat_integration_assert( false !== strpos( $mega_html, '<h2>Tubes acier &amp; accessoires</h2>' )
+    && false === strpos( $mega_html, '<a class="deprat-section-heading"' )
+    && false === strpos( $mega_html, 'Portes de garage</h2>' )
+    && false !== strpos( $mega_html, 'deprat-section-icon' ),
+    'Le titre non cliquable a une icône et les sections sans catégories sont absentes.' );
+deprat_integration_assert( false !== strpos( $tree_editor_html, 'data-tree-section' ),
+    'L’administration permet de choisir le titre visuel sans créer de catégorie.' );
 deprat_integration_assert(
     false !== strpos( $mega_html, 'deprat-mega-intro' )
-    && false !== strpos( $mega_html, 'Voir toutes les pièces' )
+    && false !== strpos( $mega_html, 'Voir tous les composants' )
     && false !== strpos( $mega_html, 'deprat_all=1' )
-    && false === strpos( $mega_html, 'Pièces détachées pour professionnels' )
+    && false === strpos( $mega_html, 'Catalogue professionnel' )
     && false === strpos( $mega_html, 'Voir les produits' ),
     'Le bandeau doit être condensé et aucun lien de catégorie ne doit être dupliqué.'
 );
@@ -403,9 +424,9 @@ $menu_request = (object) array(
     'classes' => array(),
 );
 $fallback_menu = wp_page_menu( array( 'echo' => false, 'show_home' => false ) );
-deprat_integration_assert( false !== strpos( $fallback_menu, 'Pièces détachées' )
+deprat_integration_assert( false !== strpos( $fallback_menu, 'Nos composants' )
     && false !== strpos( $fallback_menu, 'deprat-mega-panel' ),
-    'Le menu Astra automatique doit recevoir le nom Pièces détachées et le méga-menu.' );
+    'Le menu Astra automatique doit recevoir le nom Nos composants et le méga-menu.' );
 
 $current_admin = get_current_user_id();
 wp_set_current_user( 0 );
