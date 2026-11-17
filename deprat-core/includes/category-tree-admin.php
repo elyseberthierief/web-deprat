@@ -90,14 +90,14 @@ add_action( 'admin_menu', static function () {
 
 function deprat_category_tree_admin_assets( $hook ) {
     if ( 'product_page_deprat-categories-tree' !== $hook ) { return; }
-    wp_enqueue_style( 'deprat-category-tree', plugins_url( 'assets/css/category-tree-admin.css', dirname( __DIR__ ) . '/deprat-core.php' ), array(), '0.1.35' );
+    wp_enqueue_style( 'deprat-category-tree', plugins_url( 'assets/css/category-tree-admin.css', dirname( __DIR__ ) . '/deprat-core.php' ), array(), '0.1.36' );
     wp_enqueue_style( 'deprat-catalog-sections-editor',
         plugins_url( 'assets/css/catalogue-sections.css', dirname( __DIR__ ) . '/deprat-core.php' ),
-        array( 'deprat-category-tree' ), '0.1.35' );
-    wp_enqueue_script( 'deprat-category-tree', plugins_url( 'assets/js/category-tree-admin.js', dirname( __DIR__ ) . '/deprat-core.php' ), array( 'jquery', 'jquery-ui-sortable' ), '0.1.35', true );
+        array( 'deprat-category-tree' ), '0.1.36' );
+    wp_enqueue_script( 'deprat-category-tree', plugins_url( 'assets/js/category-tree-admin.js', dirname( __DIR__ ) . '/deprat-core.php' ), array( 'jquery', 'jquery-ui-sortable' ), '0.1.36', true );
     wp_enqueue_script( 'deprat-category-tree-preview',
         plugins_url( 'assets/js/category-tree-preview.js', dirname( __DIR__ ) . '/deprat-core.php' ),
-        array( 'deprat-category-tree', 'jquery', 'jquery-ui-sortable' ), '0.1.35', true );
+        array( 'deprat-category-tree', 'jquery', 'jquery-ui-sortable' ), '0.1.36', true );
     wp_localize_script( 'deprat-category-tree', 'depratCategoryTree', array(
         'ajaxUrl' => admin_url( 'admin-ajax.php' ),
         'nonce' => wp_create_nonce( 'deprat_categories_tree' ),
@@ -182,6 +182,19 @@ function deprat_category_tree_admin_visual_menu() {
                     <div class="deprat-section-heading">
                         <span class="deprat-section-icon-wrap"><?php echo deprat_catalog_section_icon( $key ); // SVG interne fixe. ?></span>
                         <h2><?php echo esc_html( $title ); ?></h2>
+                        <details class="deprat-section-create-menu" data-preview-create-menu>
+                            <summary aria-label="<?php echo esc_attr( 'Ajouter une catégorie dans ' . $title ); ?>" title="<?php echo esc_attr( 'Ajouter dans ' . $title ); ?>">
+                                <span aria-hidden="true">+</span>
+                            </summary>
+                            <div class="deprat-section-create-dropdown">
+                                <button type="button" data-preview-add-category>
+                                    <span aria-hidden="true">+</span> Créer une catégorie
+                                </button>
+                                <button type="button" data-preview-add-subcategory>
+                                    <span aria-hidden="true">↳</span> Créer une sous-catégorie
+                                </button>
+                            </div>
+                        </details>
                     </div>
                     <ul class="deprat-section-categories deprat-preview-list" data-preview-list
                         data-section-key="<?php echo esc_attr( $key ); ?>" aria-label="<?php echo esc_attr( 'Catégories : ' . $title ); ?>"></ul>
@@ -232,18 +245,31 @@ function deprat_category_tree_admin_page() {
             <p>Aucune rubrique visuelle ne crée de catégorie WooCommerce. Le menu et la boutique utilisent les mêmes références et sous-catégories. « Non classé » reste géré séparément.</p>
             <button type="button" class="button button-primary" data-tree-save>Enregistrer le méga-menu</button>
         </div>
-        <form class="deprat-tree-create-form" data-tree-create-form hidden>
-            <h2 data-tree-create-title>Nouvelle catégorie</h2>
-            <input type="hidden" name="parent" value="0" data-tree-create-parent>
-            <label>Nom de la catégorie
-                <input type="text" name="name" maxlength="160" required placeholder="Ex. Tubes acier" data-tree-create-name>
-            </label>
-            <div class="deprat-tree-create-actions">
-                <button type="button" class="button" data-tree-create-cancel>Annuler</button>
-                <button type="submit" class="button button-primary" data-tree-create-submit>Créer cette catégorie</button>
-            </div>
-            <p data-tree-create-error role="alert" hidden></p>
-        </form>
+        <div class="deprat-tree-create-overlay" data-tree-create-overlay hidden>
+            <form class="deprat-tree-create-form" data-tree-create-form role="dialog"
+                aria-modal="true" aria-labelledby="deprat-tree-create-title" hidden>
+                <button type="button" class="deprat-tree-create-close" data-tree-create-cancel
+                    aria-label="Fermer sans créer">×</button>
+                <span class="deprat-tree-create-kicker">CATALOGUE DEPRAT</span>
+                <h2 id="deprat-tree-create-title" data-tree-create-title>Nouvelle catégorie</h2>
+                <p class="deprat-tree-create-context" data-tree-create-context hidden></p>
+                <input type="hidden" name="section" value="" data-tree-create-section>
+                <input type="hidden" name="parent" value="0" data-tree-create-parent>
+                <label class="deprat-tree-create-parent-picker" data-tree-create-parent-picker hidden>
+                    Catégorie parente
+                    <select data-tree-create-parent-select></select>
+                </label>
+                <label>Nom de la catégorie
+                    <input type="text" name="name" maxlength="160" required autocomplete="off"
+                        placeholder="Saisissez le nom de la catégorie" data-tree-create-name>
+                </label>
+                <p class="deprat-tree-create-error" data-tree-create-error role="alert" hidden></p>
+                <div class="deprat-tree-create-actions">
+                    <button type="button" class="button" data-tree-create-cancel>Annuler</button>
+                    <button type="submit" class="button button-primary" data-tree-create-submit>Créer cette catégorie</button>
+                </div>
+            </form>
+        </div>
     </div>
     <?php
 }
@@ -277,6 +303,14 @@ function deprat_category_tree_ajax_create() {
     $name = isset( $_POST['name'] ) && is_scalar( $_POST['name'] )
         ? trim( sanitize_text_field( wp_unslash( $_POST['name'] ) ) ) : '';
     $parent = isset( $_POST['parent'] ) && is_scalar( $_POST['parent'] ) ? absint( $_POST['parent'] ) : 0;
+    // Facultatif : seul un nouveau terme RACINE peut être affecté à une
+    // rubrique visuelle. Les sous-catégories héritent de leur catégorie parente.
+    $section = isset( $_POST['section'] ) && is_scalar( $_POST['section'] )
+        ? sanitize_key( wp_unslash( $_POST['section'] ) ) : '';
+    $sections_autorisees = deprat_catalog_section_definitions();
+    if ( '' !== $section && ( $parent || ! isset( $sections_autorisees[ $section ] ) ) ) {
+        wp_send_json_error( array( 'message' => 'Rubrique de menu invalide.' ), 400 );
+    }
     if ( ! $name || strlen( $name ) > 160 ) {
         wp_send_json_error( array( 'message' => 'Renseignez un nom de catégorie valide.' ), 400 );
     }
@@ -291,7 +325,13 @@ function deprat_category_tree_ajax_create() {
         wp_send_json_error( array( 'message' => $created->get_error_message() ), 400 );
     }
     $id = (int) $created['term_id'];
+    if ( '' !== $section ) {
+        // La catégorie créée depuis un titre de rubrique reste dans cette
+        // rubrique dès sa création, même avant une réorganisation ultérieure.
+        update_term_meta( $id, '_deprat_catalog_section', $section );
+    }
     wp_send_json_success( array( 'id' => $id, 'name' => $name, 'parent' => $parent, 'count' => 0,
+        'section' => $section,
         'sectionGuess' => deprat_catalog_section_guess( get_term( $id, 'product_cat' ) ) ) );
 }
 add_action( 'wp_ajax_deprat_category_tree_create', 'deprat_category_tree_ajax_create' );
