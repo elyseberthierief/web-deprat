@@ -641,8 +641,22 @@
             categoryOptions.textContent = '';
             var chosen = [];
             var seen = {};
+            var treeOrder = window.depratProductEditor && Array.isArray( window.depratProductEditor.categoryTree )
+                ? window.depratProductEditor.categoryTree : [];
+            var ranks = {};
+            var depths = {};
+            treeOrder.forEach( function ( term, index ) {
+                ranks[String( term.id )] = index;
+                depths[String( term.id )] = Math.min( 12, Math.max( 0, Number( term.depth ) || 0 ) );
+            } );
             if ( categoryList ) {
-                categoryList.querySelectorAll( 'input[type="checkbox"]' ).forEach( function ( original ) {
+                var nativeInputs = Array.from( categoryList.querySelectorAll( 'input[type="checkbox"]' ) );
+                nativeInputs.sort( function ( left, right ) {
+                    var la = Object.prototype.hasOwnProperty.call( ranks, left.value ) ? ranks[left.value] : 999999;
+                    var rb = Object.prototype.hasOwnProperty.call( ranks, right.value ) ? ranks[right.value] : 999999;
+                    return la - rb;
+                } );
+                nativeInputs.forEach( function ( original ) {
                     if ( seen[ original.value ] ) {
                         return;
                     }
@@ -655,6 +669,15 @@
                     proxy.type = 'checkbox';
                     proxy.checked = original.checked;
                     text.textContent = name;
+                    var depth = depths[original.value] || 0;
+                    label.setAttribute( 'data-category-depth', String( depth ) );
+                    label.style.paddingLeft = ( 6 + depth * 17 ) + 'px';
+                    if ( depth ) {
+                        var branch = document.createElement( 'span' );
+                        branch.textContent = '↳';
+                        branch.className = 'deprat-category-branch-mark';
+                        label.appendChild( branch );
+                    }
                     label.appendChild( proxy );
                     label.appendChild( text );
                     categoryOptions.appendChild( label );
