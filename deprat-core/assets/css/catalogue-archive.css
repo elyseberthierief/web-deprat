@@ -231,3 +231,43 @@
 .deprat-catalog-3d-controls button:is(:hover,:focus-visible) {
  background:#0d3570!important; color:#fff!important; border-color:#0d3570!important;
 }
+
+/* DEPRAT 0.1.30 : familles avec une seule zone cliquable, sans lien doublon. */
+.deprat-catalog-hub-heading {
+ display:flex;align-items:center;justify-content:space-between;gap:15px;flex-wrap:wrap;margin-bottom:18px;
+}
+.deprat-catalog-hub-heading h2 {margin:0;}
+.deprat-catalog-hub-viewall {
+ display:inline-flex;align-items:center;justify-content:center;gap:9px;
+ min-height:40px;padding:8px 16px;border-radius:8px;border:1px solid #0e4a97;
+ background:#0e4a97;color:#fff;font-size:13px;font-weight:800;
+}
+.deprat-catalog .deprat-catalog-hub-viewall:is(:hover,:focus-visible) {
+ background:#093469!important;color:#fff!important;border-color:#093469!important;
+}
+.deprat-catalog-hub-card {
+ display:flex;align-items:center;gap:13px;min-height:102px;
+ padding:14px;border-radius:12px;
+}
+.deprat-catalog-hub-image {
+ flex:0 0 69px;width:69px;height:69px;
+ border:1px solid #e0e9f2;
+}
+.deprat-catalog-hub-symbol {font-size:28px;}
+.deprat-catalog-hub-card strong {
+ flex:1 1 auto;font-size:16px;line-height:1.35;margin:0;overflow-wrap:anywhere;
+}
+.deprat-catalog-hub-chevron {
+ flex:0 0 auto;font-size:24px;color:#8ca9ce;margin-left:auto;
+}
+.deprat-catalog-hub-card:is(:hover,:focus-visible) strong {color:#0d56aa;}
+.deprat-catalog-hub-card:focus-visible {outline:3px solid #dda52e;outline-offset:2px;}
+@media (max-width:700px) {
+  .deprat-catalog-hub-grid {grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;}
+  .deprat-catalog-hub-card {padding:11px;gap:8px;min-height:90px;}
+  .deprat-catalog-hub-image {width:50px;height:50px;flex-basis:50px;}
+  .deprat-catalog-hub-card strong {font-size:13px;}
+}
+@media (max-width:430px) {
+  .deprat-catalog-hub-grid {grid-template-columns:1fr;}
+}
