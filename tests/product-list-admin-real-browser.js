@@ -11,6 +11,11 @@ const assert = require( 'assert' );
         headless: true
     } );
     const page = await browser.newPage( { viewport: { width: 1650, height: 1040 }, deviceScaleFactor: 1 } );
+    page.on( 'console', msg => {
+        if ( msg.type() === 'warning' && msg.text().includes( 'DEPRAT navigation' ) ) {
+            console.log( 'NAV_DIAG:', msg.text() );
+        }
+    } );
     try {
         await page.goto( base + '/wp-login.php', { waitUntil: 'domcontentloaded' } );
         await page.fill( '#user_login', 'deprat-test' );
@@ -19,6 +24,9 @@ const assert = require( 'assert' );
 
         const listing = base + '/wp-admin/edit.php?post_type=product';
         await page.goto( listing, { waitUntil: 'domcontentloaded' } );
+        // Une propriété de window disparaîtrait si la navigation rechargeait
+        // tout WordPress. Elle doit survivre aux clics de tous les niveaux.
+        await page.evaluate( () => { window.__depratDocumentMarker = 'same-document'; } );
         await page.waitForSelector( 'body.deprat-product-list-active [data-deprat-products-ui]' );
 
         const ui = page.locator( '[data-deprat-products-ui]' );
@@ -76,6 +84,9 @@ const assert = require( 'assert' );
             'La grille ne duplique, ne supprime et ne réordonne aucun produit.' );
         assert( await page.locator( '#the-list > tr[id^="post-"] .column-thumb img' ).first().isVisible(),
             'La grille conserve la photo des produits.' );
+        const gridImageHeight = await page.locator( '#the-list > tr[id^="post-"] .column-thumb img' )
+            .first().evaluate( img => img.getBoundingClientRect().height );
+        assert( gridImageHeight >= 185, 'Les photos en grille doivent être agrandies à environ 190 px.' );
         await page.screenshot( { path: process.env.RUNNER_TEMP + '/deprat-produits-admin-grille.png', fullPage: true } );
         await viewList.click();
         assert.strictEqual( await viewList.getAttribute( 'aria-pressed' ), 'true',
@@ -84,6 +95,10 @@ const assert = require( 'assert' );
             'table-row-group', 'La présentation native est restaurée.' );
         await viewGrid.click();
         await page.reload( { waitUntil: 'domcontentloaded' } );
+        // Le rechargement volontaire de la préférence Grille supprime
+        // naturellement notre marqueur : on le réinstalle ici avant les
+        // tests de navigation qui, eux, ne doivent PLUS recharger.
+        await page.evaluate( () => { window.__depratDocumentMarker = 'same-document'; } );
         assert.strictEqual( await ui.locator( '[data-deprat-view="grid"]' ).getAttribute( 'aria-pressed' ), 'true',
             'Le mode Grille est mémorisé entre deux visites.' );
         await ui.locator( '[data-deprat-view="list"]' ).click();
@@ -97,11 +112,17 @@ const assert = require( 'assert' );
             'La table WooCommerce et ses produits doivent rester présents.' );
         assert( await page.locator( '.column-deprat_section' ).count() >= 1,
             'La colonne Section doit refléter les rubriques du méga-menu.' );
+        const listImageHeight = await page.locator( '#the-list > tr[id^="post-"] .column-thumb img' )
+            .first().evaluate( img => img.getBoundingClientRect().height );
+        assert( listImageHeight >= 80, 'Les photos en liste doivent atteindre environ 84 px.' );
         await page.screenshot( { path: process.env.RUNNER_TEMP + '/deprat-produits-admin-tous.png', fullPage: true } );
 
         // Première ligne : filtrer par section et conserver toutes les sections.
         await ui.locator( '.deprat-products-sections a', { hasText: 'Tubes acier & accessoires' } ).click();
         await page.waitForURL( /deprat_section=tubes/ );
+        assert.strictEqual( await page.evaluate( () => window.__depratDocumentMarker ), 'same-document',
+            'Le clic sur une section ne doit pas recharger le document WordPress.' );
+
         assert( await ui.locator( '.deprat-products-sections a' ).count() >= 10,
             'La barre de sections reste visible après choix d’une section.' );
         assert( await ui.locator( '.deprat-products-level-title', { hasText: 'Catégories' } ).isVisible(),
@@ -121,9 +142,21 @@ const assert = require( 'assert' );
         // Deuxième ligne : catégorie Tubes ; troisième ligne : niveaux inférieurs.
         await ui.locator( '.deprat-products-categories a', { hasText: 'Tubes' } ).click();
         await page.waitForURL( /deprat_cat=\d+/ );
+        assert.strictEqual( await page.evaluate( () => window.__depratDocumentMarker ), 'same-document',
+            'La catégorie charge uniquement les onglets et la table, sans rechargement.' );
         assert( await ui.locator( '.deprat-products-breadcrumb' ).isVisible() );
         assert( await ui.locator( '.deprat-products-level-title', { hasText: 'Sous-catégories' } ).isVisible(),
             'La troisième rangée dispose également de son titre.' );
+        const subsection = ui.locator( 'details[data-deprat-subcategories]' );
+        assert( await subsection.isVisible(), 'Les sous-catégories disposent d’un bloc repliable.' );
+        assert( await subsection.evaluate( node => node.open ),
+            'Les sous-catégories sont ouvertes automatiquement à l’arrivée.' );
+        await subsection.locator( 'summary' ).click();
+        assert( !await subsection.evaluate( node => node.open ),
+            'Un clic sur l’intitulé replie les sous-catégories sans rechargement.' );
+        await subsection.locator( 'summary' ).click();
+        assert( await subsection.evaluate( node => node.open ),
+            'Un second clic les redéplie immédiatement.' );
         assert( await ui.locator( '.deprat-products-children a', { hasText: 'Tous' } ).isVisible(),
             'Troisième niveau avec un onglet Tous.' );
         assert( await ui.locator( '.deprat-products-children a', { hasText: 'Tubes de test' } ).isVisible(),
@@ -132,10 +165,37 @@ const assert = require( 'assert' );
         assert( !( await page.locator( '#the-list' ).textContent() ).includes( 'Embout DEPRAT de test' ) );
         await page.screenshot( { path: process.env.RUNNER_TEMP + '/deprat-produits-admin-tubes.png', fullPage: true } );
 
+        const parentUrl = page.url();
         await ui.locator( '.deprat-products-children a', { hasText: 'Tubes de test' } ).click();
-        await page.waitForURL( /deprat_cat=\d+/ );
+        // Le parent possède DÉJÀ un deprat_cat : attendre une nouvelle URL
+        // exacte et non une regexp qui correspondait avant le clic.
+        await page.waitForURL( url => url.href !== parentUrl && url.searchParams.has( 'deprat_cat' ) );
+        await page.waitForFunction( () => {
+            const crumb = document.querySelector( '.deprat-products-breadcrumb' );
+            return crumb && crumb.textContent.includes( 'Tubes de test' );
+        } );
         assert( ( await ui.locator( '.deprat-products-breadcrumb' ).textContent() ).includes( 'Tubes de test' ),
             'La navigation descend dans la hiérarchie sans masquer les sections.' );
+        assert.strictEqual( await page.evaluate( () => window.__depratDocumentMarker ), 'same-document',
+            'La sous-catégorie change le contenu sans charger une nouvelle page.' );
+        const selectedPath = page.url();
+        await page.evaluate( () => window.history.back() );
+        await page.waitForURL( parentUrl );
+        await page.waitForFunction( () => {
+            const crumb = document.querySelector( '.deprat-products-breadcrumb' );
+            return crumb && !crumb.textContent.includes( 'Tubes de test' );
+        } );
+        assert.strictEqual( await page.evaluate( () => window.__depratDocumentMarker ), 'same-document',
+            'Le bouton Précédent conserve le même document WordPress.' );
+        await page.evaluate( () => window.history.forward() );
+        await page.waitForURL( selectedPath );
+        await page.waitForFunction( () => {
+            const crumb = document.querySelector( '.deprat-products-breadcrumb' );
+            return crumb && crumb.textContent.includes( 'Tubes de test' );
+        } );
+        assert.strictEqual( await page.evaluate( () => window.__depratDocumentMarker ), 'same-document',
+            'Le bouton Suivant retrouve la même catégorie sans rechargement.' );
+
         assert( await ui.locator( '.deprat-products-sections a' ).count() >= 10 );
 
         // Filtrer instantanément les seules lignes actuellement paginées.
@@ -156,6 +216,8 @@ const assert = require( 'assert' );
         // Stock : vrai filtrage côté serveur, et non simple masque des lignes.
         await ui.locator( 'select[name="deprat_stock"]' ).selectOption( 'outofstock' );
         await page.waitForURL( /deprat_stock=outofstock/ );
+        assert.strictEqual( await page.evaluate( () => window.__depratDocumentMarker ), undefined,
+            'Une navigation native précédente réinitialise le marqueur du document.' );
         const stockRows = ( await page.locator( '#the-list' ).textContent() );
         assert( stockRows.includes( 'Produit sans stock et sans prix' ), 'Le filtre rupture doit retourner le vrai produit hors stock.' );
         assert( !stockRows.includes( 'Tube de test modifié' ), 'Le tube en stock ne doit pas rester visible en rupture.' );

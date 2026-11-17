@@ -33,14 +33,17 @@
             }
         }
 
-        function submitFilters() {
-            var paged = form.querySelector( '[name="paged"]' );
-            if ( paged ) { paged.value = '1'; }
-            if ( typeof form.requestSubmit === 'function' ) { form.requestSubmit(); }
-            else { form.submit(); }
+        function submitFilters( select ) {
+            // Ces filtres appartiennent à notre bandeau, pas au formulaire
+            // natif WP. La requête GET ne modifie aucun produit.
+            var target = new URL( window.location.href );
+            if ( select.value ) { target.searchParams.set( select.name, select.value ); }
+            else { target.searchParams.delete( select.name ); }
+            target.searchParams.delete( 'paged' );
+            navigateProducts( target.href, true );
         }
         layout.querySelectorAll( '[data-deprat-filter]' ).forEach( function ( select ) {
-            select.addEventListener( 'change', submitFilters );
+            select.addEventListener( 'change', function () { submitFilters( select ); } );
         } );
 
         // Une seule liste WooCommerce, deux présentations. La vue Grille ne
@@ -49,8 +52,10 @@
         var viewButtons = Array.from( layout.querySelectorAll( '[data-deprat-view]' ) );
         var viewStorageKey = 'deprat_products_admin_view_v1';
         var table = form.querySelector( 'table.wp-list-table' );
+        var currentView = 'list';
         function setProductView( view, remember ) {
             view = view === 'grid' ? 'grid' : 'list';
+            currentView = view;
             document.body.classList.toggle( 'deprat-product-grid-mode', view === 'grid' );
             if ( table ) { table.classList.toggle( 'deprat-product-grid', view === 'grid' ); }
             viewButtons.forEach( function ( button ) {
@@ -77,9 +82,13 @@
         // WordPress inchangée). La recherche globale reste en haut à droite.
         var quickSearch = layout.querySelector( '[data-deprat-list-search]' );
         var displayCount = layout.querySelector( '[data-deprat-visible-count]' );
-        var rows = Array.from( form.querySelectorAll( '#the-list > tr' ) ).filter( function ( row ) {
-            return !row.classList.contains( 'no-items' );
-        } );
+        var rows = [];
+        function refreshRows() {
+            rows = Array.from( form.querySelectorAll( '#the-list > tr' ) ).filter( function ( row ) {
+                return !row.classList.contains( 'no-items' );
+            } );
+        }
+        refreshRows();
         function updateVisibleRows() {
             var query = ( quickSearch.value || '' ).trim().toLocaleLowerCase( 'fr-FR' );
             var number = 0;
@@ -100,20 +109,174 @@
 
         // Le volet natif des actions à 3 points peut être ouvert à la souris
         // ou au clavier ; un autre volet se referme automatiquement.
-        form.querySelectorAll( '.deprat-products-row-menu' ).forEach( function ( menu ) {
-            menu.addEventListener( 'toggle', function () {
-                if ( menu.open ) {
-                    form.querySelectorAll( '.deprat-products-row-menu[open]' ).forEach( function ( other ) {
-                        if ( other !== menu ) { other.open = false; }
-                    } );
-                }
+        // Délégation : les nouveaux produits chargés en AJAX ont les mêmes
+        // actions ⋮, sans devoir réinitialiser chaque ligne.
+        form.addEventListener( 'toggle', function ( event ) {
+            var menu = event.target;
+            if ( !menu.matches || !menu.matches( '.deprat-products-row-menu[open]' ) ) { return; }
+            form.querySelectorAll( '.deprat-products-row-menu[open]' ).forEach( function ( other ) {
+                if ( other !== menu ) { other.open = false; }
             } );
-        } );
+        }, true );
         document.addEventListener( 'click', function ( event ) {
             if ( event.target.closest( '.deprat-products-row-menu' ) ) { return; }
             form.querySelectorAll( '.deprat-products-row-menu[open]' ).forEach( function ( node ) {
                 node.open = false;
             } );
+        } );
+
+        // Navigation de catalogue sans rechargement complet. On récupère
+        // la sortie serveur de WooCommerce pour ne jamais inventer de données
+        // produit ni réimplémenter son filtrage ou ses droits.
+        var pendingNavigation = null;
+        var requestNumber = 0;
+        function isProductListUrl( href ) {
+            try {
+                var target = new URL( href, window.location.href );
+                // Les URL WordPress peuvent utiliser l'hôte canonique
+                // (ex. localhost) alors que l'admin est ouvert via un alias
+                // (ex. 127.0.0.1). Le chemin reste le même et l'AJAX doit
+                // toujours viser l'origine de la page actuelle.
+                return target.pathname === window.location.pathname
+                    && target.searchParams.get( 'post_type' ) === 'product';
+            } catch ( error ) { return false; }
+        }
+        function replaceNavigation( newTemplate, fetchedForm ) {
+            var updated = newTemplate.content;
+            var nextSections = updated.querySelector( '.deprat-products-sections' );
+            var nextHierarchy = updated.querySelector( '.deprat-products-hierarchy' );
+            var currentSections = layout.querySelector( '.deprat-products-sections' );
+            var currentHierarchy = layout.querySelector( '.deprat-products-hierarchy' );
+            var nextTable = fetchedForm.querySelector( ':scope > table.wp-list-table' );
+            if ( !nextSections || !nextTable || !currentSections || !table ) {
+                throw new Error( 'Contenu de catalogue incomplet.' );
+            }
+
+            // Importer des noeuds externes depuis le HTML de notre propre
+            // administration, jamais exécuter ses scripts.
+            currentSections.replaceWith( document.importNode( nextSections, true ) );
+            if ( currentHierarchy ) { currentHierarchy.remove(); }
+            if ( nextHierarchy ) {
+                layout.querySelector( '.deprat-products-sections' ).after(
+                    document.importNode( nextHierarchy, true )
+                );
+            }
+            // Préserver les noeuds table/#the-list : WordPress et WooCommerce
+            // attachent parfois les handlers Quick Edit aux noeuds existants.
+            // Seul le contenu des lignes change ; ces handlers restent actifs.
+            var currentBody = table.querySelector( '#the-list' );
+            var newBody = nextTable.querySelector( '#the-list' );
+            if ( !currentBody || !newBody ) {
+                throw new Error( 'Lignes WooCommerce introuvables.' );
+            }
+            currentBody.replaceChildren( ...Array.from( newBody.childNodes ).map( function ( item ) {
+                return document.importNode( item, true );
+            } ) );
+            [ 'thead', 'tfoot' ].forEach( function ( section ) {
+                var existing = table.querySelector( ':scope > ' + section );
+                var next = nextTable.querySelector( ':scope > ' + section );
+                if ( existing && next ) {
+                    existing.replaceChildren( ...Array.from( next.childNodes ).map( function ( node ) {
+                        return document.importNode( node, true );
+                    } ) );
+                }
+            } );
+
+            // Conserver les actions groupées et la vraie pagination WP,
+            // sans toucher au formulaire principal ni aux cases cochées de la
+            // nouvelle table.
+            var currentBottom = form.querySelector( ':scope > .tablenav.bottom' );
+            var nextBottom = fetchedForm.querySelector( ':scope > .tablenav.bottom' );
+            if ( currentBottom && nextBottom ) {
+                currentBottom.replaceWith( document.importNode( nextBottom, true ) );
+            }
+            setProductView( currentView, false );
+            refreshRows();
+            updateVisibleRows();
+        }
+        async function navigateProducts( href, addHistory ) {
+            if ( !isProductListUrl( href ) ) {
+                window.location.assign( href );
+                return;
+            }
+            // Ne jamais effectuer de fetch cross-origin. Les URL des
+            // sections sont relatives au même admin que cette page.
+            var normalized = new URL( href, window.location.href );
+            normalized.protocol = window.location.protocol;
+            normalized.host = window.location.host;
+            href = normalized.href;
+            if ( pendingNavigation ) { pendingNavigation.abort(); }
+            var controller = new AbortController();
+            pendingNavigation = controller;
+            var ticket = ++requestNumber;
+            layout.classList.add( 'is-loading' );
+            layout.setAttribute( 'aria-busy', 'true' );
+            var status = layout.querySelector( '[data-deprat-navigation-status]' );
+            if ( status ) { status.textContent = 'Chargement des produits…'; }
+            try {
+                var response = await fetch( href, {
+                    method: 'GET',
+                    credentials: 'same-origin',
+                    redirect: 'follow',
+                    headers: { 'Accept': 'text/html' },
+                    signal: controller.signal
+                } );
+                if ( !response.ok || !isProductListUrl( response.url ) ) {
+                    throw new Error( 'Réponse de catalogue invalide.' );
+                }
+                var html = await response.text();
+                if ( ticket !== requestNumber ) { return; }
+                var documentFromServer = new DOMParser().parseFromString( html, 'text/html' );
+                var nextTemplate = documentFromServer.querySelector( '#deprat-products-layout-template' );
+                var fetchedForm = documentFromServer.querySelector( '#posts-filter' );
+                if ( !nextTemplate || !fetchedForm ) {
+                    throw new Error( 'La page Produits n’a pas été retournée.' );
+                }
+                replaceNavigation( nextTemplate, fetchedForm );
+                if ( addHistory && href !== window.location.href ) {
+                    window.history.pushState( { depratProducts: true }, '', href );
+                }
+                // Mettre à jour les filtres qui doivent suivre l’URL active.
+                var query = new URL( href, window.location.href ).searchParams;
+                layout.querySelectorAll( '[data-deprat-filter]' ).forEach( function ( select ) {
+                    select.value = query.get( select.name ) || '';
+                } );
+                if ( status ) { status.textContent = 'Liste des produits mise à jour.'; }
+            } catch ( error ) {
+                if ( error.name !== 'AbortError' && ticket === requestNumber ) {
+                    // Journal utile pour diagnostiquer un thème/plugin tiers :
+                    // aucune donnée client ni URL secrète n’est écrite.
+                    console.warn( 'DEPRAT navigation : retour à WordPress', error.message );
+                    // Pour toute erreur réseau/session/plugin, laisser la
+                    // navigation native reprendre la main plutôt que rester
+                    // sur un catalogue incomplet.
+                    window.location.assign( href );
+                }
+            } finally {
+                if ( ticket === requestNumber ) {
+                    pendingNavigation = null;
+                    layout.classList.remove( 'is-loading' );
+                    layout.removeAttribute( 'aria-busy' );
+                }
+            }
+        }
+        form.addEventListener( 'click', function ( event ) {
+            var link = event.target.closest(
+                '.deprat-products-sections a.deprat-products-tab, '
+                + '.deprat-products-categories a.deprat-products-tab, '
+                + '.deprat-products-children a.deprat-products-tab, '
+                + '.deprat-products-breadcrumb a'
+            );
+            if ( !link || event.defaultPrevented || event.button !== 0
+                || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey
+                || link.hasAttribute( 'download' ) || link.target === '_blank' ) { return; }
+            if ( !isProductListUrl( link.href ) ) { return; }
+            event.preventDefault();
+            navigateProducts( link.href, true );
+        } );
+        window.addEventListener( 'popstate', function () {
+            if ( !isProductListUrl( window.location.href ) ) { return; }
+            navigateProducts( window.location.href, false );
         } );
 
         var selectedSection = layout.querySelector( '.deprat-products-sections .is-active' );
