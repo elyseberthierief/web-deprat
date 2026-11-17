@@ -729,6 +729,63 @@ const assert = require( 'assert' );
             'Le vrai méga-menu reprend le titre et l’ordre de la section créée.' );
         assert( ( await page.locator( '.deprat-mega-panel' ).first().textContent() ).includes( 'Plaques fixation test' ),
             'Le méga-menu reprend toutes les sous-catégories de la nouvelle arborescence.' );
+        // Les crayons des sections ET des catégories restent dans la même page.
+        await page.goto( base + '/wp-admin/edit.php?post_type=product&page=deprat-categories-tree',
+            { waitUntil: 'domcontentloaded' } );
+        const editPageUrl = page.url();
+        const editableCategory = page.locator( '[data-preview-section="' + customKey + '"] [data-preview-item]' )
+            .filter( { hasText: 'Composants moteur test' } ).first();
+        await editableCategory.locator( '[data-preview-edit-category]' ).click();
+        assert.strictEqual( page.url(), editPageUrl,
+            'Le crayon de catégorie ne doit pas ouvrir une autre page.' );
+        assert( await page.locator( '[data-tree-edit-form]' ).isVisible(),
+            'Une fenêtre avec le nom de catégorie s’ouvre directement sur le menu.' );
+        assert.strictEqual( await page.locator( '[data-tree-edit-form]' ).getAttribute( 'aria-modal' ), 'true' );
+        assert.strictEqual( await page.locator( '[data-tree-edit-name]' ).inputValue(), 'Composants moteur test',
+            'Le nom actuel est prérempli dans la popup.' );
+        assert( ( await page.locator( '[data-tree-edit-full-link]' ).getAttribute( 'href' ) ).includes( 'term.php' ),
+            'La fiche WooCommerce complète reste accessible volontairement depuis la popup.' );
+        await page.locator( '[data-tree-edit-close]' ).last().click();
+        assert( await page.locator( '[data-tree-edit-overlay]' ).isHidden(), 'Annuler ferme la popup.' );
+        assert.strictEqual( page.url(), editPageUrl, 'Annuler ne navigue pas.' );
+        await editableCategory.locator( '[data-preview-edit-category]' ).click();
+        await page.locator( '[data-tree-edit-name]' ).fill( 'Composants moteur renommés test' );
+        await page.locator( '[data-tree-edit-save]' ).click();
+        await page.locator( '[data-tree-edit-overlay]' ).waitFor( { state: 'hidden' } );
+        assert.strictEqual( page.url(), editPageUrl, 'Le nom est modifié sans redirection.' );
+        assert( await page.locator( '[data-preview-section="' + customKey + '"] [data-preview-item]' )
+            .filter( { hasText: 'Composants moteur renommés test' } ).first().isVisible(),
+            'Le méga-menu est rafraîchi immédiatement après modification du nom.' );
+        await page.locator( '[data-tree-advanced] > summary' ).click();
+        const categoryAdvanced = page.locator( '[data-tree-item]' )
+            .filter( { has: page.locator( ':scope > .deprat-tree-row [data-tree-name]',
+                { hasText: 'Composants moteur renommés test' } ) } ).first();
+        await categoryAdvanced.locator( ':scope > .deprat-tree-row [data-tree-edit-category]' ).click();
+        assert( await page.locator( '[data-tree-edit-form]' ).isVisible(),
+            'Le bouton Modifier dans la gestion avancée ouvre la même popup.' );
+        await page.keyboard.press( 'Escape' );
+        assert( await page.locator( '[data-tree-edit-overlay]' ).isHidden(), 'La touche Escape ferme la popup.' );
+        await page.reload( { waitUntil: 'domcontentloaded' } );
+        assert( await page.locator( '[data-preview-section="' + customKey + '"] [data-preview-item]' )
+            .filter( { hasText: 'Composants moteur renommés test' } ).first().isVisible(),
+            'Le nouveau nom WooCommerce persiste après rechargement sans altérer le classement.' );
+        const rejectedDuplicate = await page.evaluate( async () => {
+            const term = document.querySelector( '[data-preview-section^="custom_"] [data-preview-item]' );
+            const payload = new URLSearchParams( {
+                action: 'deprat_category_tree_edit_category',
+                nonce: window.depratCategoryTree.nonce,
+                term_id: term.getAttribute( 'data-term-id' ),
+                name: 'Tubes'
+            } );
+            const response = await fetch( window.depratCategoryTree.ajaxUrl, {
+                method: 'POST', credentials: 'same-origin',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
+                body: payload.toString()
+            } );
+            return response.status;
+        } );
+        assert.strictEqual( rejectedDuplicate, 409, 'Un doublon de catégorie au même niveau doit être refusé.' );
+
 
         // Un visiteur non connecté ne voit pas et ne peut pas ouvrir son historique.
         const guest = await browser.newPage();
