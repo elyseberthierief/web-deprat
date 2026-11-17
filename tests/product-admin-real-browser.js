@@ -546,6 +546,73 @@ const assert = require( 'assert' );
         assert( await page.locator( '[data-section-key="liaison"] > [data-preview-item]' )
             .filter( { hasText: 'Supports DEPRAT test' } ).count() === 1,
             'La rubrique choisie visuellement doit rester enregistrée après rechargement.' );
+        // Depuis le titre d'une rubrique, le + propose deux créations distinctes.
+        const garage = page.locator( '[data-preview-section="garage"]' );
+        const plusGarage = garage.locator( '[data-preview-create-menu]' );
+        await plusGarage.locator( 'summary' ).click();
+        assert( await plusGarage.locator( '[data-preview-add-category]' ).isVisible(),
+            'Le + affiche Créer une catégorie dans la rubrique.' );
+        assert( await plusGarage.locator( '[data-preview-add-subcategory]' ).isDisabled(),
+            'Une rubrique vide ne permet pas de créer une sous-catégorie sans parent.' );
+        await plusGarage.locator( '[data-preview-add-category]' ).click();
+        assert( await page.locator( '[data-tree-create-form]' ).isVisible(), 'Le choix ouvre la popup de création.' );
+        assert.strictEqual( await page.locator( '[data-tree-create-form]' ).getAttribute( 'aria-modal' ), 'true' );
+        assert( ( await page.locator( '[data-tree-create-context]' ).textContent() ).includes( 'Portes de garage' ),
+            'La popup reprend le titre exact de la rubrique sélectionnée.' );
+        assert( await page.locator( '[data-tree-create-parent-picker]' ).isHidden(),
+            'Une catégorie principale n’a pas de parent à choisir.' );
+        await page.locator( '[data-tree-create-name]' ).fill( 'Catégorie garage créée depuis menu' );
+        await page.locator( '[data-tree-create-submit]' ).click();
+        const newGarageFamily = garage.locator( '[data-section-key="garage"] > [data-preview-item]' )
+            .filter( { hasText: 'Catégorie garage créée depuis menu' } ).first();
+        await newGarageFamily.waitFor();
+        await page.locator( '[data-tree-create-overlay]' ).waitFor( { state: 'hidden' } );
+        const newGarageId = await newGarageFamily.getAttribute( 'data-term-id' );
+        assert( newGarageId && Number( newGarageId ) > 0, 'La nouvelle catégorie WooCommerce a un identifiant réel.' );
+        await plusGarage.locator( 'summary' ).click();
+        assert( await plusGarage.locator( '[data-preview-add-subcategory]' ).isEnabled(),
+            'La création de sous-catégories est activée lorsqu’un parent existe.' );
+        await plusGarage.locator( '[data-preview-add-subcategory]' ).click();
+        assert( await page.locator( '[data-tree-create-parent-picker]' ).isVisible(),
+            'La popup propose de sélectionner la catégorie parente.' );
+        await page.locator( '[data-tree-create-parent-select]' ).selectOption( newGarageId );
+        await page.locator( '[data-tree-create-name]' ).fill( 'Sous-catégorie garage créée depuis menu' );
+        await page.locator( '[data-tree-create-submit]' ).click();
+        await page.locator( '[data-tree-create-overlay]' ).waitFor( { state: 'hidden' } );
+        assert( await newGarageFamily.locator( ':scope > .deprat-section-children [data-preview-item]' )
+            .filter( { hasText: 'Sous-catégorie garage créée depuis menu' } ).first().isVisible(),
+            'La sous-catégorie créée apparaît immédiatement dépliée sous son parent.' );
+        // Le formulaire utilise les mêmes droits/nonce que le gestionnaire existant.
+        const invalidSectionStatus = await page.evaluate( async () => {
+            const params = new URLSearchParams( {
+                action: 'deprat_category_tree_create',
+                nonce: window.depratCategoryTree.nonce,
+                name: 'Catégorie interdite',
+                parent: '0',
+                section: 'rubrique-inconnue'
+            } );
+            const response = await fetch( window.depratCategoryTree.ajaxUrl, {
+                method: 'POST', credentials: 'same-origin',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
+                body: params.toString()
+            } );
+            return response.status;
+        } );
+        assert.strictEqual( invalidSectionStatus, 400, 'Une rubrique inconnue doit être rejetée côté serveur.' );
+        await page.locator( '[data-tree-save]' ).first().click();
+        await page.waitForFunction( () => {
+            const status = document.querySelector( '[data-tree-status]' );
+            return status && status.textContent.includes( 'enregistré' );
+        }, { timeout: 25000 } );
+        await page.reload( { waitUntil: 'domcontentloaded' } );
+        const persistedGarage = page.locator( '[data-section-key="garage"] > [data-preview-item]' )
+            .filter( { hasText: 'Catégorie garage créée depuis menu' } ).first();
+        assert( await persistedGarage.isVisible(), 'La rubrique reste affectée à la catégorie après rechargement.' );
+        await persistedGarage.locator( ':scope > .deprat-section-term-row [data-preview-toggle]' ).click();
+        assert( await persistedGarage.locator( ':scope > .deprat-section-children [data-preview-item]' )
+            .filter( { hasText: 'Sous-catégorie garage créée depuis menu' } ).first().isVisible(),
+            'Le lien entre parent et sous-catégorie est réellement conservé dans WooCommerce.' );
+
         await page.screenshot( { path: process.env.RUNNER_TEMP + '/deprat-arborescence-admin.png', fullPage: true } );
         await page.goto( base + '/?product_cat=tubes', { waitUntil: 'domcontentloaded' } );
         assert( ( await page.locator( '.deprat-mega-panel' ).first().textContent() ).includes( 'Plaques fixation test' ),

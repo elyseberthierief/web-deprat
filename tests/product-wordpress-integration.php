@@ -385,6 +385,23 @@ deprat_integration_assert(
 );
 deprat_integration_assert( $terms_before_preview === wp_count_terms( array( 'taxonomy' => 'product_cat', 'hide_empty' => false ) ),
     'La prévisualisation ne doit créer aucun terme WooCommerce.' );
+deprat_integration_assert(
+    substr_count( $visual_menu_html, 'data-preview-create-menu' ) === count( deprat_catalog_section_definitions() )
+    && substr_count( $visual_menu_html, 'data-preview-add-category' ) === count( deprat_catalog_section_definitions() )
+    && substr_count( $visual_menu_html, 'data-preview-add-subcategory' ) === count( deprat_catalog_section_definitions() ),
+    'Chaque rubrique doit proposer la création ciblée de catégories et sous-catégories.'
+);
+ob_start();
+deprat_category_tree_admin_page();
+$category_admin_page_html = ob_get_clean();
+deprat_integration_assert( false !== strpos( $category_admin_page_html, 'data-tree-create-overlay' )
+    && false !== strpos( $category_admin_page_html, 'aria-modal="true"' )
+    && false !== strpos( $category_admin_page_html, 'data-tree-create-parent-select' )
+    && false !== strpos( $category_admin_page_html, 'data-tree-create-section' ),
+    'La popup admin doit pouvoir choisir la catégorie parente et la rubrique.'
+);
+deprat_integration_assert( $terms_before_preview === wp_count_terms( array( 'taxonomy' => 'product_cat', 'hide_empty' => false ) ),
+    'Afficher les boutons + et la popup ne doit créer aucune catégorie sans action utilisateur.' );
 
 ob_start();
 deprat_category_tree_render_list( 0, deprat_category_tree_terms() );
