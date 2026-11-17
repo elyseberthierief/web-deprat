@@ -6,6 +6,15 @@
  */
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
+/** URL de la liste complète, distincte de la page d'entrée par familles. */
+function deprat_catalog_all_products_url() {
+    return add_query_arg( 'deprat_all', '1', wc_get_page_permalink( 'shop' ) );
+}
+function deprat_catalog_show_all_products() {
+    return function_exists( 'is_shop' ) && is_shop()
+        && isset( $_GET['deprat_all'] ) && is_scalar( $_GET['deprat_all'] )
+        && '1' === (string) wp_unslash( $_GET['deprat_all'] );
+}
 function deprat_catalog_is_archive() {
     return function_exists( 'is_shop' ) && ( is_shop() || is_product_category() );
 }
@@ -17,8 +26,8 @@ add_filter( 'template_include', 'deprat_catalog_template', 45 );
 
 function deprat_catalog_assets() {
     if ( ! deprat_catalog_is_archive() ) { return; }
-    wp_enqueue_style( 'deprat-catalogue', plugins_url( 'assets/css/catalogue-archive.css', dirname( __DIR__ ) . '/deprat-core.php' ), array(), '0.1.29' );
-    wp_enqueue_script( 'deprat-catalogue', plugins_url( 'assets/js/catalogue-archive.js', dirname( __DIR__ ) . '/deprat-core.php' ), array(), '0.1.29', true );
+    wp_enqueue_style( 'deprat-catalogue', plugins_url( 'assets/css/catalogue-archive.css', dirname( __DIR__ ) . '/deprat-core.php' ), array(), '0.1.30' );
+    wp_enqueue_script( 'deprat-catalogue', plugins_url( 'assets/js/catalogue-archive.js', dirname( __DIR__ ) . '/deprat-core.php' ), array(), '0.1.30', true );
     wp_localize_script( 'deprat-catalogue', 'depratCatalogueConfig', array(
         'ajaxUrl' => class_exists( 'WC_AJAX' ) ? WC_AJAX::get_endpoint( 'add_to_cart' ) : '',
         'contoursUrl' => plugins_url( 'assets/js/product-3d-contours.js', dirname( __DIR__ ) . '/deprat-core.php' ),
@@ -243,10 +252,36 @@ function deprat_catalog_category_index( $term ) {
     set_transient( $key, $index, 5 * MINUTE_IN_SECONDS );
     return $index;
 }
+/**
+ * La vue « Toutes les pièces » agrège les produits publiés, sans limite de
+ * catégorie. Le filtrage utilise exactement les mêmes données que les pages
+ * Tubes, Embouts, etc., et reste paginé à l'affichage.
+ */
+function deprat_catalog_all_products_index() {
+    $cached = get_transient( 'deprat_catalog_all_ix' );
+    if ( is_array( $cached ) ) { return $cached; }
+    $ids = get_posts( array(
+        'post_type' => 'product',
+        'post_status' => 'publish',
+        'fields' => 'ids',
+        'posts_per_page' => -1,
+        'no_found_rows' => true,
+    ) );
+    $index = array();
+    foreach ( $ids as $id ) {
+        $product = wc_get_product( $id );
+        if ( $product && $product->is_visible() ) {
+            $index[ (int) $id ] = deprat_catalog_specs( (int) $id );
+        }
+    }
+    set_transient( 'deprat_catalog_all_ix', $index, 5 * MINUTE_IN_SECONDS );
+    return $index;
+}
 function deprat_catalog_clear_cache( $post_id = 0 ) {
     // Lorsque le catalogue est modifié, la durée de vie courte des facettes évite
     // de devoir connaître toutes les anciennes catégories du produit.
     if ( ! $post_id ) { return; }
+    delete_transient( 'deprat_catalog_all_ix' );
     $categories = get_the_terms( $post_id, 'product_cat' );
     if ( ! is_array( $categories ) ) { return; }
     foreach ( $categories as $term ) {
@@ -308,10 +343,15 @@ function deprat_catalog_query( $term, $index, $filters ) {
     $args = array(
         'post_type' => 'product', 'post_status' => 'publish', 'posts_per_page' => 12,
         'paged' => $page, 'post__in' => $ids ? $ids : array( 0 ),
-        'tax_query' => array( array( 'taxonomy' => 'product_cat', 'terms' => $term->term_id,
-            'include_children' => true ) ),
         'orderby' => 'title', 'order' => 'ASC',
     );
+    if ( $term && isset( $term->term_id ) ) {
+        $args['tax_query'] = array( array(
+            'taxonomy' => 'product_cat',
+            'terms' => (int) $term->term_id,
+            'include_children' => true,
+        ) );
+    }
     if ( 'recent' === $sort ) { $args['orderby'] = 'date'; $args['order'] = 'DESC'; }
     elseif ( 'name_desc' === $sort ) { $args['orderby'] = 'title'; $args['order'] = 'DESC'; }
     return new WP_Query( $args );
@@ -477,13 +517,9 @@ function deprat_catalog_mega_menu( $item_output, $item, $depth, $args ) {
     ?>
     <nav class="deprat-mega-panel" aria-label="Familles de pièces détachées">
         <div class="deprat-mega-intro">
-            <div>
-                <span class="deprat-mega-eyebrow">CATALOGUE DEPRAT</span>
-                <strong>Pièces détachées pour professionnels</strong>
-                <span>Accédez directement à une famille de produits.</span>
-            </div>
-            <a class="deprat-mega-viewall" href="<?php echo esc_url( wc_get_page_permalink( 'shop' ) ); ?>">
-                Toutes les pièces <span aria-hidden="true">→</span>
+            <strong>Pièces détachées</strong>
+            <a class="deprat-mega-viewall" href="<?php echo esc_url( deprat_catalog_all_products_url() ); ?>">
+                Voir toutes les pièces <span aria-hidden="true">→</span>
             </a>
         </div>
         <div class="deprat-mega-grid">
@@ -516,8 +552,6 @@ function deprat_catalog_mega_menu( $item_output, $item, $depth, $args ) {
                                 <li><a href="<?php echo esc_url( $url ); ?>"><?php echo esc_html( $child->name ); ?></a></li>
                             <?php endforeach; ?>
                         </ul>
-                    <?php else : ?>
-                        <a class="deprat-mega-family-all" href="<?php echo esc_url( $root_url ); ?>">Voir les produits <span aria-hidden="true">›</span></a>
                     <?php endif; ?>
                 </section>
             <?php endforeach; ?>
@@ -531,11 +565,11 @@ add_filter( 'walker_nav_menu_start_el', 'deprat_catalog_mega_menu', 20, 4 );
 function deprat_catalog_mega_assets() {
     wp_enqueue_style( 'deprat-catalog-mega-menu',
         plugins_url( 'assets/css/catalogue-mega-menu.css', dirname( __DIR__ ) . '/deprat-core.php' ),
-        array(), '0.1.29'
+        array(), '0.1.30'
     );
     wp_enqueue_script( 'deprat-catalog-mega-menu',
         plugins_url( 'assets/js/catalogue-mega-menu.js', dirname( __DIR__ ) . '/deprat-core.php' ),
-        array(), '0.1.29', true
+        array(), '0.1.30', true
     );
 }
 add_action( 'wp_enqueue_scripts', 'deprat_catalog_mega_assets', 20 );
