@@ -236,4 +236,75 @@ $_POST = array( 'deprat_package_choice' => '0' );
 $standard_cart_data = deprat_packaging_cart_item_data( array(), $piece_id, 0, 2 );
 deprat_integration_assert( 'pieces' === $standard_cart_data['deprat_package']['mode'] && empty( $standard_cart_data['deprat_nonstandard_packaging'] ), 'La commande standard ne doit pas inclure de plus-value.' );
 
+
+// Catalogue : chaque famille doit présenter uniquement ses références.
+$tubes_term = get_term( (int) $tube_category['term_id'], 'product_cat' );
+$embouts_term = get_term( (int) $end_category['term_id'], 'product_cat' );
+$families = deprat_catalog_root_categories();
+$family_ids = array_map( static function ( $term ) { return (int) $term->term_id; }, $families );
+deprat_integration_assert( in_array( (int) $tubes_term->term_id, $family_ids, true ), 'Tubes doit figurer dans le méga-menu.' );
+deprat_integration_assert( in_array( (int) $embouts_term->term_id, $family_ids, true ), 'Embouts doit figurer dans le méga-menu.' );
+$tube_index = deprat_catalog_category_index( $tubes_term );
+$embout_index = deprat_catalog_category_index( $embouts_term );
+deprat_integration_assert( isset( $tube_index[ $product_id ] ) && ! isset( $tube_index[ $piece_id ] ), 'La page Tubes doit exclure les embouts.' );
+deprat_integration_assert( isset( $embout_index[ $piece_id ] ) && ! isset( $embout_index[ $product_id ] ), 'La page Embouts doit exclure les tubes.' );
+deprat_integration_assert( 'Acier galvanisé' === $tube_index[ $product_id ]['material'], 'La matière de la fiche doit être disponible dans les filtres.' );
+$_GET['deprat_material'] = 'acier-galvanise';
+$filters = deprat_catalog_filters();
+deprat_integration_assert( deprat_catalog_matches( $tube_index[ $product_id ], $filters ), 'La matière filtrée doit correspondre au tube.' );
+deprat_integration_assert( ! deprat_catalog_matches( $embout_index[ $piece_id ], $filters ), 'La matière absente ne doit pas correspondre au filtre.' );
+$filtered_tubes = deprat_catalog_query( $tubes_term, $tube_index, $filters );
+deprat_integration_assert( $filtered_tubes->have_posts(), 'Le filtre matière doit retourner le tube.' );
+wp_reset_postdata();
+unset( $_GET['deprat_material'] );
+
+$shop_page_id = wc_get_page_id( 'shop' );
+if ( $shop_page_id <= 0 ) {
+    $shop_page_id = wp_insert_post( array( 'post_type' => 'page', 'post_status' => 'publish',
+        'post_title' => 'Boutique', 'post_name' => 'boutique' ) );
+    update_option( 'woocommerce_shop_page_id', $shop_page_id );
+}
+$shop_item = (object) array(
+    'type' => 'post_type', 'object' => 'page', 'object_id' => (int) $shop_page_id,
+    'title' => 'Boutique', 'url' => get_permalink( $shop_page_id ),
+    'classes' => array(), 'menu_item_parent' => 0,
+);
+$menu_items = deprat_catalog_relabel_menu( array( $shop_item ) );
+deprat_integration_assert( 'Pièces détachées' === $menu_items[0]->title, 'Le menu Boutique doit devenir Pièces détachées.' );
+ob_start();
+$mega_html = deprat_catalog_mega_menu( '<a href="#">Pièces détachées</a>', $menu_items[0], 0,
+    (object) array( 'theme_location' => 'primary' ) );
+$extra_html = ob_get_clean();
+deprat_integration_assert( false !== strpos( $mega_html, 'deprat-mega-panel' )
+    && false !== strpos( $mega_html, 'Tubes' ) && false !== strpos( $mega_html, 'Embouts' ),
+    'Le méga-menu doit reprendre les catégories WooCommerce sans liens inventés.' );
+
+$_GET = array();
+$requests_page = get_page_by_path( 'mes-demandes-devis' );
+if ( ! $requests_page ) {
+    $request_page_id = wp_insert_post( array( 'post_type' => 'page', 'post_status' => 'publish',
+        'post_title' => 'Mes demandes de devis', 'post_name' => 'mes-demandes-devis',
+        'post_content' => '[deprat_mes_demandes]' ) );
+} else { $request_page_id = $requests_page->ID; }
+deprat_integration_assert( $request_page_id > 0, 'La page privée Mes demandes doit exister pour le test.' );
+$menu_request = (object) array(
+    'type' => 'post_type', 'object' => 'page', 'object_id' => $request_page_id,
+    'title' => 'Mes demandes de devis', 'url' => get_permalink( $request_page_id ),
+    'classes' => array(),
+);
+$current_admin = get_current_user_id();
+wp_set_current_user( 0 );
+deprat_integration_assert( ! count( deprat_catalog_private_menu_items( array( $menu_request ) ) ),
+    'Le lien Mes demandes doit être absent du menu public.' );
+wp_set_current_user( $current_admin );
+
+// Un produit sans tarif doit conserver le bouton de demande dans une carte archive.
+ob_start();
+deprat_catalog_render_card( wc_get_product( $piece_id ) );
+$card_html = ob_get_clean();
+deprat_integration_assert( false !== strpos( $card_html, 'data-catalog-add' )
+    && false !== strpos( $card_html, 'data-open-model' ) === false
+    && false !== strpos( $card_html, 'deprat-catalog-ref' ),
+    'La carte Embouts doit offrir l’ajout rapide, la référence et ne pas inventer une vue 3D.' );
+
 WP_CLI::success( 'WordPress et WooCommerce : sauvegarde, médias et affichages vérifiés.' );
