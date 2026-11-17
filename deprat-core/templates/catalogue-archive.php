@@ -89,6 +89,10 @@ $roots = deprat_catalog_root_categories();
         <div class="deprat-catalog-layout">
             <aside class="deprat-catalog-sidebar" aria-label="Filtres des produits">
                 <form method="get" action="<?php echo esc_url( $current_url ); ?>" class="deprat-catalog-filter-form" data-catalog-filters>
+                    <?php // Conserver la catégorie avec les permaliens classiques (?product_cat=tubes). ?>
+                    <?php if ( false !== strpos( $current_url, '?' ) ) : ?>
+                        <input type="hidden" name="product_cat" value="<?php echo esc_attr( $category->slug ); ?>">
+                    <?php endif; ?>
                     <h2><span aria-hidden="true">☷</span> Filtrer les produits</h2>
                     <?php if ( $material_facets ) : ?>
                         <fieldset>
@@ -149,6 +153,9 @@ $roots = deprat_catalog_root_categories();
                     <strong><?php echo esc_html( sprintf( _n( '%d résultat affiché', '%d résultats affichés', $products->found_posts, 'deprat' ), $products->found_posts ) ); ?></strong>
                     <div class="deprat-catalog-toolbar-controls">
                         <form method="get" action="<?php echo esc_url( $current_url ); ?>" class="deprat-catalog-sort">
+                            <?php if ( false !== strpos( $current_url, '?' ) ) : ?>
+                                <input type="hidden" name="product_cat" value="<?php echo esc_attr( $category->slug ); ?>">
+                            <?php endif; ?>
                             <?php foreach ( $_GET as $key => $value ) :
                                 if ( ! is_scalar( $value ) || 'deprat_sort' === $key || 'deprat_page' === $key || ! preg_match( '/^deprat_(?:material|shape|length_min|length_max|diameter_min|diameter_max|thickness_min|thickness_max|stock|view3d)$/', $key ) ) { continue; }
                                 ?>
