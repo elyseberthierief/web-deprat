@@ -143,21 +143,111 @@
             } );
         } );
 
-        // Modèle 3D : réutilise le même GLB que la fiche, sans précharger toutes les pièces.
+        // Le catalogue réutilise les vrais fichiers GLB et le moteur de contours
+        // déjà utilisé par les fiches produit, sans recopier les modèles.
         var dialog = catalog.querySelector( '[data-catalog-model-dialog]' );
         var model = dialog ? dialog.querySelector( '[data-model-viewer]' ) : null;
         var close = dialog ? dialog.querySelector( '[data-model-close]' ) : null;
         var title = dialog ? dialog.querySelector( '[data-model-title]' ) : null;
+        var stage = dialog ? dialog.querySelector( '.deprat-catalog-3d-stage' ) : null;
+        var outline = dialog ? dialog.querySelector( '[data-model-outline]' ) : null;
+        var renderButtons = dialog ? dialog.querySelectorAll( '[data-model-render]' ) : [];
+        var backgroundButton = dialog ? dialog.querySelector( '[data-model-background]' ) : null;
+        var backgroundOverride = 'auto';
+        var automaticBackground = 'light';
+        var renderMode = 'texture';
+        var contourInstance = null;
+        var contourLoading = null;
+
+        function background() { return backgroundOverride === 'auto' ? automaticBackground : backgroundOverride; }
+        function applyBackground() {
+            if ( stage ) { stage.setAttribute( 'data-3d-background', background() ); }
+            if ( backgroundButton ) {
+                backgroundButton.textContent = 'Fond : ' + ( backgroundOverride === 'auto' ? 'automatique' : background() === 'dark' ? 'gris contrasté' : 'clair' );
+            }
+            if ( contourInstance ) { contourInstance.recolor(); }
+        }
+        function detectBackground() {
+            if ( ! model || ! model.model || ! model.model.materials ) { return; }
+            var values = [];
+            model.model.materials.forEach( function ( material ) {
+                var pbr = material && material.pbrMetallicRoughness;
+                var rgba = pbr && pbr.baseColorFactor;
+                if ( ! rgba || rgba.length < 3 ) { return; }
+                var value = .2126 * rgba[0] + .7152 * rgba[1] + .0722 * rgba[2];
+                if ( Number.isFinite( value ) ) { values.push( value ); }
+            } );
+            var luminance = values.length ? values.reduce( function ( sum, v ) { return sum + v; }, 0 ) / values.length : null;
+            automaticBackground = luminance !== null && luminance >= .65 ? 'dark' : 'light';
+            applyBackground();
+        }
+        if ( model ) { model.addEventListener( 'load', detectBackground ); }
+        if ( backgroundButton ) {
+            backgroundButton.addEventListener( 'click', function () {
+                backgroundOverride = backgroundOverride === 'auto'
+                    ? ( automaticBackground === 'dark' ? 'light' : 'dark' )
+                    : backgroundOverride === 'dark' ? 'light' : 'auto';
+                applyBackground();
+            } );
+        }
+        function render( mode ) {
+            renderMode = mode;
+            renderButtons.forEach( function ( button ) {
+                var active = button.getAttribute( 'data-model-render' ) === mode;
+                button.classList.toggle( 'is-active', active );
+                button.setAttribute( 'aria-pressed', active ? 'true' : 'false' );
+            } );
+            if ( ! model || ! outline ) { return; }
+            var contours = mode === 'contours';
+            model.hidden = contours;
+            outline.hidden = ! contours;
+            if ( contourInstance ) {
+                if ( contours && dialog && dialog.open ) { contourInstance.show(); }
+                else { contourInstance.hide(); }
+            }
+            if ( ! contours || contourInstance || contourLoading || !dialog.open ) { return; }
+            var url = window.depratCatalogueConfig && window.depratCatalogueConfig.contoursUrl;
+            if ( ! url ) { outline.textContent = 'Vue en contours indisponible.'; return; }
+            outline.textContent = 'Chargement des contours…';
+            contourLoading = import( url ).then( function ( module ) {
+                outline.textContent = '';
+                return module.createContourViewer( outline, model.src, background );
+            } ).then( function ( instance ) {
+                contourInstance = instance;
+                if ( renderMode === 'contours' && dialog.open ) { instance.show(); }
+                else { instance.hide(); }
+            } ).catch( function () {
+                outline.textContent = 'La vue en contours n’est pas disponible pour ce modèle.';
+                model.hidden = false;
+                renderMode = 'texture';
+                renderButtons.forEach( function ( button ) {
+                    var active = button.getAttribute( 'data-model-render' ) === 'texture';
+                    button.classList.toggle( 'is-active', active );
+                    button.setAttribute( 'aria-pressed', active ? 'true' : 'false' );
+                } );
+            } ).finally( function () { contourLoading = null; } );
+        }
+        renderButtons.forEach( function ( button ) {
+            button.addEventListener( 'click', function () { render( button.getAttribute( 'data-model-render' ) ); } );
+        } );
         catalog.querySelectorAll( '[data-open-model]' ).forEach( function ( button ) {
             button.addEventListener( 'click', function () {
                 if ( ! dialog || ! model ) { return; }
                 var src = button.getAttribute( 'data-model-src' );
                 if ( ! src ) { return; }
+                // Les géométries CAD sont liées au GLB de chaque référence.
+                if ( contourInstance ) { contourInstance.destroy(); contourInstance = null; }
+                if ( outline ) { outline.textContent = ''; }
+                backgroundOverride = 'auto';
+                automaticBackground = 'light';
+                applyBackground();
+                render( 'texture' );
                 model.setAttribute( 'src', src );
                 model.setAttribute( 'alt', 'Modèle 3D de ' + ( button.getAttribute( 'data-model-name' ) || 'la pièce' ) );
                 if ( title ) { title.textContent = 'Vue 360° – ' + button.getAttribute( 'data-model-name' ); }
                 if ( typeof dialog.showModal === 'function' ) { dialog.showModal(); }
                 else { dialog.setAttribute( 'open', '' ); }
+                if ( model.loaded ) { detectBackground(); }
             } );
         } );
         function closeModel() {
@@ -165,6 +255,7 @@
             if ( typeof dialog.close === 'function' ) { dialog.close(); }
             else { dialog.removeAttribute( 'open' ); }
             if ( model ) { model.removeAttribute( 'src' ); }
+            if ( contourInstance ) { contourInstance.destroy(); contourInstance = null; }
         }
         if ( close ) { close.addEventListener( 'click', closeModel ); }
         if ( dialog ) {
@@ -173,6 +264,7 @@
             } );
             dialog.addEventListener( 'close', function () {
                 if ( model ) { model.removeAttribute( 'src' ); }
+                if ( contourInstance ) { contourInstance.destroy(); contourInstance = null; }
             } );
         }
     }
