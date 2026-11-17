@@ -216,7 +216,12 @@ $roots = deprat_catalog_root_categories();
                         if ( $filters['features'] ) { $args['deprat_feature'] = $filters['features']; }
                         $base_url = add_query_arg( array_merge( $args, array( 'deprat_page' => '%#%' ) ), $current_url );
                         echo '<nav class="deprat-catalog-pagination" aria-label="Pagination des produits">';
-                        echo paginate_links( array( 'base' => str_replace( '%25%23%25', '%#%', esc_url( $base_url ) ), 'format' => '', 'total' => $max, 'current' => $current_page, 'type' => 'list', 'prev_text' => '‹ Précédent', 'next_text' => 'Suivant ›' ) );
+                        // paginate_links renvoie du HTML : filtrer les balises
+                        // autorisées sans casser les liens de pagination WordPress.
+                        // Faux positif « echoed-request » : les paramètres GET
+                        // sont filtrés, la base URL échappée, et le HTML issu de
+                        // paginate_links est limité par wp_kses_post.
+                        echo wp_kses_post( paginate_links( array( 'base' => str_replace( '%25%23%25', '%#%', esc_url( $base_url ) ), 'format' => '', 'total' => $max, 'current' => $current_page, 'type' => 'list', 'prev_text' => '‹ Précédent', 'next_text' => 'Suivant ›' ) ) ); // nosemgrep: php.lang.security.injection.echoed-request.echoed-request
                         echo '</nav>';
                     }
                     ?>

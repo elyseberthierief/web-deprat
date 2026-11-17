@@ -437,6 +437,35 @@ deprat_integration_assert( ! count( deprat_catalog_private_menu_items( array( $m
     'Le lien Mes demandes doit être absent du menu public.' );
 wp_set_current_user( $current_admin );
 
+// Vérifier qu'un paramètre GET ne peut pas injecter de balises exécutables.
+$original_get = $_GET;
+$_GET['deprat_q'] = '"><img src=x onerror=alert(1)>';
+$_GET['deprat_statut'] = '"><svg onload=alert(1)>';
+$_GET['deprat_periode'] = '<script>alert(1)</script>';
+$history_html = deprat_html_historique();
+deprat_integration_assert( is_string( $history_html ) && false !== strpos( $history_html, 'deprat-recherche-form' ),
+    'Le formulaire d’historique reste fonctionnel après sanitation des requêtes.' );
+deprat_integration_assert( false === strpos( $history_html, '<img src=x' )
+    && false === strpos( $history_html, '<svg onload=' )
+    && false === strpos( $history_html, '<script>alert(1)</script>' ),
+    'Les paramètres GET ne doivent jamais injecter de HTML exécutable dans l’historique.' );
+$_GET = $original_get;
+
+// Test d'autorisation : connaître le numéro d'une demande ne suffit pas.
+$security_customer = wp_create_user( 'deprat-security-client', wp_generate_password( 20 ), 'security-client@example.test' );
+deprat_integration_assert( ! is_wp_error( $security_customer ), 'Le client de sécurité doit pouvoir être créé.' );
+$security_order = wc_create_order( array( 'customer_id' => $current_admin ) );
+deprat_integration_assert( $security_order instanceof WC_Order, 'Commande de test sécurité disponible.' );
+$security_order->update_meta_data( '_deprat_demande', 'oui' );
+$security_order->save();
+wp_set_current_user( $security_customer );
+deprat_integration_assert( ! deprat_devis_est_au_client( $security_order ),
+    'Un client non propriétaire ne doit pas accéder à un devis privé.' );
+wp_set_current_user( $current_admin );
+deprat_integration_assert( deprat_devis_est_au_client( $security_order ),
+    'Le propriétaire connecté doit accéder à sa demande.' );
+$security_order->delete( true );
+
 // Un produit sans tarif doit conserver le bouton de demande dans une carte archive.
 ob_start();
 deprat_catalog_render_card( wc_get_product( $piece_id ) );
