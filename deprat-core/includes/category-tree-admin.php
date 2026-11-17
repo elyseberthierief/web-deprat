@@ -90,13 +90,14 @@ add_action( 'admin_menu', static function () {
 
 function deprat_category_tree_admin_assets( $hook ) {
     if ( 'product_page_deprat-categories-tree' !== $hook ) { return; }
-    wp_enqueue_style( 'deprat-category-tree', plugins_url( 'assets/css/category-tree-admin.css', dirname( __DIR__ ) . '/deprat-core.php' ), array(), '0.1.32' );
-    wp_enqueue_script( 'deprat-category-tree', plugins_url( 'assets/js/category-tree-admin.js', dirname( __DIR__ ) . '/deprat-core.php' ), array( 'jquery', 'jquery-ui-sortable' ), '0.1.32', true );
+    wp_enqueue_style( 'deprat-category-tree', plugins_url( 'assets/css/category-tree-admin.css', dirname( __DIR__ ) . '/deprat-core.php' ), array(), '0.1.33' );
+    wp_enqueue_script( 'deprat-category-tree', plugins_url( 'assets/js/category-tree-admin.js', dirname( __DIR__ ) . '/deprat-core.php' ), array( 'jquery', 'jquery-ui-sortable' ), '0.1.33', true );
     wp_localize_script( 'deprat-category-tree', 'depratCategoryTree', array(
         'ajaxUrl' => admin_url( 'admin-ajax.php' ),
         'nonce' => wp_create_nonce( 'deprat_categories_tree' ),
         'editBase' => admin_url( 'term.php?taxonomy=product_cat&post_type=product&tag_ID=' ),
         'maxDepth' => 30,
+        'sectionLabels' => deprat_catalog_section_definitions(),
     ) );
 }
 add_action( 'admin_enqueue_scripts', 'deprat_category_tree_admin_assets' );
@@ -131,6 +132,17 @@ function deprat_category_tree_render_item( $term, $terms, $depth = 0 ) {
                 <button type="button" class="button" data-tree-indent title="Ranger dans la catégorie précédente" aria-label="Augmenter le niveau">↳</button>
                 <button type="button" class="button" data-tree-outdent title="Remonter d'un niveau" aria-label="Diminuer le niveau">↰</button>
                 <button type="button" class="button" data-tree-add-child>+ Sous-catégorie</button>
+                <label class="deprat-tree-section-editor" title="Rubrique visuelle non cliquable du menu. Aucune catégorie créée.">
+                    Rubrique
+                    <select data-tree-section data-term-id="<?php echo esc_attr( $id ); ?>" aria-label="<?php echo esc_attr( 'Rubrique du menu pour ' . $term->name ); ?>">
+                        <option value="">Automatique</option>
+                        <?php
+                        $selected_section = get_term_meta( $id, '_deprat_catalog_section', true );
+                        foreach ( deprat_catalog_section_definitions() as $section_key => $section_title ) : ?>
+                            <option value="<?php echo esc_attr( $section_key ); ?>" <?php selected( $selected_section, $section_key ); ?>><?php echo esc_html( $section_title ); ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </label>
                 <?php if ( $url ) : ?>
                     <a class="button" href="<?php echo esc_url( $url ); ?>">Modifier</a>
                 <?php endif; ?>
@@ -160,6 +172,7 @@ function deprat_category_tree_admin_page() {
             <strong>Comment organiser ?</strong> Faites glisser une catégorie avec la poignée <strong>⠿</strong>
             pour changer l’ordre ou déposez-la dans la zone pointillée sous une autre pour en faire une sous-catégorie.
             Utilisez <strong>↑ / ↓</strong> pour changer l’ordre sans glisser et les flèches <strong>↳ / ↰</strong> pour modifier le niveau.
+            Le sélecteur <strong>Rubrique</strong> classe une catégorie existante sous un simple titre visuel, sans créer de catégorie WooCommerce.
             <strong>Enregistrez</strong> lorsque le plan vous convient.
         </div>
         <div class="deprat-tree-toolbar">
@@ -286,6 +299,26 @@ function deprat_category_tree_ajax_save() {
     if ( is_wp_error( $validated ) ) {
         wp_send_json_error( array( 'message' => $validated->get_error_message() ), 400 );
     }
+    // Le mapping de rubriques est facultatif et ne crée jamais de terme WooCommerce.
+    // Toutes les clés doivent correspondre à des IDs réels et à nos titres autorisés.
+    $section_changes = array();
+    if ( isset( $_POST['sections'] ) ) {
+        $raw_sections = is_scalar( $_POST['sections'] ) ? wp_unslash( $_POST['sections'] ) : '';
+        $requested_sections = is_string( $raw_sections ) ? json_decode( $raw_sections, true ) : null;
+        if ( ! is_array( $requested_sections ) || count( $requested_sections ) > 2000 ) {
+            wp_send_json_error( array( 'message' => 'Affectation des rubriques invalide.' ), 400 );
+        }
+        $valid_ids = array_fill_keys( $ids, true );
+        $definitions = deprat_catalog_section_definitions();
+        foreach ( $requested_sections as $term_id => $section ) {
+            $id = filter_var( $term_id, FILTER_VALIDATE_INT, array( 'options' => array( 'min_range' => 1 ) ) );
+            if ( ! $id || ! isset( $valid_ids[ $id ] ) || ! is_string( $section )
+                || ( '' !== $section && ! isset( $definitions[ $section ] ) ) ) {
+                wp_send_json_error( array( 'message' => 'Une rubrique ne correspond pas aux catégories existantes.' ), 400 );
+            }
+            $section_changes[ $id ] = $section;
+        }
+    }
     $parents = $validated['parents'];
     // Détacher d'abord les parents modifiés pour éviter les cycles transitoires
     // (ex. A/B deviennent B/A) pendant l'application séquentielle WP.
@@ -312,6 +345,10 @@ function deprat_category_tree_ajax_save() {
         // Compatibilité avec le tri natif WooCommerce.
         wc_set_term_order( (int) $id, (int) $validated['orders'][ $id ], 'product_cat' );
         clean_term_cache( (int) $id, 'product_cat' );
+    }
+    foreach ( $section_changes as $id => $section ) {
+        if ( '' === $section ) { delete_term_meta( $id, '_deprat_catalog_section' ); }
+        else { update_term_meta( $id, '_deprat_catalog_section', $section ); }
     }
     delete_transient( 'deprat_catalog_all_ix' );
     update_option( 'deprat_category_tree_saved_at', time(), false );

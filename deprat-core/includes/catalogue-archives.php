@@ -2,7 +2,7 @@
 /**
  * Catalogue professionnel DEPRAT : pages catégories WooCommerce indépendantes.
  * Les filtres s'appliquent uniquement aux produits de la catégorie visitée.
- * La page Boutique devient l'accueil « Pièces détachées ».
+ * La page Boutique devient l'accueil « Nos composants ».
  */
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
@@ -80,7 +80,7 @@ function deprat_catalog_relabel_menu( $items ) {
     $shop_id = wc_get_page_id( 'shop' );
     foreach ( $items as $item ) {
         if ( deprat_catalog_is_shop_menu_link( $item, $shop_id ) ) {
-            $item->title = 'Pièces détachées';
+            $item->title = 'Nos composants';
             $item->classes[] = 'deprat-mega-parent';
         }
     }
@@ -539,9 +539,9 @@ function deprat_catalog_render_mega_children( $parent, $depth = 0 ) {
 }
 
 /**
- * Méga-menu « Pièces détachées » inspiré de la maquette :
- * 3 à 4 colonnes de familles, vignettes et liens vers les sous-catégories réelles.
- * Les liens sont issus de product_cat, sans recopier les noms dans le code.
+ * Méga-menu DEPRAT : titres de rubriques non cliquables, liens uniquement vers
+ * les catégories existantes et sous-catégories dépliables.
+ * Aucun produit ni aucune catégorie WooCommerce n'est créé ici.
  */
 function deprat_catalog_mega_menu( $item_output, $item, $depth, $args ) {
     if ( $depth > 0 || ! $item || ! in_array( 'deprat-mega-parent', (array) $item->classes, true ) ) {
@@ -549,37 +549,20 @@ function deprat_catalog_mega_menu( $item_output, $item, $depth, $args ) {
     }
     $location = isset( $args->theme_location ) ? (string) $args->theme_location : '';
     if ( preg_match( '/footer|secondary|social/i', $location ) ) { return $item_output; }
-    $roots = deprat_catalog_root_categories();
-    if ( ! $roots ) { return $item_output; }
+    if ( ! deprat_catalog_root_categories() ) { return $item_output; }
     ob_start();
     ?>
-    <nav class="deprat-mega-panel" aria-label="Familles de pièces détachées">
+    <nav class="deprat-mega-panel" aria-label="Nos composants">
         <div class="deprat-mega-intro">
-            <strong>Pièces détachées</strong>
+            <div class="deprat-mega-copy">
+                <strong>Nos composants</strong>
+                <p>L’ensemble des composants pour volets roulants, stores et portes de garage : tubes, liaisons, manœuvres, lames, coulisses, supports et accessoires.</p>
+            </div>
             <a class="deprat-mega-viewall" href="<?php echo esc_url( deprat_catalog_all_products_url() ); ?>">
-                Voir toutes les pièces <span aria-hidden="true">→</span>
+                Voir tous les composants <span aria-hidden="true">→</span>
             </a>
         </div>
-        <div class="deprat-mega-grid">
-            <?php foreach ( $roots as $root ) :
-                $root_url = get_term_link( $root );
-                if ( is_wp_error( $root_url ) ) { continue; }
-                $image = absint( get_term_meta( $root->term_id, 'thumbnail_id', true ) );
-                ?>
-                <section class="deprat-mega-family">
-                    <a class="deprat-mega-family-heading" href="<?php echo esc_url( $root_url ); ?>">
-                        <span class="deprat-mega-family-illustration" aria-hidden="true">
-                            <?php if ( $image ) : ?>
-                                <?php echo wp_get_attachment_image( $image, 'thumbnail', false, array( 'loading' => 'lazy', 'alt' => '' ) ); ?>
-                            <?php else : ?><span class="deprat-mega-fallback">▤</span><?php endif; ?>
-                        </span>
-                        <span><?php echo esc_html( $root->name ); ?></span>
-                        <span class="deprat-mega-heading-arrow" aria-hidden="true">›</span>
-                    </a>
-                    <?php deprat_catalog_render_mega_children( $root->term_id ); ?>
-                </section>
-            <?php endforeach; ?>
-        </div>
+        <?php deprat_catalog_render_sections( 'mega' ); ?>
     </nav>
     <?php
     return $item_output . ob_get_clean();
@@ -589,11 +572,15 @@ add_filter( 'walker_nav_menu_start_el', 'deprat_catalog_mega_menu', 20, 4 );
 function deprat_catalog_mega_assets() {
     wp_enqueue_style( 'deprat-catalog-mega-menu',
         plugins_url( 'assets/css/catalogue-mega-menu.css', dirname( __DIR__ ) . '/deprat-core.php' ),
-        array(), '0.1.31'
+        array(), '0.1.33'
+    );
+    wp_enqueue_style( 'deprat-catalog-sections',
+        plugins_url( 'assets/css/catalogue-sections.css', dirname( __DIR__ ) . '/deprat-core.php' ),
+        array( 'deprat-catalog-mega-menu' ), '0.1.33'
     );
     wp_enqueue_script( 'deprat-catalog-mega-menu',
         plugins_url( 'assets/js/catalogue-mega-menu.js', dirname( __DIR__ ) . '/deprat-core.php' ),
-        array(), '0.1.31', true
+        array(), '0.1.33', true
     );
 }
 add_action( 'wp_enqueue_scripts', 'deprat_catalog_mega_assets', 20 );
@@ -613,7 +600,7 @@ function deprat_catalog_fallback_page_menu( $html, $args = null ) {
     $pattern = '~(<li\b[^>]*\bpage-item-' . $shop_id . '\b[^>]*>)(\s*<a\b[^>]*>)(.*?)(</a>)~is';
     return preg_replace_callback( $pattern, static function( $matches ) use ( $shop_id, $mega ) {
         $li = str_replace( 'page-item-' . $shop_id, 'page-item-' . $shop_id . ' deprat-mega-parent', $matches[1] );
-        return $li . $matches[2] . 'Pièces détachées' . $matches[4] . $mega;
+        return $li . $matches[2] . 'Nos composants' . $matches[4] . $mega;
     }, $html, 1 );
 }
 add_filter( 'wp_page_menu', 'deprat_catalog_fallback_page_menu', 30, 2 );

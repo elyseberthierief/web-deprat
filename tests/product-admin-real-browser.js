@@ -297,7 +297,7 @@ const assert = require( 'assert' );
         await page.waitForSelector( '.deprat-catalog-layout' );
         assert( await page.locator( '.deprat-mega-parent .deprat-mega-panel' ).count() > 0, 'Le menu principal Astra doit ouvrir le méga-menu des catégories.' );
         assert( ( await page.locator( '.deprat-mega-panel' ).first().textContent() ).includes( 'Embouts' ), 'Les sous-pages de catégorie apparaissent dans le méga-menu.' );
-        assert( ( await page.locator( '.deprat-mega-parent' ).first().textContent() ).includes( 'Pièces détachées' ), 'Le menu Boutique est renommé Pièces détachées.' );
+        assert( ( await page.locator( '.deprat-mega-parent' ).first().textContent() ).includes( 'Nos composants' ), 'Le menu Boutique est renommé Nos composants.' );
         await page.locator( '.deprat-mega-parent' ).first().hover();
         const megaPanel = page.locator( '.deprat-mega-panel' ).first();
         await megaPanel.waitFor( { state: 'visible' } );
@@ -305,19 +305,35 @@ const assert = require( 'assert' );
         const viewportWidth = page.viewportSize().width;
         assert( megaRect.x >= 0 && megaRect.x + megaRect.width <= viewportWidth + 2,
             'Le méga-menu doit rester entièrement visible même depuis un lien à droite de l’en-tête.' );
-        assert( await megaPanel.locator( '.deprat-mega-family' ).count() >= 2, 'Les familles Tubes et Embouts figurent dans le méga-menu.' );
+        assert( await megaPanel.locator( '.deprat-section' ).count() >= 1, 'Les familles réelles sont groupées sous un titre visuel.' );
+        assert( await megaPanel.locator( '.deprat-section-heading h2' ).first().isVisible(), 'Le titre de section est visible.' );
+        assert.strictEqual( await megaPanel.locator( '.deprat-section-heading a' ).count(), 0,
+            'Les titres de section ne doivent jamais être des liens.' );
         assert( megaRect.width >= viewportWidth - 4, 'Le méga-menu occupe désormais la largeur complète de l’écran.' );
-        assert.strictEqual( ( await megaPanel.locator( '.deprat-mega-intro > strong' ).textContent() ).trim(),
-            'Pièces détachées', 'Le bandeau ne doit afficher que le titre Pièces détachées.' );
+        assert.strictEqual( ( await megaPanel.locator( ' .deprat-mega-copy > strong' ).textContent() ).trim(),
+            'Nos composants', 'Le bandeau doit afficher Nos composants.' );
         assert.strictEqual( await megaPanel.locator( '.deprat-mega-family-all' ).count(), 0,
             'Aucun doublon Voir les produits ne doit apparaître sous les catégories.' );
         const fullShopLink = megaPanel.locator( '.deprat-mega-viewall' );
-        assert( ( await fullShopLink.textContent() ).includes( 'Voir toutes les pièces' ),
-            'Le bouton Voir toutes les pièces reste distinct des catégories.' );
+        assert( ( await fullShopLink.textContent() ).includes( 'Voir tous les composants' ),
+            'Le bouton Voir tous les composants reste distinct des catégories.' );
         const fullShopUrl = await fullShopLink.getAttribute( 'href' );
         assert( fullShopUrl.includes( 'deprat_all=1' ), 'Le bouton renvoie sur toutes les références, pas sur la grille des catégories.' );
         const introHeight = await megaPanel.locator( '.deprat-mega-intro' ).evaluate( element => element.getBoundingClientRect().height );
-        assert( introHeight <= 84, 'Le bandeau bleu doit être compact, pas une grande zone vide.' );
+        assert( introHeight <= 125, 'Le bandeau doit rester compact et aligné.' );
+        // La catégorie reste un lien, seul le chevron déroule ses sous-catégories existantes.
+        const tubeFamily = megaPanel.locator( '.deprat-section-term', { has: megaPanel.locator( '.deprat-section-term-link', { hasText: 'Tubes' } ) } ).first();
+        const tubeToggle = tubeFamily.locator( ':scope > .deprat-section-term-row > [data-deprat-section-toggle]' );
+        if ( await tubeToggle.count() ) {
+            const id = await tubeToggle.getAttribute( 'aria-controls' );
+            assert.strictEqual( await page.locator( '[id="' + id + '"]' ).isVisible(), false,
+                'Les sous-catégories sont fermées par défaut.' );
+            await tubeToggle.click();
+            assert.strictEqual( await tubeToggle.getAttribute( 'aria-expanded' ), 'true',
+                'Le chevron déplie les vraies sous-catégories.' );
+            assert( await page.locator( '[id="' + id + '"] .deprat-section-term-link' ).count() > 0,
+                'Aucune sous-catégorie vide n’est inventée.' );
+        }
         await page.screenshot( { path: process.env.RUNNER_TEMP + '/deprat-mega-menu.png', fullPage: false } );
 
         assert( ( await page.locator( '.deprat-catalog-header h1' ).textContent() ).includes( 'Tubes' ), 'La page Tubes a son propre titre.' );
@@ -391,16 +407,19 @@ const assert = require( 'assert' );
 
         await page.goto( base + '/boutique/', { waitUntil: 'domcontentloaded' } );
         if ( await page.locator( '.deprat-catalog-hub' ).count() ) {
-            assert( await page.locator( '.deprat-catalog-hub-card' ).count() >= 2, 'Pièces détachées propose les familles Tubes et Embouts.' );
+            assert( await page.locator( '.deprat-catalog-hub .deprat-section' ).count() >= 1,
+                'La page Nos composants groupe les catégories existantes.' );
+            assert( await page.locator( '.deprat-catalog-hub .deprat-section-term-link' ).count() >= 2,
+                'Tubes et Embouts restent chacun un lien de catégorie.' );
             assert.strictEqual( await page.locator( '.deprat-catalog-hub-link' ).count(), 0,
                 'Pas de texte Voir les produits sous les familles de la page boutique.' );
             assert( await page.locator( '.deprat-catalog-hub-viewall' ).isVisible(),
-                'L’accès à toutes les pièces reste possible sur la page d’accueil des familles.' );
+                'L’accès à tous les composants reste possible sur la page d’accueil des familles.' );
         }
         await page.goto( fullShopUrl, { waitUntil: 'domcontentloaded' } );
         await page.waitForSelector( '.deprat-catalog-results' );
-        assert( ( await page.locator( '.deprat-catalog-header h1' ).textContent() ).includes( 'Toutes les pièces' ),
-            'Le bouton ouvre une page Toutes les pièces et non la page des catégories.' );
+        assert( ( await page.locator( '.deprat-catalog-header h1' ).textContent() ).includes( 'Tous les composants' ),
+            'Le bouton ouvre une page Tous les composants et non la page des catégories.' );
         const allProductsText = await page.locator( '[data-catalog-products]' ).textContent();
         assert( allProductsText.includes( 'Tube de test' ) && allProductsText.includes( 'Embout DEPRAT de test' ),
             'La vue globale liste les références de plusieurs catégories.' );
@@ -423,6 +442,8 @@ const assert = require( 'assert' );
         assert( await page.locator( '[data-tree-item]' ).count() >= 2, 'Les catégories déjà présentes sont visibles dans l’arborescence.' );
         assert( await page.locator( '[data-tree-item] [data-drag-handle]' ).first().isVisible(), 'La poignée drag-and-drop est visible.' );
         assert( await page.locator( '[data-tree-item] [data-tree-up]' ).first().isVisible(), 'Le bouton de réorganisation sans souris est disponible.' );
+        assert( await page.locator( '[data-tree-item] [data-tree-section]' ).first().isVisible(),
+            'Une rubrique peut être attribuée à une catégorie sans créer de famille WooCommerce.' );
         assert( await page.locator( '.deprat-tree-root' ).evaluate( list => !!window.jQuery( list ).data( 'ui-sortable' ) ),
             'Le déplacement à la souris doit être activé via jQuery UI Sortable.' );
         await page.locator( '[data-tree-create-root]' ).click();

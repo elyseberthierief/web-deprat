@@ -16,31 +16,32 @@ $roots = deprat_catalog_root_categories();
         <a href="<?php echo esc_url( home_url( '/' ) ); ?>">Accueil</a>
         <span aria-hidden="true">/</span>
         <?php if ( $is_hub && ! $is_all ) : ?>
-            <strong aria-current="page">Pièces détachées</strong>
+            <strong aria-current="page">Nos composants</strong>
         <?php elseif ( $is_all ) : ?>
-            <a href="<?php echo esc_url( $shop_url ); ?>">Pièces détachées</a>
+            <a href="<?php echo esc_url( $shop_url ); ?>">Nos composants</a>
             <span aria-hidden="true">/</span>
-            <strong aria-current="page">Toutes les pièces</strong>
+            <strong aria-current="page">Tous les composants</strong>
         <?php else : ?>
-            <a href="<?php echo esc_url( $shop_url ); ?>">Pièces détachées</a>
+            <a href="<?php echo esc_url( $shop_url ); ?>">Nos composants</a>
             <span aria-hidden="true">/</span>
             <strong aria-current="page"><?php echo esc_html( single_term_title( '', false ) ); ?></strong>
         <?php endif; ?>
     </nav>
     <header class="deprat-catalog-header">
-        <h1><?php echo $is_all ? 'Toutes les pièces' : ( $is_hub ? 'Pièces détachées' : esc_html( single_term_title( '', false ) ) ); ?></h1>
+        <h1><?php echo $is_all ? 'Tous les composants' : ( $is_hub ? 'Nos composants' : esc_html( single_term_title( '', false ) ) ); ?></h1>
         <p><?php
             if ( $is_all ) {
                 echo 'Retrouvez toutes les références disponibles dans notre catalogue professionnel, quelle que soit leur catégorie.';
             } elseif ( $is_hub ) {
-                echo 'Découvrez nos pièces détachées pour volets roulants et portes de garage. Sélectionnez une famille de produits.';
+                echo 'L’ensemble de nos composants pour volets roulants, stores et portes de garage : tubes, liaisons, manœuvres, lames, coulisses, supports et accessoires.';
             } else {
                 $description = $category && isset( $category->description ) ? wp_strip_all_tags( $category->description ) : '';
                 echo esc_html( $description ?: 'Consultez les références DEPRAT de cette catégorie et affinez votre recherche avec les filtres.' );
             }
         ?></p>
     </header>
-    <nav class="deprat-catalog-nav" aria-label="Catégories des pièces détachées">
+    <?php if ( ! $is_hub || $is_all ) : ?>
+    <nav class="deprat-catalog-nav" aria-label="Catégories des composants">
         <?php foreach ( $roots as $root ) :
             $url = get_term_link( $root );
             if ( is_wp_error( $url ) ) { continue; }
@@ -54,33 +55,15 @@ $roots = deprat_catalog_root_categories();
             </a>
         <?php endforeach; ?>
     </nav>
+    <?php endif; ?>
 
     <?php if ( $is_hub && ! $is_all ) : ?>
-        <section class="deprat-catalog-hub" aria-labelledby="deprat-families-title">
-            <div class="deprat-catalog-hub-heading">
-                <h2 id="deprat-families-title">Choisissez une famille de produits</h2>
-                <a class="deprat-catalog-hub-viewall" href="<?php echo esc_url( deprat_catalog_all_products_url() ); ?>">Voir toutes les pièces <span aria-hidden="true">→</span></a>
+        <section class="deprat-catalog-hub" aria-label="Familles de composants DEPRAT">
+            <?php deprat_catalog_render_sections( 'page' ); ?>
+            <div class="deprat-catalog-hub-footer">
+                <a class="deprat-catalog-hub-viewall" href="<?php echo esc_url( deprat_catalog_all_products_url() ); ?>">Voir tous les composants <span aria-hidden="true">→</span></a>
             </div>
-            <div class="deprat-catalog-hub-grid">
-                <?php foreach ( $roots as $root ) :
-                    $url = get_term_link( $root );
-                    if ( is_wp_error( $url ) ) { continue; }
-                    $thumb = absint( get_term_meta( $root->term_id, 'thumbnail_id', true ) );
-                    ?>
-                    <a href="<?php echo esc_url( $url ); ?>" class="deprat-catalog-hub-card">
-                        <span class="deprat-catalog-hub-image">
-                            <?php if ( $thumb ) : ?>
-                                <?php echo wp_get_attachment_image( $thumb, 'woocommerce_thumbnail', false, array( 'loading' => 'lazy', 'alt' => $root->name ) ); ?>
-                            <?php else : ?>
-                                <span aria-hidden="true" class="deprat-catalog-hub-symbol">▤</span>
-                            <?php endif; ?>
-                        </span>
-                        <strong><?php echo esc_html( $root->name ); ?></strong>
-                        <span class="deprat-catalog-hub-chevron" aria-hidden="true">›</span>
-                    </a>
-                <?php endforeach; ?>
-            </div>
-            <?php if ( ! $roots ) : ?><p>Créez les catégories de produits dans WooCommerce pour les afficher ici.</p><?php endif; ?>
+            <?php if ( ! $roots ) : ?><p>Les catégories WooCommerce existantes apparaîtront ici lorsqu’elles seront renseignées.</p><?php endif; ?>
         </section>
     <?php elseif ( $is_all || ( $category && isset( $category->term_id ) ) ) :
         $index = $is_all ? deprat_catalog_all_products_index() : deprat_catalog_category_index( $category );
@@ -180,7 +163,7 @@ $roots = deprat_catalog_root_categories();
                     <a class="deprat-catalog-reset" href="<?php echo esc_url( $current_url ); ?>">Réinitialiser les filtres</a>
                 </form>
             </aside>
-            <section class="deprat-catalog-results" aria-label="<?php echo esc_attr( $is_all ? 'Toutes les pièces détachées' : 'Produits de la catégorie ' . $category->name ); ?>">
+            <section class="deprat-catalog-results" aria-label="<?php echo esc_attr( $is_all ? 'Tous les composants détachées' : 'Produits de la catégorie ' . $category->name ); ?>">
                 <div class="deprat-catalog-toolbar">
                     <strong><?php echo esc_html( sprintf( _n( '%d résultat affiché', '%d résultats affichés', $products->found_posts, 'deprat' ), $products->found_posts ) ); ?></strong>
                     <div class="deprat-catalog-toolbar-controls">
@@ -241,7 +224,7 @@ $roots = deprat_catalog_root_categories();
                     <div class="deprat-catalog-no-results">
                         <h2>Aucun produit pour ces filtres</h2>
                         <p>Essayez de modifier les critères de recherche ou de les réinitialiser.</p>
-                        <a href="<?php echo esc_url( $current_url ); ?>"><?php echo esc_html( $is_all ? 'Voir toutes les pièces' : 'Voir tous les produits ' . $category->name ); ?></a>
+                        <a href="<?php echo esc_url( $current_url ); ?>"><?php echo esc_html( $is_all ? 'Voir tous les composants' : 'Voir tous les produits ' . $category->name ); ?></a>
                     </div>
                 <?php endif; ?>
                 <?php wp_reset_postdata(); ?>
