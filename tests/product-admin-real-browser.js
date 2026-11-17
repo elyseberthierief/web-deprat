@@ -287,6 +287,65 @@ const assert = require( 'assert' );
         await pieceQty.fill( '2' );
         assert( ( await page.locator( '[data-package-calculator]' ).textContent() ).includes( '100 pièces' ), 'Deux cartons de 50 représentent 100 pièces.' );
         console.log( 'Tubes standard et pièces libres : calculs, avertissement et panier AJAX validés.' );
+        // Méga-menu et archives : chaque sous-page contient sa catégorie uniquement.
+        await page.setViewportSize( { width: 1550, height: 1000 } );
+        await page.goto( base + '/?product_cat=tubes', { waitUntil: 'domcontentloaded' } );
+        await page.waitForSelector( '.deprat-catalog-layout' );
+        assert( ( await page.locator( '.deprat-catalog-header h1' ).textContent() ).includes( 'Tubes' ), 'La page Tubes a son propre titre.' );
+        assert( await page.locator( '.deprat-catalog-filter-form' ).isVisible(), 'La page Tubes affiche ses filtres.' );
+        assert.strictEqual( await page.locator( '[data-catalog-card]' ).count(), 1, 'La page Tubes contient uniquement le tube.' );
+        assert( ( await page.locator( '[data-catalog-card]' ).textContent() ).includes( 'Tube de test' ), 'Le tube doit apparaître.' );
+        assert( ! ( await page.locator( '[data-catalog-card]' ).textContent() ).includes( 'Embout DEPRAT de test' ), 'Ne pas mélanger Embouts dans Tubes.' );
+        assert( await page.locator( '[data-catalog-gallery] [data-gallery-slide]' ).count() >= 2, 'La carte récupère les photos WooCommerce de la fiche produit.' );
+        await page.locator( '[data-catalog-gallery]' ).hover();
+        await page.waitForFunction( () => document.querySelector( '[data-catalog-gallery] [data-gallery-slide="1"]' ).classList.contains( 'is-active' ) );
+        assert( await page.locator( '[data-open-model]' ).isVisible(), 'La vue 360° apparaît si un fichier GLB est présent.' );
+        await page.locator( '[data-open-model]' ).click();
+        assert( await page.locator( '[data-catalog-model-dialog]' ).isVisible(), 'La fenêtre 3D s’ouvre depuis la carte.' );
+        await page.locator( '[data-model-close]' ).click();
+        await page.locator( '[data-view="list"]' ).click();
+        assert( await page.locator( '[data-catalog-products]' ).evaluate( node => node.classList.contains( 'is-list' ) ), 'Vue liste accessible.' );
+        await page.locator( '[data-view="grid"]' ).click();
+        assert( await page.locator( '[data-catalog-products]' ).evaluate( node => !node.classList.contains( 'is-list' ) ), 'Retour vue grille.' );
+        const tubeFilter = page.locator( '[name="deprat_material"][value="acier-galvanise"]' );
+        assert( await tubeFilter.count() === 1, 'La matière réelle du tube est proposée en filtre.' );
+        await tubeFilter.check();
+        await page.locator( '.deprat-catalog-apply' ).click();
+        await page.waitForSelector( '[data-catalog-card]' );
+        assert.strictEqual( await page.locator( '[data-catalog-card]' ).count(), 1, 'Le filtre matière conserve le tube.' );
+        await page.screenshot( { path: process.env.RUNNER_TEMP + '/deprat-catalogue-tubes.png', fullPage: true } );
+        const tubeArchiveUrl = page.url();
+        const archiveAdd = page.locator( '[data-catalog-add] [type="submit"]' );
+        assert( await archiveAdd.isVisible(), 'Ajout rapide de la demande disponible pour le tube sans prix.' );
+        await archiveAdd.click();
+        await page.locator( '[data-catalog-feedback].is-success' ).waitFor( { timeout: 20000 } );
+        assert.strictEqual( page.url(), tubeArchiveUrl, 'Ajout à la demande sans quitter Tubes.' );
+
+        await page.goto( base + '/?product_cat=embouts', { waitUntil: 'domcontentloaded' } );
+        await page.waitForSelector( '.deprat-catalog-layout' );
+        assert( ( await page.locator( '.deprat-catalog-header h1' ).textContent() ).includes( 'Embouts' ), 'La page Embouts a son propre titre.' );
+        assert.strictEqual( await page.locator( '[data-catalog-card]' ).count(), 1, 'La page Embouts contient uniquement l’embout.' );
+        assert( ( await page.locator( '[data-catalog-card]' ).textContent() ).includes( 'Embout DEPRAT de test' ), 'L’embout doit apparaître.' );
+        assert.strictEqual( await page.locator( '[data-open-model]' ).count(), 0, 'Aucun bouton 360° inventé si le produit n’a pas de GLB.' );
+        await page.locator( '[data-catalog-add] select[name="deprat_package_choice"]' ).selectOption( 'unitary' );
+        assert( await page.locator( '[data-catalog-add] [data-unitary-warning]' ).isVisible(), 'La plus-value apparaît pour une quantité libre.' );
+        await page.locator( '[data-catalog-add] [name="quantity"]' ).fill( '7' );
+        await page.locator( '[data-catalog-add] [type="submit"]' ).click();
+        await page.locator( '[data-catalog-feedback].is-success' ).waitFor( { timeout: 20000 } );
+        await page.screenshot( { path: process.env.RUNNER_TEMP + '/deprat-catalogue-embouts.png', fullPage: true } );
+
+        await page.goto( base + '/boutique/', { waitUntil: 'domcontentloaded' } );
+        if ( await page.locator( '.deprat-catalog-hub' ).count() ) {
+            assert( await page.locator( '.deprat-catalog-hub-card' ).count() >= 2, 'Pièces détachées propose les familles Tubes et Embouts.' );
+        }
+        // Un visiteur non connecté ne voit pas et ne peut pas ouvrir son historique.
+        const guest = await browser.newPage();
+        try {
+            await guest.goto( base + '/?pagename=mes-demandes-devis', { waitUntil: 'domcontentloaded' } );
+            assert( ! guest.url().includes( 'mes-demandes-devis' ), 'Mes demandes privées redirige vers Mon compte pour les visiteurs.' );
+        } finally { await guest.close(); }
+        console.log( 'Archives Tubes/Embouts, filtres, galerie, 360°, grille/liste, ajout AJAX et accès privé validés.' );
+
     } catch ( error ) {
         await page.screenshot( { path: process.env.RUNNER_TEMP + '/deprat-editor-error.png', fullPage: true } ).catch( () => {} );
         throw error;
