@@ -194,6 +194,7 @@ function deprat_product_list_admin_markup() {
                 </div>
                 <div class="deprat-products-header-search" data-deprat-search-destination></div>
             </header>
+            <h2 class="deprat-products-level-title">Sections</h2>
             <nav class="deprat-products-sections" aria-label="Filtrer les produits par section">
                 <?php
                 deprat_product_list_nav_item( 'Tous les produits', deprat_product_list_count(), $all_url, ! $section, 'section' );
@@ -207,6 +208,7 @@ function deprat_product_list_admin_markup() {
             </nav>
             <?php if ( $section ) : ?>
             <div class="deprat-products-hierarchy">
+                <h2 class="deprat-products-level-title">Catégories</h2>
                 <nav class="deprat-products-categories" aria-label="Catégories de la section sélectionnée">
                     <?php
                     $current_root_id = $path ? (int) $path[0]->term_id : 0;
@@ -237,7 +239,9 @@ function deprat_product_list_admin_markup() {
                     </nav>
                     <?php if ( $selected ) :
                         $children = deprat_category_tree_front_children( (int) $selected->term_id ); ?>
-                        <nav class="deprat-products-children" aria-label="Sous-catégories de <?php echo esc_attr( $selected->name ); ?>">
+                        <div class="deprat-products-subcategory-level">
+                            <h2 class="deprat-products-level-title deprat-products-level-title--sub">Sous-catégories</h2>
+                            <nav class="deprat-products-children" aria-label="Sous-catégories de <?php echo esc_attr( $selected->name ); ?>">
                             <?php deprat_product_list_nav_item( 'Tous',
                                 deprat_product_list_count( deprat_product_list_term_ids( $selected ) ),
                                 deprat_product_list_url( array( 'deprat_cat' => (string) $selected->term_id ) ),
@@ -248,7 +252,8 @@ function deprat_product_list_admin_markup() {
                                     deprat_product_list_url( array( 'deprat_cat' => (string) $child->term_id ) ),
                                     false, 'child' );
                             } ?>
-                        </nav>
+                            </nav>
+                        </div>
                     <?php else : ?>
                         <span class="deprat-products-hint">Choisissez une catégorie pour afficher ses sous-catégories.</span>
                     <?php endif; ?>
@@ -278,6 +283,14 @@ function deprat_product_list_admin_markup() {
                     <label><span class="screen-reader-text">Filtrer les lignes visibles</span>
                         <input type="search" data-deprat-list-search placeholder="Filtrer dans la liste…" autocomplete="off"></label>
                     <strong data-deprat-visible-count></strong>
+                </div>
+                <div class="deprat-products-view-toggle" role="group" aria-label="Mode d’affichage des produits" data-deprat-view-toggle>
+                    <button type="button" data-deprat-view="list" aria-pressed="true" title="Afficher en liste">
+                        <span aria-hidden="true">☰</span> Liste
+                    </button>
+                    <button type="button" data-deprat-view="grid" aria-pressed="false" title="Afficher en grille">
+                        <span aria-hidden="true">▦</span> Grille
+                    </button>
                 </div>
             </div>
         </div>
