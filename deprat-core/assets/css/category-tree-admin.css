@@ -61,3 +61,8 @@
 .deprat-tree-children::before {display:none;}
 .deprat-tree-admin.is-dragging .deprat-tree-children {min-height:34px;background:rgba(235,244,255,.55);}
 .deprat-tree-admin.is-dragging .deprat-tree-children:not(:has(>.deprat-tree-item))::before {display:block;}
+
+/* 0.1.33 — affectation facultative des titres visuels (aucun nouveau terme). */
+.deprat-tree-section-editor{display:inline-flex;align-items:center;gap:6px;color:#5a7190;font-size:11px;font-weight:700}
+.deprat-tree-section-editor select{width:175px;max-width:28vw;height:31px;min-height:31px;font-size:11px;border:1px solid #c8d9eb;border-radius:6px;background:#fff;color:#17447d;padding:2px 5px}
+@media(max-width:900px){.deprat-tree-section-editor select{max-width:65vw}}
