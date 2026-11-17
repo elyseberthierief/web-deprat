@@ -498,7 +498,13 @@ const assert = require( 'assert' );
         const pdfUrl = await exportButton.getAttribute( 'href' );
         assert( pdfUrl.includes( 'admin-post.php' ) && pdfUrl.includes( 'deprat_export_megamenu_pdf' ),
             'Le lien pointe vers le gestionnaire sécurisé de PDF.' );
-        const pdfResponse = await page.request.get( pdfUrl );
+        // Le banc de test ouvre WordPress via 127.0.0.1 alors que WP peut
+        // produire des URL localhost : conserver l’origine de la session.
+        const pdfSessionUrl = new URL( pdfUrl, page.url() );
+        const currentOrigin = new URL( page.url() );
+        pdfSessionUrl.protocol = currentOrigin.protocol;
+        pdfSessionUrl.host = currentOrigin.host;
+        const pdfResponse = await page.request.get( pdfSessionUrl.href );
         assert.strictEqual( pdfResponse.status(), 200, 'Le téléchargement du PDF fonctionne en administrateur.' );
         assert( ( pdfResponse.headers()['content-type'] || '' ).includes( 'application/pdf' ),
             'Le serveur doit produire un vrai PDF, pas une page HTML.' );
@@ -509,7 +515,7 @@ const assert = require( 'assert' );
             'Le contenu est un document PDF valide.' );
         assert( pdfBytes.toString( 'latin1' ).includes( '(Tubes)' ),
             'La hiérarchie exportée contient les catégories existantes.' );
-        const invalidPdfUrl = new URL( pdfUrl );
+        const invalidPdfUrl = new URL( pdfSessionUrl.href );
         invalidPdfUrl.searchParams.set( '_wpnonce', 'nonce_invalide' );
         const deniedPdf = await page.request.get( invalidPdfUrl.href, { maxRedirects: 0 } );
         assert.strictEqual( deniedPdf.status(), 403,
