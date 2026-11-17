@@ -546,5 +546,8 @@ deprat_integration_assert( false !== strpos( $subcat_card_html, 'deprat-catalog-
     && false !== strpos( $subcat_card_html, 'Embouts de sécurité</a>' )
     && false === strpos( $subcat_card_html, '>Embouts</a>' ),
     'La carte affiche une véritable sous-catégorie sans répéter la famille racine.' );
+// Le terme de test n'interfère pas avec les scénarios Playwright existants.
+wp_set_object_terms( $piece_id, array( (int) $end_category['term_id'] ), 'product_cat' );
+wp_delete_term( (int) $child_category['term_id'], 'product_cat' );
 
 WP_CLI::success( 'WordPress et WooCommerce : sauvegarde, médias et affichages vérifiés.' );
