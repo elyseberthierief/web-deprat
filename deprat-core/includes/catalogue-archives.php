@@ -47,8 +47,8 @@ add_filter( 'template_include', 'deprat_catalog_template', 45 );
 
 function deprat_catalog_assets() {
     if ( ! deprat_catalog_is_archive() ) { return; }
-    wp_enqueue_style( 'deprat-catalogue', plugins_url( 'assets/css/catalogue-archive.css', dirname( __DIR__ ) . '/deprat-core.php' ), array(), '0.1.31' );
-    wp_enqueue_script( 'deprat-catalogue', plugins_url( 'assets/js/catalogue-archive.js', dirname( __DIR__ ) . '/deprat-core.php' ), array(), '0.1.31', true );
+    wp_enqueue_style( 'deprat-catalogue', plugins_url( 'assets/css/catalogue-archive.css', dirname( __DIR__ ) . '/deprat-core.php' ), array(), '0.1.38' );
+    wp_enqueue_script( 'deprat-catalogue', plugins_url( 'assets/js/catalogue-archive.js', dirname( __DIR__ ) . '/deprat-core.php' ), array(), '0.1.38', true );
     wp_localize_script( 'deprat-catalogue', 'depratCatalogueConfig', array(
         'ajaxUrl' => class_exists( 'WC_AJAX' ) ? WC_AJAX::get_endpoint( 'add_to_cart' ) : '',
         'contoursUrl' => plugins_url( 'assets/js/product-3d-contours.js', dirname( __DIR__ ) . '/deprat-core.php' ),
@@ -395,13 +395,34 @@ function deprat_catalog_render_card( $product ) {
     if ( '' === $description ) { $description = $product->get_short_description(); }
     if ( '' === trim( wp_strip_all_tags( $description ) ) ) { $description = $product->get_description(); }
     $description = trim( wp_strip_all_tags( $description ) );
-    $excerpt = wp_trim_words( $description, 21, '…' );
+    $excerpt = wp_trim_words( $description, 14, '…' );
     $packages = deprat_product_tech_packages( $data );
     $allow_unitary = deprat_packaging_allow_unitary( $id );
+    $choices = array();
+    foreach ( $packages as $index => $pack ) {
+        $choices[] = array(
+            'value' => (string) $index,
+            'title' => ! empty( $pack['title'] ) ? $pack['title'] : 'Conditionnement standard ' . ( $index + 1 ),
+            'label' => deprat_packaging_label( $pack ),
+            'row' => $pack,
+            'unitary' => false,
+        );
+    }
+    if ( $allow_unitary ) {
+        $choices[] = array(
+            'value' => 'unitary',
+            'title' => 'À l’unité',
+            'label' => 'Quantité libre (conditionnement non standard)',
+            'row' => deprat_packaging_unitary_row(),
+            'unitary' => true,
+        );
+    }
+    $multiple_choices = count( $choices ) > 1;
+    $single_choice = $choices ? $choices[0]['value'] : '0';
     $can_add = $product->is_type( 'simple' ) && $product->is_purchasable()
         && $product->is_in_stock() && ( $packages || $allow_unitary );
     ?>
-    <article class="deprat-catalog-card" data-catalog-card>
+    <article class="deprat-catalog-card" data-catalog-card data-product-url="<?php echo esc_url( $url ); ?>">
         <div class="deprat-catalog-image" data-catalog-gallery>
             <a href="<?php echo esc_url( $url ); ?>" class="deprat-catalog-image-link" aria-label="<?php echo esc_attr( 'Voir la fiche ' . $product->get_name() ); ?>">
                 <?php if ( $images ) : ?>
@@ -450,7 +471,26 @@ function deprat_catalog_render_card( $product ) {
                 <p class="deprat-catalog-matter"><span aria-hidden="true">▱</span>
                     <strong>Matière :</strong> <?php echo esc_html( $spec['material'] ); ?></p>
             <?php endif; ?>
-            <?php $card_features = deprat_catalog_card_features( $spec ); ?>
+            <?php
+            // Afficher uniquement les sous-catégories WooCommerce déjà
+            // affectées au produit, jamais les familles de premier niveau.
+            $assigned = get_the_terms( $id, 'product_cat' );
+            $subcategories = array();
+            if ( is_array( $assigned ) ) {
+                foreach ( $assigned as $term ) {
+                    if ( $term->parent > 0 && 'uncategorized' !== $term->slug ) { $subcategories[] = $term; }
+                }
+            }
+            if ( $subcategories ) : ?>
+                <div class="deprat-catalog-subcategories" aria-label="Sous-catégories du produit">
+                    <?php foreach ( array_slice( $subcategories, 0, 3 ) as $subcategory ) :
+                        $term_link = get_term_link( $subcategory );
+                        if ( is_wp_error( $term_link ) ) { continue; } ?>
+                        <a href="<?php echo esc_url( $term_link ); ?>"><?php echo esc_html( $subcategory->name ); ?></a>
+                    <?php endforeach; ?>
+                </div>
+            <?php endif; ?>
+            <?php $card_features = array_slice( deprat_catalog_card_features( $spec ), 0, 3 ); ?>
             <?php if ( $spec['shape'] || $card_features ) : ?>
                 <dl class="deprat-catalog-spec-list" aria-label="Caractéristiques techniques principales">
                     <?php if ( $spec['shape'] ) : ?><div><dt>Forme</dt><dd><?php echo esc_html( $spec['shape'] ); ?></dd></div><?php endif; ?>
@@ -464,30 +504,17 @@ function deprat_catalog_render_card( $product ) {
         </div>
         <div class="deprat-catalog-card-footer">
             <?php if ( $can_add ) : ?>
-                <form class="deprat-catalog-add" data-catalog-add>
+                <form class="deprat-catalog-add" data-catalog-add
+                    data-product-name="<?php echo esc_attr( $product->get_name() ); ?>"
+                    data-product-sku="<?php echo esc_attr( $product->get_sku() ); ?>"
+                    data-product-url="<?php echo esc_url( $url ); ?>"
+                    data-product-description="<?php echo esc_attr( $excerpt ); ?>"
+                    data-product-material="<?php echo esc_attr( $spec['material'] ); ?>"
+                    data-product-image="<?php echo $images ? esc_url( wp_get_attachment_image_url( $images[0], 'woocommerce_thumbnail' ) ) : ''; ?>"
+                    data-package-options="<?php echo esc_attr( wp_json_encode( $choices ) ); ?>"
+                    data-multiple-packages="<?php echo $multiple_choices ? 'true' : 'false'; ?>">
                     <input type="hidden" name="product_id" value="<?php echo esc_attr( $id ); ?>">
-                    <?php if ( count( $packages ) > 1 || $allow_unitary ) : ?>
-                        <label class="deprat-catalog-package-label deprat-catalog-package-selectable">
-                            <span>Conditionnement <small>— choisissez une option ↓</small></span>
-                            <select name="deprat_package_choice" aria-label="Choisir un conditionnement">
-                                <?php foreach ( $packages as $index => $package ) : ?>
-                                    <option value="<?php echo esc_attr( $index ); ?>">
-                                        <?php echo esc_html( ( $package['title'] ? $package['title'] . ' – ' : '' ) . deprat_packaging_label( $package ) ); ?>
-                                    </option>
-                                <?php endforeach; ?>
-                                <?php if ( $allow_unitary ) : ?><option value="unitary">À l’unité – quantité libre</option><?php endif; ?>
-                            </select>
-                        </label>
-                    <?php else : ?>
-                        <input type="hidden" name="deprat_package_choice" value="0">
-                        <div class="deprat-catalog-package-fixed">
-                            <span>Conditionnement standard</span>
-                            <p class="deprat-catalog-package-summary"><?php echo esc_html( deprat_packaging_label( $packages[0] ) ); ?></p>
-                        </div>
-                    <?php endif; ?>
-                    <p class="deprat-catalog-unitary-warning" data-unitary-warning hidden>
-                        <?php echo esc_html( deprat_packaging_surcharge_warning() ); ?>
-                    </p>
+                    <input type="hidden" name="deprat_package_choice" value="<?php echo esc_attr( $single_choice ); ?>">
                     <div class="deprat-catalog-action-row">
                         <label class="deprat-catalog-qty-label">
                             <span>Quantité</span>
@@ -497,7 +524,7 @@ function deprat_catalog_render_card( $product ) {
                                 <button type="button" data-qty-plus aria-label="Augmenter la quantité">+</button>
                             </span>
                         </label>
-                        <button type="submit" class="deprat-catalog-add-button">Ajouter à ma demande</button>
+                        <button type="submit" class="deprat-catalog-add-button" aria-label="<?php echo esc_attr( $multiple_choices ? 'Choisir le conditionnement de ' . $product->get_name() : 'Ajouter ' . $product->get_name() . ' à ma demande' ); ?>">Ajouter <span aria-hidden="true">+</span></button>
                     </div>
                     <p class="deprat-catalog-feedback" data-catalog-feedback aria-live="polite" hidden></p>
                 </form>
