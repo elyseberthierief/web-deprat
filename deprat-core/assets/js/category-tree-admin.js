@@ -129,7 +129,25 @@
             edit.className = 'button';
             edit.href = config.editBase + id;
             edit.textContent = 'Modifier';
-            actions.append( moveUp, moveDown, indent, outdent, addChild, edit );
+            var sectionLabel = document.createElement( 'label' );
+            sectionLabel.className = 'deprat-tree-section-editor';
+            sectionLabel.textContent = 'Rubrique ';
+            var sectionSelect = document.createElement( 'select' );
+            sectionSelect.setAttribute( 'data-tree-section', '' );
+            sectionSelect.setAttribute( 'data-term-id', String( id ) );
+            sectionSelect.setAttribute( 'aria-label', 'Rubrique du menu pour ' + name );
+            var autoOption = document.createElement( 'option' );
+            autoOption.value = '';
+            autoOption.textContent = 'Automatique';
+            sectionSelect.appendChild( autoOption );
+            Object.keys( config.sectionLabels || {} ).forEach( function ( key ) {
+                var option = document.createElement( 'option' );
+                option.value = key;
+                option.textContent = config.sectionLabels[ key ];
+                sectionSelect.appendChild( option );
+            } );
+            sectionLabel.appendChild( sectionSelect );
+            actions.append( moveUp, moveDown, indent, outdent, addChild, sectionLabel, edit );
             row.append( handle, label, actions );
             var nested = document.createElement( 'ul' );
             nested.className = 'deprat-tree-list deprat-tree-children';
@@ -150,6 +168,9 @@
             form.scrollIntoView( { behavior: 'smooth', block: 'center' } );
             formName.focus( { preventScroll: true } );
         }
+        app.addEventListener( 'change', function ( event ) {
+            if ( event.target.matches( '[data-tree-section]' ) ) { changed(); }
+        } );
         app.addEventListener( 'click', function ( event ) {
             var addRoot = event.target.closest( '[data-tree-create-root]' );
             if ( addRoot ) { openCreate( null ); return; }
@@ -246,10 +267,15 @@
         function save() {
             if ( saving ) { return; }
             var tree = serialized( root );
+            var sections = {};
+            app.querySelectorAll( '[data-tree-section]' ).forEach( function ( select ) {
+                var id = Number( select.getAttribute( 'data-term-id' ) );
+                if ( id > 0 ) { sections[ id ] = select.value; }
+            } );
             saving = true;
             saveButtons.forEach( function ( button ) { button.disabled = true; button.textContent = 'Enregistrement…'; } );
             message( 'Enregistrement de votre arborescence…', false );
-            post( 'deprat_category_tree_save', { tree: JSON.stringify( tree ) } )
+            post( 'deprat_category_tree_save', { tree: JSON.stringify( tree ), sections: JSON.stringify( sections ) } )
                 .then( function ( response ) {
                     dirty = false;
                     dirtyLabel.hidden = true;
