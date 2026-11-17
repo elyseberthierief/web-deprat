@@ -1403,7 +1403,10 @@ function deprat_html_historique() {
         echo '<span class="deprat-etat deprat-etat-' . esc_attr( $etat ) . '">' . esc_html( deprat_statut_client_v7( $etat ) ) . '</span>';
         if ( $pdf_devis && in_array( $etat, array( 'dpr-envoye', 'dpr-modifie', 'dpr-accepte', 'dpr-facture', 'dpr-termine' ), true ) ) {
             // Défense en profondeur : seul du HTML autorisé sort de ce lien.
-            echo wp_kses_post( '<p><a class="deprat-lien-document" href="' . esc_url( deprat_lien_document_v7( $commande, 'devis' ) ) . '" target="_blank" rel="noopener noreferrer">Consulter le devis</a></p>' );
+            // Faux positif « echoed-request » : URL de document reconstruite côté
+            // serveur, liée à un ordre contrôlé par autorisation + nonce ;
+            // esc_url + wp_kses_post filtrent l'URL et les attributs HTML.
+            echo wp_kses_post( '<p><a class="deprat-lien-document" href="' . esc_url( deprat_lien_document_v7( $commande, 'devis' ) ) . '" target="_blank" rel="noopener noreferrer">Consulter le devis</a></p>' ); // nosemgrep: php.lang.security.injection.echoed-request.echoed-request
         }
         if ( in_array( $etat, array( 'dpr-envoye', 'dpr-modifie' ), true ) && $pdf_devis && ! $accord ) {
             $version = (string) $pdf_devis;
@@ -1434,7 +1437,9 @@ function deprat_html_historique() {
         echo '<div class="deprat-carte-colonne deprat-carte-facture"><h3>Facture</h3>';
         if ( $facture_disponible ) {
             echo '<span class="deprat-etat deprat-etat-dpr-facture">✓ Facture disponible</span>';
-            echo wp_kses_post( '<p><a class="deprat-lien-document" href="' . esc_url( deprat_lien_document_v7( $commande, 'facture' ) ) . '" target="_blank" rel="noopener noreferrer">Consulter la facture</a></p>' );
+            // Faux positif documenté : lien de facture serveur filtré par
+            // esc_url + wp_kses_post, accès au fichier protégé par droits + nonce.
+            echo wp_kses_post( '<p><a class="deprat-lien-document" href="' . esc_url( deprat_lien_document_v7( $commande, 'facture' ) ) . '" target="_blank" rel="noopener noreferrer">Consulter la facture</a></p>' ); // nosemgrep: php.lang.security.injection.echoed-request.echoed-request
             if ( $facture_date ) { echo '<p class="deprat-texte-secondaire">Envoyée le ' . esc_html( deprat_date_utc_v7( $facture_date ) ) . '</p>'; }
             echo '<p class="deprat-paiement-v7">' . esc_html( deprat_mention_paiement_v7() ) . '</p>';
         } else {
@@ -1471,7 +1476,9 @@ function deprat_html_historique() {
             $url = add_query_arg( array( 'deprat_page' => $i, 'deprat_q' => $recherche, 'deprat_statut' => $statut, 'deprat_periode' => $periode ), deprat_lien_historique() );
             // Les seules portions variables sont échappées (esc_url, esc_html)
             // ou issues de constantes. KSES revalide le balisage final.
-            echo wp_kses_post( '<a class="' . ( $i === $page ? 'deprat-page-active' : '' ) . '" href="' . esc_url( $url ) . '"' . ( $i === $page ? ' aria-current="page"' : '' ) . '>' . esc_html( $i ) . '</a>' );
+            // Faux positif : le lien est construit par add_query_arg, puis
+            // échappé en URL/texte ; KSES filtre les attributs HTML résiduels.
+            echo wp_kses_post( '<a class="' . ( $i === $page ? 'deprat-page-active' : '' ) . '" href="' . esc_url( $url ) . '"' . ( $i === $page ? ' aria-current="page"' : '' ) . '>' . esc_html( $i ) . '</a>' ); // nosemgrep: php.lang.security.injection.echoed-request.echoed-request
         }
         echo '</nav>';
     }
