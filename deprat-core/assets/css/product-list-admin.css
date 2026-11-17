@@ -1,4 +1,4 @@
-/* DEPRAT 0.1.42 — Liste Produits B2B, conservant le tableau WordPress. */
+/* DEPRAT 0.1.43 — Liste Produits B2B, conservant le tableau WordPress. */
 body.deprat-product-list-active{--deprat-list-navy:#123b78;--deprat-list-blue:#0e4d9c;--deprat-list-soft:#eaf3ff;--deprat-list-line:#dce6f3;--deprat-list-gold:#e5ac3a;--deprat-list-muted:#56718f}
 body.deprat-product-list-active #wpbody-content>.wrap{max-width:100%;padding-right:9px}
 body.deprat-product-list-active #wpbody-content>.wrap>.wp-heading-inline,
@@ -467,4 +467,154 @@ body.deprat-product-list-active.deprat-product-grid-mode #the-list>tr.inline-edi
     body.deprat-product-list-active.deprat-product-grid-mode #posts-filter>table.wp-list-table tbody#the-list{
         grid-template-columns:repeat(auto-fill,minmax(min(100%,215px),1fr));
     }
+}
+
+
+/* 0.1.43 — photos de composants plus grandes et mieux identifiables.
+   Le mode Liste met la photo en valeur, la Grille lui réserve un vrai espace.
+   Toujours object-fit:contain : aucun tube ni embout n'est recadré. */
+body.deprat-product-list-active:not(.deprat-product-grid-mode)
+    table.wp-list-table .column-thumb{
+    width:104px!important;
+    min-width:104px!important;
+    text-align:center;
+}
+body.deprat-product-list-active:not(.deprat-product-grid-mode)
+    table.wp-list-table tbody .column-thumb{
+    padding:9px 7px!important;
+}
+body.deprat-product-list-active:not(.deprat-product-grid-mode)
+    table.wp-list-table .column-thumb img{
+    display:block;
+    width:84px!important;
+    height:84px!important;
+    max-width:100%!important;
+    object-fit:contain!important;
+    background:#f3f7fc;
+    border:1px solid #e6edf5;
+    border-radius:9px;
+    margin:auto;
+    padding:4px;
+    box-sizing:border-box;
+}
+body.deprat-product-list-active.deprat-product-grid-mode
+    #the-list>tr:not(.no-items):not(.inline-edit-row){
+    grid-template-rows:30px 211px minmax(47px,auto) auto auto auto auto 1fr;
+}
+body.deprat-product-list-active.deprat-product-grid-mode
+    #the-list>tr>.column-thumb{
+    margin:2px 0 11px;
+    padding:8px!important;
+}
+body.deprat-product-list-active.deprat-product-grid-mode
+    #the-list>tr>.column-thumb img{
+    width:100%!important;
+    height:190px!important;
+    max-height:190px;
+    object-fit:contain!important;
+}
+@media(max-width:782px){
+    body.deprat-product-list-active:not(.deprat-product-grid-mode)
+        table.wp-list-table .column-thumb{
+        width:90px!important;
+        min-width:90px!important;
+    }
+    body.deprat-product-list-active:not(.deprat-product-grid-mode)
+        table.wp-list-table .column-thumb img{
+        width:72px!important;
+        height:72px!important;
+    }
+    body.deprat-product-list-active.deprat-product-grid-mode
+        #the-list>tr:not(.no-items):not(.inline-edit-row){
+        grid-template-rows:30px 193px minmax(47px,auto) auto auto auto auto 1fr;
+    }
+    body.deprat-product-list-active.deprat-product-grid-mode
+        #the-list>tr>.column-thumb img{
+        height:172px!important;
+        max-height:172px;
+    }
+}
+
+/* 0.1.43 : l’arborescence se met à jour en AJAX, sans clignotement de page. */
+body.deprat-product-list-active .deprat-products-ui.is-loading
+    :is(.deprat-products-hierarchy,.deprat-products-sections){
+    opacity:.62;
+    transition:opacity .15s ease-in-out;
+}
+body.deprat-product-list-active .deprat-products-ui.is-loading
+    .deprat-products-count{
+    opacity:.8;
+}
+
+/* WooCommerce impose parfois un max-height ancien aux miniatures admin :
+   lever explicitement cette limite pour les visuels agrandis. */
+body.deprat-product-list-active:not(.deprat-product-grid-mode) table.wp-list-table .column-thumb img{
+    max-height:84px!important;min-height:80px!important;min-width:80px!important;
+}
+body.deprat-product-list-active.deprat-product-grid-mode #the-list>tr>.column-thumb img{
+    max-height:190px!important;min-height:185px!important;min-width:0!important;
+}
+@media(max-width:782px){
+ body.deprat-product-list-active:not(.deprat-product-grid-mode) table.wp-list-table .column-thumb img{
+    max-height:72px!important;min-height:70px!important;min-width:70px!important;
+ }
+ body.deprat-product-list-active.deprat-product-grid-mode #the-list>tr>.column-thumb img{
+    max-height:172px!important;min-height:170px!important;
+ }
+}
+
+
+/* Sous-catégories ouvertes à l'arrivée, repliables sans requête ni rechargement. */
+body.deprat-product-list-active details.deprat-products-subcategory-level{
+    display:block;
+    min-width:0;
+    padding-left:15px;
+    border-left:1px solid #c4d4e8;
+}
+body.deprat-product-list-active .deprat-products-subcategory-toggle{
+    display:flex;align-items:center;gap:7px;
+    cursor:pointer;list-style:none;
+    width:max-content;max-width:100%;
+    padding:4px 6px 7px 0;
+    border-radius:6px;
+    color:#42628a;
+}
+body.deprat-product-list-active .deprat-products-subcategory-toggle::-webkit-details-marker{
+    display:none;
+}
+body.deprat-product-list-active .deprat-products-subcategory-toggle::marker{content:""}
+body.deprat-product-list-active .deprat-products-subcategory-toggle:focus-visible{
+    outline:2px solid #bd8b21;outline-offset:2px;
+}
+body.deprat-product-list-active .deprat-products-subcategory-arrow{
+    display:inline-grid;place-items:center;width:18px;height:18px;
+    color:#32649a;font-size:18px;line-height:1;
+    transform:rotate(180deg);transition:transform .15s ease;
+}
+body.deprat-product-list-active details.deprat-products-subcategory-level:not([open])
+    .deprat-products-subcategory-arrow{transform:rotate(0)}
+body.deprat-product-list-active details.deprat-products-subcategory-level
+    >.deprat-products-children{display:flex;align-items:center;gap:7px;flex-wrap:wrap;padding:0 0 4px;border:0}
+body.deprat-product-list-active details.deprat-products-subcategory-level:not([open])
+    >.deprat-products-children{display:none}
+/* Titres de produits et informations secondaires moins gras. */
+body.deprat-product-list-active table.wp-list-table tbody .row-title{
+    font-weight:500!important;
+}
+body.deprat-product-list-active.deprat-product-grid-mode #the-list>tr>.column-name .row-title{
+    font-weight:500!important;
+}
+body.deprat-product-list-active table.wp-list-table thead th,
+body.deprat-product-list-active table.wp-list-table thead td{
+    font-weight:500!important;
+}
+body.deprat-product-list-active table.wp-list-table .column-sku,
+body.deprat-product-list-active table.wp-list-table tbody td{
+    font-weight:400;
+}
+body.deprat-product-list-active table.wp-list-table .column-is_in_stock mark{
+    font-weight:450!important;
+}
+body.deprat-product-list-active .deprat-products-section-pill{
+    font-weight:450!important;
 }
