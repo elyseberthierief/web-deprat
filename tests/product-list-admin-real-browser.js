@@ -11,6 +11,11 @@ const assert = require( 'assert' );
         headless: true
     } );
     const page = await browser.newPage( { viewport: { width: 1650, height: 1040 }, deviceScaleFactor: 1 } );
+    page.on( 'console', msg => {
+        if ( msg.type() === 'warning' && msg.text().includes( 'DEPRAT navigation' ) ) {
+            console.log( 'NAV_DIAG:', msg.text() );
+        }
+    } );
     try {
         await page.goto( base + '/wp-login.php', { waitUntil: 'domcontentloaded' } );
         await page.fill( '#user_login', 'deprat-test' );
