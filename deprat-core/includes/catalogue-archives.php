@@ -17,10 +17,11 @@ add_filter( 'template_include', 'deprat_catalog_template', 45 );
 
 function deprat_catalog_assets() {
     if ( ! deprat_catalog_is_archive() ) { return; }
-    wp_enqueue_style( 'deprat-catalogue', plugins_url( 'assets/css/catalogue-archive.css', dirname( __DIR__ ) . '/deprat-core.php' ), array(), '0.1.28' );
-    wp_enqueue_script( 'deprat-catalogue', plugins_url( 'assets/js/catalogue-archive.js', dirname( __DIR__ ) . '/deprat-core.php' ), array(), '0.1.28', true );
+    wp_enqueue_style( 'deprat-catalogue', plugins_url( 'assets/css/catalogue-archive.css', dirname( __DIR__ ) . '/deprat-core.php' ), array(), '0.1.29' );
+    wp_enqueue_script( 'deprat-catalogue', plugins_url( 'assets/js/catalogue-archive.js', dirname( __DIR__ ) . '/deprat-core.php' ), array(), '0.1.29', true );
     wp_localize_script( 'deprat-catalogue', 'depratCatalogueConfig', array(
         'ajaxUrl' => class_exists( 'WC_AJAX' ) ? WC_AJAX::get_endpoint( 'add_to_cart' ) : '',
+        'contoursUrl' => plugins_url( 'assets/js/product-3d-contours.js', dirname( __DIR__ ) . '/deprat-core.php' ),
     ) );
     // Le moteur glTF est enregistré en module sur les archives contenant une 3D.
     wp_enqueue_script( 'deprat-model-viewer', 'https://ajax.googleapis.com/ajax/libs/model-viewer/4.4.0/model-viewer.min.js', array(), '4.4.0', true );
@@ -530,11 +531,11 @@ add_filter( 'walker_nav_menu_start_el', 'deprat_catalog_mega_menu', 20, 4 );
 function deprat_catalog_mega_assets() {
     wp_enqueue_style( 'deprat-catalog-mega-menu',
         plugins_url( 'assets/css/catalogue-mega-menu.css', dirname( __DIR__ ) . '/deprat-core.php' ),
-        array(), '0.1.28'
+        array(), '0.1.29'
     );
     wp_enqueue_script( 'deprat-catalog-mega-menu',
         plugins_url( 'assets/js/catalogue-mega-menu.js', dirname( __DIR__ ) . '/deprat-core.php' ),
-        array(), '0.1.28', true
+        array(), '0.1.29', true
     );
 }
 add_action( 'wp_enqueue_scripts', 'deprat_catalog_mega_assets', 20 );
