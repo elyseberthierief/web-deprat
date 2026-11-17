@@ -8,7 +8,11 @@ if ( ! defined( 'ABSPATH' ) ) { exit; }
 
 /** URL de la liste complète, distincte de la page d'entrée par familles. */
 function deprat_catalog_all_products_url() {
-    return add_query_arg( 'deprat_all', '1', wc_get_page_permalink( 'shop' ) );
+    // Une archive produits réelle est reconnue par is_shop(), même si
+    // la page Boutique de WordPress n'est pas encore configurée.
+    $url = get_post_type_archive_link( 'product' );
+    if ( ! $url ) { $url = wc_get_page_permalink( 'shop' ); }
+    return add_query_arg( 'deprat_all', '1', $url );
 }
 /**
  * WordPress sans permaliens personnalisés : conserver le paramètre de routage
