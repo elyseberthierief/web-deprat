@@ -1,0 +1,103 @@
+name: Sécurité DEPRAT (code, secrets et dépendances)
+
+on:
+  pull_request:
+    branches: ["feature/deprat-core"]
+  push:
+    branches: ["feature/deprat-core"]
+  workflow_dispatch:
+  schedule:
+    - cron: "23 5 * * 1"
+
+# Le scanner ne doit pas avoir d'accès en écriture au dépôt.
+permissions:
+  contents: read
+
+jobs:
+  security-code:
+    name: Semgrep — sécurité PHP / JavaScript
+    runs-on: ubuntu-latest
+    container:
+      image: semgrep/semgrep:1.179.0
+    steps:
+      - uses: actions/checkout@v6
+      - name: Analyser le code applicatif
+        run: |
+          semgrep scan \
+            --config p/security-audit \
+            --config p/owasp-top-ten \
+            --metrics=off \
+            --strict \
+            --json --output semgrep-security.json \
+            deprat-core wp-content/code-snippets
+      - name: Résumer les résultats et bloquer les alertes graves
+        run: |
+          python3 - <<'PY'
+          import json
+          from collections import Counter
+          from pathlib import Path
+          data = json.loads(Path("semgrep-security.json").read_text())
+          results = data.get("results", [])
+          errors = data.get("errors", [])
+          counts = Counter(x.get("extra", {}).get("severity", "UNKNOWN") for x in results)
+          print("Semgrep — résultats : " + ", ".join(f"{k}: {v}" for k, v in sorted(counts.items())))
+          if not results:
+              print("Aucun signalement pour les règles sélectionnées.")
+          for r in results:
+              print(f"{r['extra'].get('severity', 'UNKNOWN')}: {r['check_id']} — {r['path']}:{r['start']['line']}")
+          if errors:
+              print(f"Échec : {len(errors)} erreur(s) du scanner.")
+              raise SystemExit(2)
+          if counts["ERROR"]:
+              print(f"Échec : {counts['ERROR']} alerte(s) de gravité ERROR à traiter.")
+              raise SystemExit(1)
+          print("Contrôle des alertes ERROR validé (les autres alertes restent à examiner).")
+          PY
+      - name: Conserver le rapport JSON
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: securite-semgrep
+          path: semgrep-security.json
+          if-no-files-found: warn
+          retention-days: 14
+
+  security-secrets:
+    name: Gitleaks — secrets et clés dans Git
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: Vérifier les clés/API et mots de passe committés
+        uses: gitleaks/gitleaks-action@v3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_ENABLE_COMMENTS: "false"
+          GITLEAKS_ENABLE_UPLOAD_ARTIFACT: "false"
+          GITLEAKS_ENABLE_SUMMARY: "true"
+
+  security-dependencies:
+    name: Audit des dépendances déclarées
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Détecter les manifestes de dépendances et auditer npm
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -d '' locks < <(find . -type f -name package-lock.json -not -path '*/node_modules/*' -print0)
+          if (( ${#locks[@]} == 0 )); then
+            echo "Aucun package-lock.json : pas de dépendances npm versionnées à auditer."
+          fi
+          for lock in "${locks[@]}"; do
+            dir="$(dirname "$lock")"
+            echo "Audit npm des dépendances : $dir"
+            ( cd "$dir" && npm audit --audit-level=high --omit=dev )
+          done
+          if find . -type f \( -name composer.lock -o -name yarn.lock -o -name pnpm-lock.yaml \) -print -quit | grep -q .; then
+            echo "::warning::Autres gestionnaires détectés : prévoir leur audit dédié."
+          fi
