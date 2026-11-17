@@ -78,12 +78,8 @@
                 selection.value = sourceSection( real );
                 actions.appendChild( selection );
             }
-            var edit = document.createElement( 'a' );
+            var edit = makeControl( '✎', 'data-preview-edit-category', 'Modifier la catégorie ' + name );
             edit.className = 'deprat-preview-edit';
-            edit.href = config.editBase + Number( id );
-            edit.title = 'Modifier la catégorie ' + name;
-            edit.setAttribute( 'aria-label', 'Modifier la catégorie ' + name );
-            edit.textContent = '✎';
             actions.appendChild( edit );
 
             var children = directItems( sourceChildList( real ), '[data-tree-item]' );
