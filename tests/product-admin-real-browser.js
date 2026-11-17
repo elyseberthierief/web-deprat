@@ -422,6 +422,7 @@ const assert = require( 'assert' );
         await page.waitForSelector( '[data-deprat-category-tree] .deprat-tree-root' );
         assert( await page.locator( '[data-tree-item]' ).count() >= 2, 'Les catégories déjà présentes sont visibles dans l’arborescence.' );
         assert( await page.locator( '[data-tree-item] [data-drag-handle]' ).first().isVisible(), 'La poignée drag-and-drop est visible.' );
+        assert( await page.locator( '[data-tree-item] [data-tree-up]' ).first().isVisible(), 'Le bouton de réorganisation sans souris est disponible.' );
         assert( await page.locator( '.deprat-tree-root' ).evaluate( list => !!window.jQuery( list ).data( 'ui-sortable' ) ),
             'Le déplacement à la souris doit être activé via jQuery UI Sortable.' );
         await page.locator( '[data-tree-create-root]' ).click();
@@ -429,6 +430,25 @@ const assert = require( 'assert' );
         await page.locator( '[data-tree-create-submit]' ).click();
         await page.locator( '.deprat-tree-root > [data-tree-item]', { hasText: 'Supports DEPRAT test' } ).waitFor();
         const supports = page.locator( '.deprat-tree-root > [data-tree-item]' ).filter( { hasText: 'Supports DEPRAT test' } ).first();
+        // Tester le glisser-déposer réellement (la présence de sortable ne suffit pas).
+        const originalFirstRoot = await page.locator( '.deprat-tree-root > [data-tree-item]' ).first();
+        const originalFirstId = await originalFirstRoot.getAttribute( 'data-term-id' );
+        const supportsId = await supports.getAttribute( 'data-term-id' );
+        const sortableCancel = await page.locator( '.deprat-tree-root' ).evaluate( list => window.jQuery( list ).sortable( 'option', 'cancel' ) );
+        assert( !sortableCancel.includes( 'button,' ) && sortableCancel.includes( 'button:not([data-drag-handle])' ),
+            'La poignée-bouton doit être autorisée par jQuery UI Sortable.' );
+        await supports.locator( ':scope > .deprat-tree-row [data-drag-handle]' )
+            .dragTo( originalFirstRoot.locator( ':scope > .deprat-tree-row' ),
+                { targetPosition: { x: 15, y: 5 }, steps: 20 } );
+        assert.strictEqual( await page.locator( '.deprat-tree-root > [data-tree-item]' ).first().getAttribute( 'data-term-id' ), supportsId,
+            'Glisser la poignée doit réellement modifier l’ordre des catégories.' );
+        // Alternative accessible utilisable sans glisser (et sur les écrans tactiles).
+        await supports.locator( ':scope > .deprat-tree-row [data-tree-down]' ).click();
+        assert.strictEqual( await page.locator( '.deprat-tree-root > [data-tree-item]' ).first().getAttribute( 'data-term-id' ), originalFirstId,
+            'Le bouton Descendre doit modifier l’ordre.' );
+        await supports.locator( ':scope > .deprat-tree-row [data-tree-up]' ).click();
+        assert.strictEqual( await page.locator( '.deprat-tree-root > [data-tree-item]' ).first().getAttribute( 'data-term-id' ), supportsId,
+            'Le bouton Monter doit restaurer l’ordre.' );
         await supports.locator( ':scope > .deprat-tree-row [data-tree-add-child]' ).click();
         await page.locator( '[data-tree-create-name]' ).fill( 'Supports moteurs test' );
         await page.locator( '[data-tree-create-submit]' ).click();
