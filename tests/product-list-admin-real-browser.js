@@ -95,6 +95,10 @@ const assert = require( 'assert' );
             'table-row-group', 'La présentation native est restaurée.' );
         await viewGrid.click();
         await page.reload( { waitUntil: 'domcontentloaded' } );
+        // Le rechargement volontaire de la préférence Grille supprime
+        // naturellement notre marqueur : on le réinstalle ici avant les
+        // tests de navigation qui, eux, ne doivent PLUS recharger.
+        await page.evaluate( () => { window.__depratDocumentMarker = 'same-document'; } );
         assert.strictEqual( await ui.locator( '[data-deprat-view="grid"]' ).getAttribute( 'aria-pressed' ), 'true',
             'Le mode Grille est mémorisé entre deux visites.' );
         await ui.locator( '[data-deprat-view="list"]' ).click();
