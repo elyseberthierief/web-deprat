@@ -158,7 +158,8 @@ add_action( 'wp_enqueue_scripts', 'deprat_product_3d_front_assets' );
  * Un importmap assure que le chargeur GLB et les contrôles utilisent la même version.
  */
 function deprat_product_3d_importmap() {
-    if ( ! function_exists( 'is_product' ) || ! is_product() || ! deprat_product_3d_model( get_queried_object_id() ) ) { return; }
+    if ( ( ! function_exists( 'is_product' ) || ! is_product() || ! deprat_product_3d_model( get_queried_object_id() ) )
+        && ( ! function_exists( 'deprat_catalog_is_archive' ) || ! deprat_catalog_is_archive() ) ) { return; }
     echo '<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.175.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.175.0/examples/jsm/"}}</script>' . "\n";
 }
 add_action( 'wp_head', 'deprat_product_3d_importmap', 2 );
