@@ -10,6 +10,13 @@
         var formParent = app.querySelector( '[data-tree-create-parent]' );
         var formTitle = app.querySelector( '[data-tree-create-title]' );
         var formError = app.querySelector( '[data-tree-create-error]' );
+        var overlay = app.querySelector( '[data-tree-create-overlay]' );
+        var formSection = app.querySelector( '[data-tree-create-section]' );
+        var formContext = app.querySelector( '[data-tree-create-context]' );
+        var parentPicker = app.querySelector( '[data-tree-create-parent-picker]' );
+        var parentSelect = app.querySelector( '[data-tree-create-parent-select]' );
+        var createTrigger = null;
+        var creating = false;
         var status = app.querySelector( '[data-tree-status]' );
         var dirtyLabel = app.querySelector( '[data-tree-unsaved]' );
         var saveButtons = app.querySelectorAll( '[data-tree-save]' );
@@ -159,17 +166,77 @@
             return li;
         }
 
-        function openCreate( parent ) {
-            form.hidden = false;
+        function closeCreate() {
+            if ( creating ) { return; }
+            overlay.hidden = true;
+            form.hidden = true;
+            document.body.classList.remove( 'deprat-tree-modal-open' );
+            formError.hidden = true;
+            if ( createTrigger && createTrigger.isConnected ) { createTrigger.focus(); }
+        }
+        function availableParents( section ) {
+            var list = app.querySelector( '[data-tree-preview] [data-section-key="' + section + '"]' );
+            if ( !list ) { return []; }
+            return Array.from( list.querySelectorAll( '[data-preview-item]' ) ).map( function ( item ) {
+                var depth = 0;
+                var ancestor = item.parentElement.closest( '[data-preview-item]' );
+                while ( ancestor ) {
+                    depth += 1;
+                    ancestor = ancestor.parentElement.closest( '[data-preview-item]' );
+                }
+                var label = item.querySelector( ':scope > .deprat-section-term-row .deprat-section-term-link' );
+                return {
+                    id: item.getAttribute( 'data-term-id' ),
+                    name: label ? label.textContent.trim() : '',
+                    depth: depth
+                };
+            } ).filter( function ( item ) { return item.depth < 30; } );
+        }
+        function openCreate( parent, options ) {
+            options = options || {};
+            var section = options.section && config.sectionLabels[ options.section ] ? options.section : '';
+            var isSectionChild = section && options.mode === 'child';
+            var names = isSectionChild ? availableParents( section ) : [];
+            if ( isSectionChild && !names.length ) {
+                message( 'Créez d’abord une catégorie dans cette rubrique.', true );
+                return;
+            }
+            createTrigger = options.trigger || document.activeElement;
+            formSection.value = section;
             formParent.value = parent ? parent.getAttribute( 'data-term-id' ) : '0';
-            formTitle.textContent = parent
-                ? 'Ajouter une sous-catégorie de « ' + itemName( parent ) + ' »'
-                : 'Nouvelle catégorie principale';
+            formTitle.textContent = isSectionChild
+                ? 'Créer une sous-catégorie'
+                : parent ? 'Créer une sous-catégorie de « ' + itemName( parent ) + ' »'
+                    : 'Créer une catégorie';
+            formContext.hidden = !section;
+            formContext.textContent = section ? 'Rubrique : ' + config.sectionLabels[ section ] : '';
+            parentPicker.hidden = !isSectionChild;
+            parentSelect.replaceChildren();
+            if ( isSectionChild ) {
+                names.forEach( function ( item ) {
+                    var option = document.createElement( 'option' );
+                    option.value = item.id;
+                    option.textContent = '— '.repeat( item.depth ) + item.name;
+                    parentSelect.appendChild( option );
+                } );
+                formParent.value = names[ 0 ].id;
+            }
             formName.value = '';
             formError.hidden = true;
-            form.scrollIntoView( { behavior: 'smooth', block: 'center' } );
-            formName.focus( { preventScroll: true } );
+            formError.textContent = '';
+            overlay.hidden = false;
+            form.hidden = false;
+            document.body.classList.add( 'deprat-tree-modal-open' );
+            formName.focus();
         }
+        parentSelect.addEventListener( 'change', function () {
+            formParent.value = parentSelect.value;
+        } );
+        app.addEventListener( 'deprat-tree-create-from-section', function ( event ) {
+            var info = event.detail || {};
+            if ( !config.sectionLabels[ info.section ] ) { return; }
+            openCreate( null, { section: info.section, mode: info.mode, trigger: info.trigger } );
+        } );
         app.addEventListener( 'deprat-tree-preview-changed', function () {
             initializeSortable();
             changed();
@@ -179,9 +246,9 @@
         } );
         app.addEventListener( 'click', function ( event ) {
             var addRoot = event.target.closest( '[data-tree-create-root]' );
-            if ( addRoot ) { openCreate( null ); return; }
+            if ( addRoot ) { openCreate( null, { trigger: addRoot } ); return; }
             var addChild = event.target.closest( '[data-tree-add-child]' );
-            if ( addChild ) { openCreate( addChild.closest( '[data-tree-item]' ) ); return; }
+            if ( addChild ) { openCreate( addChild.closest( '[data-tree-item]' ), { trigger: addChild } ); return; }
             var up = event.target.closest( '[data-tree-up]' );
             var down = event.target.closest( '[data-tree-down]' );
             if ( up || down ) {
@@ -223,7 +290,25 @@
                 changed();
             }
         } );
-        app.querySelector( '[data-tree-create-cancel]' ).addEventListener( 'click', function () { form.hidden = true; } );
+        overlay.addEventListener( 'click', function ( event ) {
+            if ( event.target === overlay || event.target.closest( '[data-tree-create-cancel]' ) ) {
+                closeCreate();
+            }
+        } );
+        overlay.addEventListener( 'keydown', function ( event ) {
+            if ( event.key === 'Escape' ) { event.preventDefault(); closeCreate(); return; }
+            if ( event.key !== 'Tab' ) { return; }
+            var focusable = Array.from( form.querySelectorAll( 'button, input:not([type="hidden"]), select' ) )
+                .filter( function ( field ) { return !field.disabled && field.getClientRects().length > 0; } );
+            if ( !focusable.length ) { return; }
+            var first = focusable[ 0 ];
+            var last = focusable[ focusable.length - 1 ];
+            if ( event.shiftKey && document.activeElement === first ) {
+                event.preventDefault(); last.focus();
+            } else if ( !event.shiftKey && document.activeElement === last ) {
+                event.preventDefault(); first.focus();
+            }
+        } );
         function post( action, data ) {
             var body = new URLSearchParams( data || {} );
             body.set( 'action', action );
@@ -247,6 +332,7 @@
             var name = formName.value.trim();
             if ( !name ) { formName.focus(); return; }
             var parentId = Number( formParent.value ) || 0;
+            var section = formSection.value;
             var parent = parentId
                 ? app.querySelector( '[data-tree-item][data-term-id="' + parentId + '"]' ) : null;
             var destination = parent ? childList( parent ) : root;
@@ -256,21 +342,42 @@
                 return;
             }
             var submit = app.querySelector( '[data-tree-create-submit]' );
+            if ( parentId && !parent ) {
+                formError.textContent = 'Catégorie parente introuvable. Rechargez la page.';
+                formError.hidden = false;
+                return;
+            }
+            creating = true;
             submit.disabled = true;
             formError.hidden = true;
-            post( 'deprat_category_tree_create', { name: name, parent: String( parentId ) } )
+            post( 'deprat_category_tree_create', {
+                name: name,
+                parent: String( parentId ),
+                section: parentId ? '' : section
+            } )
                 .then( function ( response ) {
                     var created = makeItem( response.id, response.name );
                     created.setAttribute( 'data-section-guess', response.sectionGuess || 'autres' );
+                    if ( !parentId && section ) {
+                        var sectionSelect = created.querySelector( '[data-tree-section]' );
+                        sectionSelect.value = section;
+                    }
                     destination.appendChild( created );
                     initializeSortable();
-                    form.hidden = true;
+                    // Le parent doit rester ouvert pour voir la sous-catégorie créée.
+                    if ( parentId ) {
+                        app.dispatchEvent( new CustomEvent( 'deprat-tree-expand-parent', {
+                            detail: { id: String( parentId ) }
+                        } ) );
+                    }
+                    creating = false;
+                    closeCreate();
                     changed();
-                    message( 'Catégorie créée. Enregistrez ensuite l’ordre de l’arborescence.', false );
+                    message( 'Catégorie créée dans le menu. Enregistrez le méga-menu pour conserver l’ordre.', false );
                 } ).catch( function ( error ) {
                     formError.textContent = error.message;
                     formError.hidden = false;
-                } ).finally( function () { submit.disabled = false; } );
+                } ).finally( function () { creating = false; submit.disabled = false; } );
         } );
         function save() {
             if ( saving ) { return; }
