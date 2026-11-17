@@ -436,3 +436,33 @@ function deprat_catalog_mega_assets() {
     );
 }
 add_action( 'wp_enqueue_scripts', 'deprat_catalog_mega_assets', 20 );
+
+
+/**
+ * Compatibilité avec le menu automatique du thème (wp_page_menu/wp_list_pages)
+ * lorsque l'utilisateur n'a pas encore créé de menu principal personnalisé.
+ * Le menu généré reste celui du thème : seul « Shop » reçoit le méga-menu DEPRAT.
+ */
+function deprat_catalog_fallback_page_menu( $html, $args = null ) {
+    if ( ! is_string( $html ) || false !== strpos( $html, 'deprat-mega-panel' ) ) { return $html; }
+    $shop_id = function_exists( 'wc_get_page_id' ) ? (int) wc_get_page_id( 'shop' ) : 0;
+    if ( $shop_id < 1 || false === strpos( $html, 'page-item-' . $shop_id ) ) { return $html; }
+    $fake_item = (object) array( 'classes' => array( 'deprat-mega-parent' ) );
+    $mega = deprat_catalog_mega_menu( '', $fake_item, 0, (object) array( 'theme_location' => 'primary' ) );
+    $pattern = '~(<li\b[^>]*\bpage-item-' . $shop_id . '\b[^>]*>)(\s*<a\b[^>]*>)(.*?)(</a>)~is';
+    return preg_replace_callback( $pattern, static function( $matches ) use ( $shop_id, $mega ) {
+        $li = str_replace( 'page-item-' . $shop_id, 'page-item-' . $shop_id . ' deprat-mega-parent', $matches[1] );
+        return $li . $matches[2] . 'Pièces détachées' . $matches[4] . $mega;
+    }, $html, 1 );
+}
+add_filter( 'wp_page_menu', 'deprat_catalog_fallback_page_menu', 30, 2 );
+add_filter( 'wp_list_pages', 'deprat_catalog_fallback_page_menu', 30, 2 );
+
+/** Cacher l'historique des demandes même dans un menu WordPress automatique. */
+function deprat_catalog_hide_requests_from_page_lists( $excluded ) {
+    if ( is_user_logged_in() ) { return $excluded; }
+    $page = get_page_by_path( 'mes-demandes-devis', OBJECT, 'page' );
+    if ( $page ) { $excluded[] = (int) $page->ID; }
+    return array_unique( array_map( 'intval', $excluded ) );
+}
+add_filter( 'wp_list_pages_excludes', 'deprat_catalog_hide_requests_from_page_lists', 20 );
