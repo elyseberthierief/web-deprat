@@ -29,7 +29,7 @@
 /* Le vrai méga-menu couvre le large écran et reste scrollable si nécessaire. */
 @media(min-width:922px){
  .deprat-mega-panel .deprat-mega-intro{display:flex;align-items:center;justify-content:space-between;gap:24px;padding:13px max(26px,calc((100vw - 1470px)/2));min-height:86px}
- .deprat-mega-panel .deprat-mega-copy{display:flex;align-items:center;gap:24px;min-width:0}
+ .deprat-mega-panel .deprat-mega-intro > .deprat-mega-copy{display:flex;align-items:center;gap:24px;min-width:0}
  .deprat-mega-panel .deprat-mega-copy strong{flex:0 0 auto;font-size:clamp(22px,2vw,31px);font-weight:850;color:#10366f;white-space:nowrap}
  .deprat-mega-panel .deprat-mega-copy p{border-left:1px solid #b8cce3;padding-left:23px;margin:0;max-width:780px;color:#355575;font-size:12.5px;line-height:1.55;font-weight:450}
  .deprat-mega-panel .deprat-mega-viewall{white-space:nowrap}
