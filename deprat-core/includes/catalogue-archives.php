@@ -27,13 +27,30 @@ function deprat_catalog_assets() {
 }
 add_action( 'wp_enqueue_scripts', 'deprat_catalog_assets', 35 );
 
+/**
+ * Reconnaître la page boutique WordPress même si le menu utilise un lien personnalisé.
+ * Ne remplace pas les menus du thème Astra.
+ */
+function deprat_catalog_is_shop_menu_link( $item, $shop_id ) {
+    if ( ! $item || $shop_id < 1 ) { return false; }
+    if ( 'post_type' === $item->type && 'page' === $item->object && (int) $item->object_id === (int) $shop_id ) {
+        return true;
+    }
+    if ( 'custom' !== $item->type || empty( $item->url ) ) { return false; }
+    $shop_path = wp_parse_url( get_permalink( $shop_id ), PHP_URL_PATH );
+    $link_path = wp_parse_url( $item->url, PHP_URL_PATH );
+    if ( ! $shop_path || ! $link_path ) { return false; }
+    return trim( $shop_path, '/' ) === trim( $link_path, '/' );
+}
+
 /** Renommer seulement le lien de la page boutique dans les menus existants. */
 function deprat_catalog_relabel_menu( $items ) {
     if ( ! function_exists( 'wc_get_page_id' ) ) { return $items; }
     $shop_id = wc_get_page_id( 'shop' );
     foreach ( $items as $item ) {
-        if ( 'post_type' === $item->type && 'page' === $item->object && (int) $item->object_id === $shop_id ) {
+        if ( deprat_catalog_is_shop_menu_link( $item, $shop_id ) ) {
             $item->title = 'Pièces détachées';
+            $item->classes[] = 'deprat-mega-parent';
         }
     }
     return $items;
@@ -339,3 +356,79 @@ function deprat_catalog_render_card( $product ) {
     </article>
     <?php
 }
+
+/**
+ * Méga-menu « Pièces détachées » inspiré de la maquette :
+ * 3 à 4 colonnes de familles, vignettes et liens vers les sous-catégories réelles.
+ * Les liens sont issus de product_cat, sans recopier les noms dans le code.
+ */
+function deprat_catalog_mega_menu( $item_output, $item, $depth, $args ) {
+    if ( $depth > 0 || ! $item || ! in_array( 'deprat-mega-parent', (array) $item->classes, true ) ) {
+        return $item_output;
+    }
+    $location = isset( $args->theme_location ) ? (string) $args->theme_location : '';
+    if ( preg_match( '/footer|secondary|social/i', $location ) ) { return $item_output; }
+    $roots = deprat_catalog_root_categories();
+    if ( ! $roots ) { return $item_output; }
+    ob_start();
+    ?>
+    <nav class="deprat-mega-panel" aria-label="Familles de pièces détachées">
+        <div class="deprat-mega-intro">
+            <div>
+                <span class="deprat-mega-eyebrow">CATALOGUE DEPRAT</span>
+                <strong>Pièces détachées pour professionnels</strong>
+                <span>Accédez directement à une famille de produits.</span>
+            </div>
+            <a class="deprat-mega-viewall" href="<?php echo esc_url( wc_get_page_permalink( 'shop' ) ); ?>">
+                Toutes les pièces <span aria-hidden="true">→</span>
+            </a>
+        </div>
+        <div class="deprat-mega-grid">
+            <?php foreach ( array_slice( $roots, 0, 16 ) as $root ) :
+                $root_url = get_term_link( $root );
+                if ( is_wp_error( $root_url ) ) { continue; }
+                $image = absint( get_term_meta( $root->term_id, 'thumbnail_id', true ) );
+                $children = get_terms( array(
+                    'taxonomy' => 'product_cat', 'parent' => (int) $root->term_id,
+                    'hide_empty' => false, 'orderby' => 'menu_order', 'order' => 'ASC', 'number' => 7,
+                ) );
+                if ( is_wp_error( $children ) || ! is_array( $children ) ) { $children = array(); }
+                ?>
+                <section class="deprat-mega-family">
+                    <a class="deprat-mega-family-heading" href="<?php echo esc_url( $root_url ); ?>">
+                        <span class="deprat-mega-family-illustration" aria-hidden="true">
+                            <?php if ( $image ) : ?>
+                                <?php echo wp_get_attachment_image( $image, 'thumbnail', false, array( 'loading' => 'lazy', 'alt' => '' ) ); ?>
+                            <?php else : ?><span class="deprat-mega-fallback">▤</span><?php endif; ?>
+                        </span>
+                        <span><?php echo esc_html( $root->name ); ?></span>
+                        <span class="deprat-mega-heading-arrow" aria-hidden="true">›</span>
+                    </a>
+                    <?php if ( $children ) : ?>
+                        <ul>
+                            <?php foreach ( $children as $child ) :
+                                $url = get_term_link( $child );
+                                if ( is_wp_error( $url ) ) { continue; }
+                                ?>
+                                <li><a href="<?php echo esc_url( $url ); ?>"><?php echo esc_html( $child->name ); ?></a></li>
+                            <?php endforeach; ?>
+                        </ul>
+                    <?php else : ?>
+                        <a class="deprat-mega-family-all" href="<?php echo esc_url( $root_url ); ?>">Voir les produits <span aria-hidden="true">›</span></a>
+                    <?php endif; ?>
+                </section>
+            <?php endforeach; ?>
+        </div>
+    </nav>
+    <?php
+    return $item_output . ob_get_clean();
+}
+add_filter( 'walker_nav_menu_start_el', 'deprat_catalog_mega_menu', 20, 4 );
+
+function deprat_catalog_mega_assets() {
+    wp_enqueue_style( 'deprat-catalog-mega-menu',
+        plugins_url( 'assets/css/catalogue-mega-menu.css', dirname( __DIR__ ) . '/deprat-core.php' ),
+        array(), '0.1.28'
+    );
+}
+add_action( 'wp_enqueue_scripts', 'deprat_catalog_mega_assets', 20 );
