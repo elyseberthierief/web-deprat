@@ -292,8 +292,16 @@ $menu_request = (object) array(
     'title' => 'Mes demandes de devis', 'url' => get_permalink( $request_page_id ),
     'classes' => array(),
 );
+$fallback_menu = wp_page_menu( array( 'echo' => false, 'show_home' => false ) );
+deprat_integration_assert( false !== strpos( $fallback_menu, 'Pièces détachées' )
+    && false !== strpos( $fallback_menu, 'deprat-mega-panel' ),
+    'Le menu Astra automatique doit recevoir le nom Pièces détachées et le méga-menu.' );
+
 $current_admin = get_current_user_id();
 wp_set_current_user( 0 );
+$guest_fallback_menu = wp_page_menu( array( 'echo' => false, 'show_home' => false ) );
+deprat_integration_assert( false === strpos( $guest_fallback_menu, 'Mes demandes de devis' ),
+    'La page Mes demandes doit être masquée du menu automatique pour les visiteurs.' );
 deprat_integration_assert( ! count( deprat_catalog_private_menu_items( array( $menu_request ) ) ),
     'Le lien Mes demandes doit être absent du menu public.' );
 wp_set_current_user( $current_admin );
