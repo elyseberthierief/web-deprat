@@ -1,4 +1,4 @@
-/* DEPRAT 0.1.42 — Liste Produits B2B, conservant le tableau WordPress. */
+/* DEPRAT 0.1.43 — Liste Produits B2B, conservant le tableau WordPress. */
 body.deprat-product-list-active{--deprat-list-navy:#123b78;--deprat-list-blue:#0e4d9c;--deprat-list-soft:#eaf3ff;--deprat-list-line:#dce6f3;--deprat-list-gold:#e5ac3a;--deprat-list-muted:#56718f}
 body.deprat-product-list-active #wpbody-content>.wrap{max-width:100%;padding-right:9px}
 body.deprat-product-list-active #wpbody-content>.wrap>.wp-heading-inline,
@@ -533,4 +533,15 @@ body.deprat-product-list-active.deprat-product-grid-mode
         height:172px!important;
         max-height:172px;
     }
+}
+
+/* 0.1.43 : l’arborescence se met à jour en AJAX, sans clignotement de page. */
+body.deprat-product-list-active .deprat-products-ui.is-loading
+    :is(.deprat-products-hierarchy,.deprat-products-sections){
+    opacity:.62;
+    transition:opacity .15s ease-in-out;
+}
+body.deprat-product-list-active .deprat-products-ui.is-loading
+    .deprat-products-count{
+    opacity:.8;
 }
