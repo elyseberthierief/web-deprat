@@ -19,7 +19,7 @@ function deprat_catalog_all_products_url() {
  * du magasin (page_id, post_type, pagename) lors des formulaires GET.
  */
 function deprat_catalog_shop_route_params() {
-    $query_string = wp_parse_url( wc_get_page_permalink( 'shop' ), PHP_URL_QUERY );
+    $query_string = wp_parse_url( deprat_catalog_all_products_url(), PHP_URL_QUERY );
     if ( ! is_string( $query_string ) || '' === $query_string ) { return array(); }
     parse_str( $query_string, $parts );
     $allowed = array( 'page_id', 'post_type', 'pagename' );
