@@ -24,8 +24,8 @@
     display: block;
     position: absolute;
     top: calc(100% - 1px);
-    left: 50%;
-    transform: translate(-38%, 10px);
+    left: 0;
+    transform: translateY(10px);
     width: min(1010px, calc(100vw - 38px));
     max-height: min(78vh, 760px);
     overflow-y: auto;
@@ -41,12 +41,13 @@
     text-align: left;
     transition: opacity .18s, transform .18s, visibility .18s;
   }
+  .deprat-mega-parent > ul.sub-menu { display: none !important; }
   .deprat-mega-parent:hover > .deprat-mega-panel,
   .deprat-mega-parent:focus-within > .deprat-mega-panel {
     opacity: 1;
     visibility: visible;
     pointer-events: auto;
-    transform: translate(-38%, 0);
+    transform: translateY(0);
   }
   .deprat-mega-panel .deprat-mega-intro {
     padding: 23px 27px 20px;
