@@ -32,7 +32,7 @@ const assert = require( 'assert' );
         assert.strictEqual( await page.locator( '[data-product-sku]' ).inputValue(), 'TEST-DP62' );
         assert.strictEqual( await page.locator( '[data-product-type]' ).inputValue(), 'simple' );
         const categorySummary = await page.locator( '[data-category-summary]' ).textContent();
-        assert( categorySummary.includes( 'Tubes' ) && categorySummary.includes( 'Embouts' ), 'Les catégories existantes doivent rester sélectionnées.' );
+        assert( categorySummary.includes( 'Tubes' ) && !categorySummary.includes( 'Embouts' ), 'La fiche Tube est uniquement classée dans Tubes.' );
 
         const layout = await page.evaluate( () => {
             const box = selector => document.querySelector( selector ).getBoundingClientRect().toJSON();
@@ -149,13 +149,14 @@ const assert = require( 'assert' );
         assert( ( await page.locator( '[data-category-summary]' ).textContent() ).includes( 'Tubes de test' ) );
         assert.strictEqual( await page.locator( '[name="deprat_product_tech[description]"]' ).inputValue(), 'Description visible directement.' );
         assert( ( await page.locator( '[data-category-summary]' ).textContent() ).includes( 'Tubes' ) );
-        assert( ( await page.locator( '[data-category-summary]' ).textContent() ).includes( 'Embouts' ) );
+        assert( !( await page.locator( '[data-category-summary]' ).textContent() ).includes( 'Embouts' ), 'Un tube ne doit pas appartenir aux embouts.' );
         assert.strictEqual( await page.locator( '[data-rows="features"] [data-row]' ).last().locator( 'input' ).nth( 1 ).inputValue(), 'Test' );
         assert.strictEqual( await page.locator( '[data-datasheet-row]' ).count(), 3, 'Trois PDF conservés après enregistrement.' );
         assert( ( await page.locator( '[data-gallery-ids]' ).inputValue() ).split( ',' ).length >= 2, 'Les photos complémentaires sont enregistrées.' );
 
         await page.locator( '[data-category-picker] summary' ).click();
-        await page.locator( '[data-category-options] label', { hasText: 'Embouts' } ).locator( 'input' ).click();
+        await page.locator( '[data-category-options] label', { hasText: 'Embouts' } ).locator( 'input' ).check();
+        await page.locator( '[data-category-options] label', { hasText: 'Embouts' } ).locator( 'input' ).uncheck();
         await page.locator( '[data-category-picker] summary' ).click();
         await Promise.all( [ page.waitForNavigation( { waitUntil: 'domcontentloaded' } ), page.click( '[data-product-save]' ) ] );
         await page.waitForSelector( 'body.deprat-product-editor-ready [data-editor-chrome]:visible' );
