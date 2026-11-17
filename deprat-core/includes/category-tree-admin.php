@@ -90,14 +90,14 @@ add_action( 'admin_menu', static function () {
 
 function deprat_category_tree_admin_assets( $hook ) {
     if ( 'product_page_deprat-categories-tree' !== $hook ) { return; }
-    wp_enqueue_style( 'deprat-category-tree', plugins_url( 'assets/css/category-tree-admin.css', dirname( __DIR__ ) . '/deprat-core.php' ), array(), '0.1.40' );
+    wp_enqueue_style( 'deprat-category-tree', plugins_url( 'assets/css/category-tree-admin.css', dirname( __DIR__ ) . '/deprat-core.php' ), array(), '0.1.44' );
     wp_enqueue_style( 'deprat-catalog-sections-editor',
         plugins_url( 'assets/css/catalogue-sections.css', dirname( __DIR__ ) . '/deprat-core.php' ),
-        array( 'deprat-category-tree' ), '0.1.40' );
-    wp_enqueue_script( 'deprat-category-tree', plugins_url( 'assets/js/category-tree-admin.js', dirname( __DIR__ ) . '/deprat-core.php' ), array( 'jquery', 'jquery-ui-sortable' ), '0.1.40', true );
+        array( 'deprat-category-tree' ), '0.1.44' );
+    wp_enqueue_script( 'deprat-category-tree', plugins_url( 'assets/js/category-tree-admin.js', dirname( __DIR__ ) . '/deprat-core.php' ), array( 'jquery', 'jquery-ui-sortable' ), '0.1.44', true );
     wp_enqueue_script( 'deprat-category-tree-preview',
         plugins_url( 'assets/js/category-tree-preview.js', dirname( __DIR__ ) . '/deprat-core.php' ),
-        array( 'deprat-category-tree', 'jquery', 'jquery-ui-sortable' ), '0.1.40', true );
+        array( 'deprat-category-tree', 'jquery', 'jquery-ui-sortable' ), '0.1.44', true );
     if ( current_user_can( 'upload_files' ) ) { wp_enqueue_media(); }
     wp_localize_script( 'deprat-category-tree', 'depratCategoryTree', array(
         'ajaxUrl' => admin_url( 'admin-ajax.php' ),
@@ -223,6 +223,13 @@ function deprat_category_tree_admin_page() {
                 <p>Modifiez directement le menu « Nos composants » : les catégories que vous déplacez ici seront réorganisées sur le site après enregistrement.</p>
             </div>
             <div class="deprat-tree-heading-actions">
+                <a href="<?php echo esc_url( wp_nonce_url(
+                    admin_url( 'admin-post.php?action=deprat_export_megamenu_pdf' ),
+                    'deprat_export_megamenu_pdf'
+                ) ); ?>" class="button deprat-tree-export-pdf" data-tree-export-pdf
+                    target="_blank" rel="noopener" title="Télécharger le PDF de l’arborescence enregistrée">
+                    <span aria-hidden="true">↓</span> Exporter l’arborescence en PDF
+                </a>
                 <a href="<?php echo esc_url( wc_get_page_permalink( 'shop' ) ); ?>" class="button" target="_blank" rel="noopener">Voir le catalogue ↗</a>
                 <button type="button" class="button button-primary" data-tree-save>Enregistrer l’arborescence</button>
             </div>
