@@ -34,7 +34,7 @@ function deprat_catalog_section_guess( $term ) {
         'sangle'    => '/sangle|enrouleur|poulie/',
         'treuil'    => '/treuil|manoeuvre-par-treuil|manoeuvres-par-treuil|passe-caisson|manivelle/',
         'liaison'   => '/attache|verrou|liaison|tablier|fixation-atr/',
-        'tubes'     => '/tube|embout|flasque|bague|support-d-arbre|support-arbre/',
+        'tubes'     => '/tube|embout|flasque|bague|supports?-d-arbres?|supports?-arbres?/',
     );
     foreach ( $patterns as $section => $regex ) {
         if ( preg_match( $regex, $name ) ) { return $section; }
