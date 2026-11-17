@@ -402,6 +402,19 @@ deprat_integration_assert( false !== strpos( $category_admin_page_html, 'data-tr
 );
 deprat_integration_assert( $terms_before_preview === wp_count_terms( array( 'taxonomy' => 'product_cat', 'hide_empty' => false ) ),
     'Afficher les boutons + et la popup ne doit créer aucune catégorie sans action utilisateur.' );
+deprat_integration_assert(
+    false !== strpos( $category_admin_page_html, 'data-tree-edit-overlay' )
+    && false !== strpos( $category_admin_page_html, 'data-tree-edit-form' )
+    && false !== strpos( $category_admin_page_html, 'data-tree-edit-name' )
+    && false !== strpos( $category_admin_page_html, 'data-tree-edit-full-link' ),
+    'Modifier une catégorie doit ouvrir une popup en administration, avec accès avancé facultatif.'
+);
+deprat_integration_assert(
+    false !== strpos( $category_admin_page_html, 'data-tree-edit-category' )
+    && false === strpos( $category_admin_page_html, 'href="' . esc_url( get_edit_term_link( (int) $tube_category['term_id'], 'product_cat', 'product' ) ) . '" >Modifier' ),
+    'Le bouton de modification rapide doit rester dans la page plutôt que naviguer vers WooCommerce.'
+);
+
 
 ob_start();
 deprat_category_tree_render_list( 0, deprat_category_tree_terms() );
