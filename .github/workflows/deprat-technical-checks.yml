@@ -43,6 +43,7 @@ jobs:
           node --check deprat-core/assets/js/category-tree-preview.js
           node --check deprat-core/assets/js/product-autosave-admin.js
           node --check deprat-core/assets/js/product-3d-contours.js
+          node --check tests/product-admin-real-browser.js
           node tests/product-technical-browser-test.js
 
   wordpress-integration:
