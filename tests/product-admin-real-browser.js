@@ -407,8 +407,10 @@ const assert = require( 'assert' );
         assert( await page.locator( '.deprat-catalog-filter-form' ).isVisible(),
             'Le catalogue général conserve les filtres disponibles.' );
         const fullAllSort = page.locator( '[data-sort-select]' );
-        await fullAllSort.selectOption( 'recent' );
-        await page.waitForLoadState( 'domcontentloaded' );
+        await Promise.all( [
+            page.waitForNavigation( { waitUntil: 'domcontentloaded' } ),
+            fullAllSort.selectOption( 'recent' ),
+        ] );
         assert( page.url().includes( 'deprat_all=1' ),
             'Le tri doit conserver la vue globale Toutes les pièces.' );
         assert( await page.locator( '[data-catalog-card]' ).count() >= 2,
