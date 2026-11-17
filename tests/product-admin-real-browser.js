@@ -177,10 +177,13 @@ const assert = require( 'assert' );
         await page.locator( '[data-three-mode="model"]' ).click();
         assert( await page.locator( '[data-render-mode="texture"]' ).isVisible(), 'Le mode pièce texturée est proposé.' );
         assert( await page.locator( '[data-render-mode="contours"]' ).isVisible(), 'Le mode vrais contours est proposé.' );
-        const backgroundBefore = await page.locator( '.deprat-three-viewport' ).getAttribute( 'data-background' );
-        await page.locator( '[data-background-cycle]' ).click();
-        const backgroundAfter = await page.locator( '.deprat-three-viewport' ).getAttribute( 'data-background' );
-        assert.notStrictEqual( backgroundAfter, backgroundBefore, 'Le bouton Fond change effectivement le contraste.' );
+        const productBackgroundSwitch = await page.locator( '[data-background-cycle]' ).evaluate( button => {
+            const panel = document.querySelector( '.deprat-three-viewport' );
+            const before = panel.getAttribute( 'data-background' );
+            button.click();
+            return { before, after: panel.getAttribute( 'data-background' ) };
+        } );
+        assert.notStrictEqual( productBackgroundSwitch.after, productBackgroundSwitch.before, 'Le bouton Fond change effectivement le contraste.' );
         assert( await page.locator( '.deprat-three-viewport' ).isVisible(), 'La visionneuse GLB doit s’ouvrir.' );
         assert( await page.locator( '.woocommerce-product-gallery.deprat-three-active' ).count() > 0, 'La galerie passe en mode 3D.' );
         await page.locator( '[data-three-mode="photos"]' ).click();
