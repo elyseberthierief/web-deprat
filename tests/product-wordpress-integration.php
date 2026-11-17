@@ -96,9 +96,43 @@ file_put_contents( $uploads['basedir'] . '/integration-test/fiche.pdf', "%PDF-1.
 file_put_contents( $uploads['basedir'] . '/integration-test/schema.png', base64_decode( 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jRr0AAAAASUVORK5CYII=' ) );
 file_put_contents( $uploads['basedir'] . '/integration-test/galerie.png', file_get_contents( $uploads['basedir'] . '/integration-test/schema.png' ) );
 file_put_contents( $uploads['basedir'] . '/integration-test/notice.pdf', "%PDF-1.4\\n%%EOF\\n" );
-$glb_json = '{"asset":{"version":"2.0"},"scene":0,"scenes":[{"nodes":[]}]}';
+// Modèle GLB réel de test : un cube composé de 12 triangles.
+// Sert à vérifier les angles nets sans montrer les diagonales du maillage.
+$vertex_positions = array(
+    array( -1, -1, -1 ), array( 1, -1, -1 ), array( 1, 1, -1 ), array( -1, 1, -1 ),
+    array( -1, -1, 1 ), array( 1, -1, 1 ), array( 1, 1, 1 ), array( -1, 1, 1 ),
+);
+$face_indices = array(
+    4, 5, 6, 4, 6, 7, 0, 2, 1, 0, 3, 2,
+    0, 4, 7, 0, 7, 3, 1, 2, 6, 1, 6, 5,
+    3, 7, 6, 3, 6, 2, 0, 1, 5, 0, 5, 4,
+);
+$glb_data = '';
+foreach ( $vertex_positions as $coords ) {
+    foreach ( $coords as $v ) { $glb_data .= pack( 'g', (float) $v ); }
+}
+foreach ( $face_indices as $v ) { $glb_data .= pack( 'v', $v ); }
+$glb_doc = array(
+    'asset' => array( 'version' => '2.0' ),
+    'scene' => 0,
+    'scenes' => array( array( 'nodes' => array( 0 ) ) ),
+    'nodes' => array( array( 'mesh' => 0 ) ),
+    'meshes' => array( array( 'primitives' => array( array( 'attributes' => array( 'POSITION' => 0 ), 'indices' => 1, 'mode' => 4 ) ) ) ),
+    'buffers' => array( array( 'byteLength' => strlen( $glb_data ) ) ),
+    'bufferViews' => array(
+        array( 'buffer' => 0, 'byteOffset' => 0, 'byteLength' => 96, 'target' => 34962 ),
+        array( 'buffer' => 0, 'byteOffset' => 96, 'byteLength' => 72, 'target' => 34963 ),
+    ),
+    'accessors' => array(
+        array( 'bufferView' => 0, 'componentType' => 5126, 'count' => 8, 'type' => 'VEC3', 'min' => array( -1, -1, -1 ), 'max' => array( 1, 1, 1 ) ),
+        array( 'bufferView' => 1, 'componentType' => 5123, 'count' => 36, 'type' => 'SCALAR' ),
+    ),
+);
+$glb_json = wp_json_encode( $glb_doc );
 $glb_json .= str_repeat( ' ', ( 4 - strlen( $glb_json ) % 4 ) % 4 );
-$glb_binary = 'glTF' . pack( 'V', 2 ) . pack( 'V', 20 + strlen( $glb_json ) ) . pack( 'V', strlen( $glb_json ) ) . 'JSON' . $glb_json;
+$glb_binary = 'glTF' . pack( 'V', 2 ) . pack( 'V', 28 + strlen( $glb_json ) + strlen( $glb_data ) )
+    . pack( 'V', strlen( $glb_json ) ) . 'JSON' . $glb_json
+    . pack( 'V', strlen( $glb_data ) ) . "BIN\0" . $glb_data;
 file_put_contents( $uploads['basedir'] . '/integration-test/modele.glb', $glb_binary );
 deprat_integration_assert( deprat_product_3d_valid_binary( $uploads['basedir'] . '/integration-test/modele.glb', strlen( $glb_binary ) ), 'Le GLB exemple doit être valide.' );
 set_post_thumbnail( $product_id, $image );
@@ -111,8 +145,11 @@ $_POST = array(
     'deprat_product_glb' => (string) $model3d,
     'deprat_product_tech' => array(
         'description' => 'Description technique \\ spéciale',
+        'shape' => 'octogonal',
         'features' => array(
             array( 'label' => 'Matière', 'value' => 'Acier galvanisé' ),
+            array( 'label' => 'Épaisseur', 'value' => '0,6 mm' ),
+            array( 'label' => 'Finition', 'value' => 'Z275' ),
             array( 'label' => 'Zéro', 'value' => '0' ),
         ),
         'norms' => array( 'NF EN 12194' ),
@@ -138,6 +175,10 @@ do_action( 'save_post_product', $product_id, get_post( $product_id ), true );
 $saved = deprat_product_tech_data( $product_id );
 deprat_integration_assert( deprat_product_3d_model( $product_id ) === (int) $model3d, 'Modèle GLB non enregistré.' );
 deprat_integration_assert( isset( $saved['features'][0]['value'] ) && 'Acier galvanisé' === $saved['features'][0]['value'], 'La caractéristique ne s’enregistre pas.' );
+deprat_integration_assert( 'octogonal' === deprat_product_shape( $product_id ), 'La forme Octogonale doit être enregistrée.' );
+deprat_integration_assert( false !== strpos( deprat_product_shape_icon( 'octogonal' ), '<polygon' ), 'L’icône octogonale doit être vectorielle.' );
+deprat_integration_assert( false !== strpos( deprat_product_shape_icon( 'rond' ), '<circle' ), 'L’icône ronde doit être vectorielle.' );
+deprat_integration_assert( '' === deprat_product_shape_normalize( 'profil inconnu' ), 'Une forme non prévue ne doit pas générer d’icône.' );
 deprat_integration_assert( 'Description technique \\ spéciale' === $saved['description'], 'Un caractère spécial de la description a été perdu.' );
 deprat_integration_assert( (int) $pdf === $saved['datasheet'] && (int) $image === $saved['technical_image'], 'Les médias ne s’enregistrent pas.' );
 deprat_integration_assert( 'TEST-DP62' === wc_get_product( $product_id )->get_sku(), 'La référence WooCommerce a été modifiée.' );
@@ -249,6 +290,19 @@ $embout_index = deprat_catalog_category_index( $embouts_term );
 deprat_integration_assert( isset( $tube_index[ $product_id ] ) && ! isset( $tube_index[ $piece_id ] ), 'La page Tubes doit exclure les embouts.' );
 deprat_integration_assert( isset( $embout_index[ $piece_id ] ) && ! isset( $embout_index[ $product_id ] ), 'La page Embouts doit exclure les tubes.' );
 deprat_integration_assert( 'Acier galvanisé' === $tube_index[ $product_id ]['material'], 'La matière de la fiche doit être disponible dans les filtres.' );
+deprat_integration_assert( 'Octogonal' === $tube_index[ $product_id ]['shape'], 'Le choix de forme doit alimenter le filtre des tubes.' );
+$facets = deprat_catalog_feature_facets( $tube_index );
+deprat_integration_assert( isset( $facets['finition']['options']['z275'] ), 'La caractéristique Finition doit être un filtre de catégorie.' );
+$technical_card = deprat_catalog_card_features( $tube_index[ $product_id ] );
+deprat_integration_assert( count( $technical_card ) >= 2, 'La carte doit reprendre les caractéristiques disponibles.' );
+$_GET['deprat_feature'] = array( 'finition' => 'z275' );
+$feature_filter = deprat_catalog_filters();
+deprat_integration_assert( deprat_catalog_matches( $tube_index[ $product_id ], $feature_filter ), 'Une caractéristique de fiche doit filtrer son produit.' );
+$_GET['deprat_feature'] = array( 'finition' => 'autre' );
+$feature_filter = deprat_catalog_filters();
+deprat_integration_assert( ! deprat_catalog_matches( $tube_index[ $product_id ], $feature_filter ), 'Une valeur de caractéristique différente doit exclure le produit.' );
+unset( $_GET['deprat_feature'] );
+
 $_GET['deprat_material'] = 'acier-galvanise';
 $filters = deprat_catalog_filters();
 deprat_integration_assert( deprat_catalog_matches( $tube_index[ $product_id ], $filters ), 'La matière filtrée doit correspondre au tube.' );
@@ -310,6 +364,12 @@ wp_set_current_user( $current_admin );
 ob_start();
 deprat_catalog_render_card( wc_get_product( $piece_id ) );
 $card_html = ob_get_clean();
+ob_start();
+deprat_catalog_render_card( wc_get_product( $product_id ) );
+$tube_card_html = ob_get_clean();
+deprat_integration_assert( false !== strpos( $tube_card_html, 'deprat-catalog-shape-badge' )
+    && false !== strpos( $tube_card_html, 'deprat-catalog-spec-list' ),
+    'La forme et les caractéristiques doivent figurer sur la carte produit.' );
 deprat_integration_assert( false !== strpos( $card_html, 'data-catalog-add' )
     && false === strpos( $card_html, 'data-open-model' )
     && false !== strpos( $card_html, 'deprat-catalog-ref' ),

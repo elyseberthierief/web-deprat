@@ -23,6 +23,7 @@ function wp_attachment_is_image( $id ) { return 0 === strpos( get_post_mime_type
 function wp_unslash( $value ) { return $value; }
 function wp_slash( $value ) { return $value; }
 function sanitize_key( $value ) { return strtolower( preg_replace( '/[^a-z0-9_\-]/', '', $value ) ); }
+function sanitize_title( $value ) { return strtolower( trim( preg_replace( '/[^a-z0-9-]+/', '-', strtolower( (string) $value ) ), '-' ) ); }
 function sanitize_text_field( $value ) { return trim( strip_tags( $value ) ); }
 function sanitize_textarea_field( $value ) { return trim( strip_tags( $value ) ); }
 function wp_verify_nonce( $nonce, $action ) { return 'valid' === $nonce && 'deprat_product_tech_save' === $action; }
@@ -41,6 +42,7 @@ function admin_url( $path ) { return 'https://example.test/wp-admin/' . $path; }
 function expect( $condition, $message ) { if ( ! $condition ) { fwrite( STDERR, "ÉCHEC : " . $message . "\n" ); exit( 1 ); } }
 
 require __DIR__ . '/../deprat-core/includes/product-technical-data.php';
+require __DIR__ . '/../deprat-core/includes/product-shape.php';
 require __DIR__ . '/../deprat-core/includes/product-packaging.php';
 require __DIR__ . '/../deprat-core/includes/product-single-layout.php';
 require __DIR__ . '/../deprat-core/includes/product-3d.php';
@@ -188,5 +190,12 @@ expect( ! empty( $custom['deprat_nonstandard_packaging'] ), 'Le panier marque le
 $display = deprat_packaging_cart_item_display( array(), array_merge( $custom, array( 'quantity' => 7 ) ) );
 expect( false !== strpos( implode( ' ', array_column( $display, 'value' ) ), '7 pièces' ), 'Le panier conserve la quantité choisie.' );
 expect( false !== strpos( implode( ' ', array_column( $display, 'value' ) ), 'plus-value' ), 'Le panier affiche la plus-value.' );
+
+
+expect( 'hexagonal' === deprat_product_shape_normalize( 'hexagone' ), 'Une variante hexagonale doit être reconnue.' );
+expect( 'octogonal' === deprat_product_shape_normalize( 'octogonale' ), 'Les libellés de forme se normalisent.' );
+expect( '' === deprat_product_shape_normalize( 'étoile' ), 'Ne pas créer d’icône pour une forme inconnue.' );
+expect( false !== strpos( deprat_product_shape_icon( 'rond' ), '<circle' ), 'Le rond est dessiné en SVG.' );
+expect( false !== strpos( deprat_product_shape_icon( 'hexagonal' ), '<polygon' ), 'L’hexagone est dessiné en SVG.' );
 
 echo "Tests de sauvegarde, droits, médias et rendu boutique réussis.\n";

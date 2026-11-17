@@ -250,3 +250,8 @@ body.deprat-product-editor-ready .deprat-tech-save.deprat-tech-save-floating:foc
         font-size: 12px;
     }
 }
+
+/* Choix dédié à la forme du profil dans l'éditeur de fiche technique. */
+.deprat-shape-admin-field{margin:2px 0 16px;padding:13px;border:1px solid #cbdcee;border-radius:10px;background:#f1f6fc;}
+.deprat-shape-admin-field select{width:100%;max-width:410px;border:1px solid #bad0e7;border-radius:7px;min-height:40px;}
+.deprat-shape-admin-field p{margin:8px 0 0;}

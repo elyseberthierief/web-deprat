@@ -17,10 +17,11 @@ add_filter( 'template_include', 'deprat_catalog_template', 45 );
 
 function deprat_catalog_assets() {
     if ( ! deprat_catalog_is_archive() ) { return; }
-    wp_enqueue_style( 'deprat-catalogue', plugins_url( 'assets/css/catalogue-archive.css', dirname( __DIR__ ) . '/deprat-core.php' ), array(), '0.1.28' );
-    wp_enqueue_script( 'deprat-catalogue', plugins_url( 'assets/js/catalogue-archive.js', dirname( __DIR__ ) . '/deprat-core.php' ), array(), '0.1.28', true );
+    wp_enqueue_style( 'deprat-catalogue', plugins_url( 'assets/css/catalogue-archive.css', dirname( __DIR__ ) . '/deprat-core.php' ), array(), '0.1.29' );
+    wp_enqueue_script( 'deprat-catalogue', plugins_url( 'assets/js/catalogue-archive.js', dirname( __DIR__ ) . '/deprat-core.php' ), array(), '0.1.29', true );
     wp_localize_script( 'deprat-catalogue', 'depratCatalogueConfig', array(
         'ajaxUrl' => class_exists( 'WC_AJAX' ) ? WC_AJAX::get_endpoint( 'add_to_cart' ) : '',
+        'contoursUrl' => plugins_url( 'assets/js/product-3d-contours.js', dirname( __DIR__ ) . '/deprat-core.php' ),
     ) );
     // Le moteur glTF est enregistré en module sur les archives contenant une 3D.
     wp_enqueue_script( 'deprat-model-viewer', 'https://ajax.googleapis.com/ajax/libs/model-viewer/4.4.0/model-viewer.min.js', array(), '4.4.0', true );
@@ -121,12 +122,18 @@ function deprat_catalog_root_categories() {
 function deprat_catalog_specs( $id ) {
     $data = deprat_product_tech_data( $id );
     $features = isset( $data['features'] ) && is_array( $data['features'] ) ? $data['features'] : array();
-    $fields = array( 'material' => '', 'length' => 0, 'diameter' => 0, 'thickness' => 0, 'shape' => '' );
+    $fields = array( 'material' => '', 'length' => 0, 'diameter' => 0, 'thickness' => 0, 'shape' => '', 'features' => array() );
     foreach ( $features as $row ) {
         if ( ! is_array( $row ) ) { continue; }
         $key = sanitize_title( isset( $row['label'] ) ? (string) $row['label'] : '' );
         $value = isset( $row['value'] ) && is_scalar( $row['value'] ) ? trim( (string) $row['value'] ) : '';
         if ( ! $value ) { continue; }
+        // Conserver les caractéristiques renseignées pour les cartes et les facettes.
+        // Une mesure longue ou du texte de description ne devient pas un filtre.
+        $label = isset( $row['label'] ) && is_scalar( $row['label'] ) ? trim( (string) $row['label'] ) : '';
+        if ( $key && $label && ! isset( $fields['features'][ $key ] ) ) {
+            $fields['features'][ $key ] = array( 'label' => $label, 'value' => $value );
+        }
         if ( in_array( $key, array( 'matiere', 'materiau', 'matieres' ), true ) ) { $fields['material'] = $value; }
         elseif ( in_array( $key, array( 'forme', 'profil', 'type-de-tube' ), true ) ) { $fields['shape'] = $value; }
         elseif ( in_array( $key, array( 'longueur', 'longueur-mm', 'longueur-m' ), true ) ) {
@@ -146,7 +153,21 @@ function deprat_catalog_specs( $id ) {
             }
         }
         $fields['in_stock'] = $product->is_in_stock();
+        foreach ( $product->get_attributes() as $attribute ) {
+            if ( ! is_object( $attribute ) || ! is_callable( array( $attribute, 'get_name' ) ) ) { continue; }
+            $name = $attribute->get_name();
+            $value = trim( wp_strip_all_tags( (string) $product->get_attribute( $name ) ) );
+            $key = sanitize_title( preg_replace( '/^pa_/', '', $name ) );
+            if ( $value && $key && ! isset( $fields['features'][ $key ] ) ) {
+                $fields['features'][ $key ] = array( 'label' => wc_attribute_label( $name ), 'value' => $value );
+            }
+        }
     } else { $fields['in_stock'] = false; }
+    $shape = deprat_product_shape( $id, $data );
+    if ( $shape ) {
+        $fields['shape'] = deprat_product_shape_choices()[ $shape ];
+        $fields['features']['forme'] = array( 'label' => 'Forme', 'value' => $fields['shape'] );
+    }
     $fields['has3d'] = (bool) deprat_product_3d_model( $id );
     return $fields;
 }
@@ -159,6 +180,51 @@ function deprat_catalog_number_mm( $value, $label = '' ) {
     $unit = isset( $matches[2] ) ? strtolower( $matches[2] ) : '';
     if ( 'm' === $unit || ( ! $unit && 'longueur-m' === $label ) ) { $number *= 1000; }
     return $number > 0 && $number < 100000000 ? $number : 0;
+}
+
+
+/** Facettes construites à partir des seules données de la catégorie. */
+function deprat_catalog_feature_facets( $index ) {
+    $facets = array();
+    $exclude = array( 'matiere', 'materiau', 'matieres', 'forme', 'forme-du-produit',
+        'profil', 'type-de-tube', 'longueur', 'longueur-mm', 'longueur-m',
+        'diametre', 'diametre-mm', 'diametre-exterieur', 'epaisseur', 'epaisseur-mm' );
+    foreach ( $index as $spec ) {
+        if ( empty( $spec['features'] ) || ! is_array( $spec['features'] ) ) { continue; }
+        foreach ( $spec['features'] as $key => $feature ) {
+            $key = sanitize_title( $key );
+            $value = isset( $feature['value'] ) ? trim( (string) $feature['value'] ) : '';
+            $label = isset( $feature['label'] ) ? trim( (string) $feature['label'] ) : '';
+            // Ne jamais proposer du texte libre très long ou une liste multiligne comme filtre.
+            if ( ! $key || in_array( $key, $exclude, true ) || !$label || !$value ||
+                strlen( $label ) > 65 || strlen( $value ) > 70 ||
+                strpbrk( $value, "\r\n" ) !== false ) { continue; }
+            if ( ! isset( $facets[ $key ] ) ) {
+                $facets[ $key ] = array( 'label' => $label, 'options' => array() );
+            }
+            $facets[ $key ]['options'][ sanitize_title( $value ) ] = $value;
+        }
+    }
+    // Eviter une barre latérale interminable.
+    uasort( $facets, static function( $a, $b ) { return strcasecmp( $a['label'], $b['label'] ); } );
+    $facets = array_slice( $facets, 0, 12, true );
+    foreach ( $facets as &$facet ) { asort( $facet['options'] ); }
+    unset( $facet );
+    return $facets;
+}
+/** Les champs affichés sur une carte proviennent uniquement de la fiche réelle. */
+function deprat_catalog_card_features( $spec ) {
+    $result = array();
+    $excluded = array( 'matiere', 'materiau', 'matieres', 'forme', 'forme-du-produit', 'profil' );
+    foreach ( (array) $spec['features'] as $key => $feature ) {
+        if ( in_array( $key, $excluded, true ) || ! is_array( $feature ) ) { continue; }
+        $label = isset( $feature['label'] ) ? trim( (string) $feature['label'] ) : '';
+        $value = isset( $feature['value'] ) ? trim( (string) $feature['value'] ) : '';
+        if ( ! $label || ! $value ) { continue; }
+        $result[] = array( 'label' => $label, 'value' => $value );
+        if ( count( $result ) >= 4 ) { break; }
+    }
+    return $result;
 }
 
 /** Facettes et filtrage issus des vrais produits de la catégorie courante. */
@@ -205,6 +271,15 @@ function deprat_catalog_filters() {
             $result[$field] = ( preg_match( '/^\\d{1,7}(?:[,.]\\d{1,2})?$/', $v ) ) ? (float) str_replace( ',', '.', $v ) : 0;
         } else { $result[$field] = sanitize_title( $v ); }
     }
+    $result['features'] = array();
+    if ( isset( $_GET['deprat_feature'] ) && is_array( $_GET['deprat_feature'] ) ) {
+        foreach ( array_slice( wp_unslash( $_GET['deprat_feature'] ), 0, 12, true ) as $key => $value ) {
+            if ( ! is_string( $key ) || ! is_scalar( $value ) ) { continue; }
+            $key = sanitize_title( $key );
+            $value = sanitize_title( (string) $value );
+            if ( $key && $value && strlen( $value ) <= 80 ) { $result['features'][ $key ] = $value; }
+        }
+    }
     return $result;
 }
 function deprat_catalog_matches( $spec, $filters ) {
@@ -216,6 +291,10 @@ function deprat_catalog_matches( $spec, $filters ) {
     }
     if ( $filters['stock'] && ! $spec['in_stock'] ) { return false; }
     if ( $filters['view3d'] && ! $spec['has3d'] ) { return false; }
+    foreach ( $filters['features'] as $key => $selected ) {
+        if ( ! isset( $spec['features'][ $key ]['value'] )
+            || sanitize_title( $spec['features'][ $key ]['value'] ) !== $selected ) { return false; }
+    }
     return true;
 }
 function deprat_catalog_query( $term, $index, $filters ) {
@@ -298,6 +377,14 @@ function deprat_catalog_render_card( $product ) {
                     data-model-name="<?php echo esc_attr( $product->get_name() ); ?>"
                     aria-label="<?php echo esc_attr( 'Voir ' . $product->get_name() . ' en 3D' ); ?>">⟳ Vue 360°</button>
             <?php endif; ?>
+            <?php
+            $shape = deprat_product_shape( $id, $data );
+            if ( $shape ) : ?>
+                <span class="deprat-catalog-shape-badge" title="<?php echo esc_attr( 'Forme : ' . deprat_product_shape_choices()[ $shape ] ); ?>">
+                    <?php echo deprat_product_shape_icon( $shape ); ?>
+                    <span><?php echo esc_html( deprat_product_shape_choices()[ $shape ] ); ?></span>
+                </span>
+            <?php endif; ?>
         </div>
         <div class="deprat-catalog-card-info">
             <?php if ( $product->get_sku() ) : ?>
@@ -308,6 +395,15 @@ function deprat_catalog_render_card( $product ) {
                 <p class="deprat-catalog-matter"><span aria-hidden="true">▱</span>
                     <strong>Matière :</strong> <?php echo esc_html( $spec['material'] ); ?></p>
             <?php endif; ?>
+            <?php $card_features = deprat_catalog_card_features( $spec ); ?>
+            <?php if ( $spec['shape'] || $card_features ) : ?>
+                <dl class="deprat-catalog-spec-list" aria-label="Caractéristiques techniques principales">
+                    <?php if ( $spec['shape'] ) : ?><div><dt>Forme</dt><dd><?php echo esc_html( $spec['shape'] ); ?></dd></div><?php endif; ?>
+                    <?php foreach ( $card_features as $feature ) : ?>
+                        <div><dt><?php echo esc_html( $feature['label'] ); ?></dt><dd><?php echo esc_html( wp_html_excerpt( $feature['value'], 90, '…' ) ); ?></dd></div>
+                    <?php endforeach; ?>
+                </dl>
+            <?php endif; ?>
             <?php if ( $excerpt ) : ?><p class="deprat-catalog-excerpt"><?php echo esc_html( $excerpt ); ?></p><?php endif; ?>
             <a class="deprat-catalog-readmore" href="<?php echo esc_url( $url ); ?>">Lire la suite <span aria-hidden="true">→</span></a>
         </div>
@@ -316,8 +412,8 @@ function deprat_catalog_render_card( $product ) {
                 <form class="deprat-catalog-add" data-catalog-add>
                     <input type="hidden" name="product_id" value="<?php echo esc_attr( $id ); ?>">
                     <?php if ( count( $packages ) > 1 || $allow_unitary ) : ?>
-                        <label class="deprat-catalog-package-label">
-                            <span>Conditionnement</span>
+                        <label class="deprat-catalog-package-label deprat-catalog-package-selectable">
+                            <span>Conditionnement <small>— choisissez une option ↓</small></span>
                             <select name="deprat_package_choice" aria-label="Choisir un conditionnement">
                                 <?php foreach ( $packages as $index => $package ) : ?>
                                     <option value="<?php echo esc_attr( $index ); ?>">
@@ -329,7 +425,10 @@ function deprat_catalog_render_card( $product ) {
                         </label>
                     <?php else : ?>
                         <input type="hidden" name="deprat_package_choice" value="0">
-                        <p class="deprat-catalog-package-summary"><?php echo esc_html( deprat_packaging_label( $packages[0] ) ); ?></p>
+                        <div class="deprat-catalog-package-fixed">
+                            <span>Conditionnement standard</span>
+                            <p class="deprat-catalog-package-summary"><?php echo esc_html( deprat_packaging_label( $packages[0] ) ); ?></p>
+                        </div>
                     <?php endif; ?>
                     <p class="deprat-catalog-unitary-warning" data-unitary-warning hidden>
                         <?php echo esc_html( deprat_packaging_surcharge_warning() ); ?>
@@ -432,11 +531,11 @@ add_filter( 'walker_nav_menu_start_el', 'deprat_catalog_mega_menu', 20, 4 );
 function deprat_catalog_mega_assets() {
     wp_enqueue_style( 'deprat-catalog-mega-menu',
         plugins_url( 'assets/css/catalogue-mega-menu.css', dirname( __DIR__ ) . '/deprat-core.php' ),
-        array(), '0.1.28'
+        array(), '0.1.29'
     );
     wp_enqueue_script( 'deprat-catalog-mega-menu',
         plugins_url( 'assets/js/catalogue-mega-menu.js', dirname( __DIR__ ) . '/deprat-core.php' ),
-        array(), '0.1.28', true
+        array(), '0.1.29', true
     );
 }
 add_action( 'wp_enqueue_scripts', 'deprat_catalog_mega_assets', 20 );

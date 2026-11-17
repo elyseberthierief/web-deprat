@@ -17,6 +17,7 @@ jobs:
         run: |
           php -l deprat-core/deprat-core.php
           php -l deprat-core/includes/product-technical-data.php
+          php -l deprat-core/includes/product-shape.php
           php -l deprat-core/includes/product-single-layout.php
           php -l deprat-core/includes/product-3d.php
           php -l deprat-core/includes/product-client-layout.php
