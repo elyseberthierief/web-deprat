@@ -517,9 +517,10 @@ deprat_integration_assert( false !== strpos( $card_html, 'data-catalog-add' )
     'La carte Embouts doit offrir l’ajout rapide, la référence et ne pas inventer une vue 3D.' );
 
 deprat_integration_assert( false !== strpos( $tube_card_html, 'data-product-url=' )
-    && false !== strpos( $tube_card_html, 'data-multiple-packages="true"' )
+    && false !== strpos( $tube_card_html, 'data-multiple-packages="false"' )
+    && false !== strpos( $tube_card_html, 'name="deprat_package_choice" value="0"' )
     && false !== strpos( $tube_card_html, 'data-package-options=' ),
-    'Le tube de test doit ouvrir une fenêtre de choix et toute la carte doit mener au détail.' );
+    'Un tube à conditionnement unique se sélectionne automatiquement et toute la carte ouvre le détail.' );
 deprat_integration_assert( false === strpos( $tube_card_html, 'deprat-catalog-package-selectable' )
     && false === strpos( $tube_card_html, 'deprat-catalog-package-fixed' )
     && false !== strpos( $tube_card_html, 'class="deprat-catalog-action-row"' ),
