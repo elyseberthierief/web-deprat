@@ -90,8 +90,8 @@ add_action( 'admin_menu', static function () {
 
 function deprat_category_tree_admin_assets( $hook ) {
     if ( 'product_page_deprat-categories-tree' !== $hook ) { return; }
-    wp_enqueue_style( 'deprat-category-tree', plugins_url( 'assets/css/category-tree-admin.css', dirname( __DIR__ ) . '/deprat-core.php' ), array(), '0.1.31' );
-    wp_enqueue_script( 'deprat-category-tree', plugins_url( 'assets/js/category-tree-admin.js', dirname( __DIR__ ) . '/deprat-core.php' ), array( 'jquery', 'jquery-ui-sortable' ), '0.1.31', true );
+    wp_enqueue_style( 'deprat-category-tree', plugins_url( 'assets/css/category-tree-admin.css', dirname( __DIR__ ) . '/deprat-core.php' ), array(), '0.1.32' );
+    wp_enqueue_script( 'deprat-category-tree', plugins_url( 'assets/js/category-tree-admin.js', dirname( __DIR__ ) . '/deprat-core.php' ), array( 'jquery', 'jquery-ui-sortable' ), '0.1.32', true );
     wp_localize_script( 'deprat-category-tree', 'depratCategoryTree', array(
         'ajaxUrl' => admin_url( 'admin-ajax.php' ),
         'nonce' => wp_create_nonce( 'deprat_categories_tree' ),
@@ -126,6 +126,8 @@ function deprat_category_tree_render_item( $term, $terms, $depth = 0 ) {
                 <span class="deprat-tree-meta"><?php echo esc_html( (int) $term->count . ' produit(s)' ); ?></span>
             </div>
             <div class="deprat-tree-actions">
+                <button type="button" class="button" data-tree-up title="Monter dans cette liste" aria-label="<?php echo esc_attr( 'Monter ' . $term->name ); ?>">↑</button>
+                <button type="button" class="button" data-tree-down title="Descendre dans cette liste" aria-label="<?php echo esc_attr( 'Descendre ' . $term->name ); ?>">↓</button>
                 <button type="button" class="button" data-tree-indent title="Ranger dans la catégorie précédente" aria-label="Augmenter le niveau">↳</button>
                 <button type="button" class="button" data-tree-outdent title="Remonter d'un niveau" aria-label="Diminuer le niveau">↰</button>
                 <button type="button" class="button" data-tree-add-child>+ Sous-catégorie</button>
@@ -157,7 +159,7 @@ function deprat_category_tree_admin_page() {
         <div class="deprat-tree-instructions">
             <strong>Comment organiser ?</strong> Faites glisser une catégorie avec la poignée <strong>⠿</strong>
             pour changer l’ordre ou déposez-la dans la zone pointillée sous une autre pour en faire une sous-catégorie.
-            Les flèches <strong>↳</strong> et <strong>↰</strong> permettent aussi d’imbriquer ou de remonter une catégorie.
+            Utilisez <strong>↑ / ↓</strong> pour changer l’ordre sans glisser et les flèches <strong>↳ / ↰</strong> pour modifier le niveau.
             <strong>Enregistrez</strong> lorsque le plan vous convient.
         </div>
         <div class="deprat-tree-toolbar">
