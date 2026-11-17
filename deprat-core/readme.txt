@@ -1,4 +1,4 @@
-DEPRAT Core 0.1.36
+DEPRAT Core 0.1.39
 
 Le plugin reprend les extraits PHP actifs dans la sauvegarde du 14 novembre 2026.
 Extraits globaux : 5 à 11 et 15.
