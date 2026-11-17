@@ -6,7 +6,7 @@
  */
 defined( 'ABSPATH' ) || exit;
 
-function deprat_catalog_section_definitions() {
+function deprat_catalog_section_defaults() {
     return array(
         'tubes'     => 'Tubes acier & accessoires',
         'liaison'   => 'Liaison tube-tablier',
@@ -19,6 +19,79 @@ function deprat_catalog_section_definitions() {
         'garage'    => 'Portes de garage',
         'autres'    => 'Autres composants',
     );
+}
+/** Palette fermée de pictogrammes internes (SVG statiques, aucun SVG utilisateur). */
+function deprat_catalog_section_palette() {
+    return array(
+        'tubes' => 'Tube',
+        'liaison' => 'Liaison',
+        'treuil' => 'Treuil',
+        'sangle' => 'Sangle',
+        'tirage' => 'Ressort',
+        'coulisses' => 'Lames',
+        'bras' => 'Bras',
+        'jalousie' => 'Persienne',
+        'garage' => 'Porte',
+        'autres' => 'Composants',
+    );
+}
+function deprat_catalog_section_media_allowed( $media_id ) {
+    return $media_id > 0
+        && 'attachment' === get_post_type( $media_id )
+        && in_array( get_post_mime_type( $media_id ), array( 'image/png', 'image/jpeg', 'image/webp' ), true );
+}
+/**
+ * Les clés historiques restent stables : les catégories déjà rattachées
+ * ne changent jamais de rubrique lors d'un renommage ou d'un déplacement.
+ */
+function deprat_catalog_section_registry() {
+    $defaults = deprat_catalog_section_defaults();
+    $saved = get_option( 'deprat_catalog_section_settings_v1', array() );
+    if ( ! is_array( $saved ) ) { $saved = array(); }
+    $registry = array();
+    $palette = deprat_catalog_section_palette();
+    foreach ( $saved as $key => $entry ) {
+        if ( ! is_string( $key ) || ! is_array( $entry )
+            || ( ! isset( $defaults[ $key ] ) && ! preg_match( '/\\Acustom_[a-f0-9]{12}\\z/D', $key ) ) ) { continue; }
+        $title = isset( $entry['title'] ) && is_string( $entry['title'] )
+            ? trim( sanitize_text_field( $entry['title'] ) ) : '';
+        if ( '' === $title || strlen( $title ) > 180 ) { continue; }
+        $icon = isset( $entry['icon'] ) && isset( $palette[ $entry['icon'] ] )
+            ? $entry['icon'] : 'autres';
+        $media_id = isset( $entry['media_id'] ) ? absint( $entry['media_id'] ) : 0;
+        $registry[ $key ] = array(
+            'title' => $title,
+            'icon' => $icon,
+            'media_id' => deprat_catalog_section_media_allowed( $media_id ) ? $media_id : 0,
+        );
+        if ( count( $registry ) >= 40 ) { break; }
+    }
+    foreach ( $defaults as $key => $title ) {
+        if ( ! isset( $registry[ $key ] ) ) {
+            $registry[ $key ] = array( 'title' => $title, 'icon' => $key, 'media_id' => 0 );
+        }
+    }
+    return $registry;
+}
+function deprat_catalog_section_definitions() {
+    $result = array();
+    foreach ( deprat_catalog_section_registry() as $key => $row ) { $result[ $key ] = $row['title']; }
+    return $result;
+}
+/** Valider exhaustivement l'ordre demandé avant toute écriture. */
+function deprat_catalog_section_validate_order( $keys, $registry = null ) {
+    if ( null === $registry ) { $registry = deprat_catalog_section_registry(); }
+    if ( ! is_array( $keys ) || count( $keys ) !== count( $registry ) ) {
+        return new WP_Error( 'invalid_section_order', 'Liste des rubriques incomplète.' );
+    }
+    $ordered = array();
+    foreach ( $keys as $key ) {
+        if ( ! is_string( $key ) || ! isset( $registry[ $key ] ) || isset( $ordered[ $key ] ) ) {
+            return new WP_Error( 'invalid_section_order', 'Rubrique inconnue ou dupliquée.' );
+        }
+        $ordered[ $key ] = $registry[ $key ];
+    }
+    return $ordered;
 }
 
 /** Affectation automatique initiale ; l'ADV peut la remplacer par catégorie. */
@@ -61,9 +134,9 @@ function deprat_catalog_grouped_roots() {
     return array_filter( $groups, static function ( $terms ) { return ! empty( $terms ); } );
 }
 
-/** Icônes de section : tracés intégrés, pas d'images ni d'assets externes. */
-function deprat_catalog_section_icon( $key ) {
-    $paths = array(
+/** Tracés internes ; les images de médiathèque sont des fichiers raster vérifiés. */
+function deprat_catalog_section_icon_paths() {
+    return array(
         'tubes'     => '<ellipse cx="7" cy="16" rx="3" ry="4" transform="rotate(-42 7 16)"/><path d="M5 12.5 17.5 3a3.5 3.5 0 0 1 4.5 5.4L9.5 20"/>',
         'liaison'   => '<path d="m10 13 4-4"/><path d="M8.1 16.2 5.9 18.4a4 4 0 0 1-5.7-5.7l4.6-4.6a4 4 0 0 1 5.7 0"/><path d="m15.9 7.8 2.2-2.2a4 4 0 0 1 5.7 5.7l-4.6 4.6a4 4 0 0 1-5.7 0"/>',
         'treuil'    => '<rect x="2" y="17" width="6" height="3" rx="1"/><rect x="16" y="4" width="6" height="4" rx="1"/><path d="M8 18h5v-12h3M12.5 18v2"/>',
@@ -75,8 +148,20 @@ function deprat_catalog_section_icon( $key ) {
         'garage'    => '<path d="M2 8V4h20v4M4 8v13h16V8zM4 12h16M4 16h16M4 20h16"/>',
         'autres'    => '<path d="m3 7 9-4 9 4-9 4zM3 7v10l9 4 9-4V7M12 11v10"/>',
     );
-    $body = isset( $paths[ $key ] ) ? $paths[ $key ] : $paths['autres'];
-    return '<svg class="deprat-section-icon" aria-hidden="true" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round">' . $body . '</svg>';
+}
+function deprat_catalog_section_icon( $key ) {
+    $registry = deprat_catalog_section_registry();
+    $row = isset( $registry[ $key ] ) ? $registry[ $key ] : array( 'icon' => 'autres', 'media_id' => 0 );
+    if ( $row['media_id'] && deprat_catalog_section_media_allowed( (int) $row['media_id'] ) ) {
+        $image = wp_get_attachment_image( (int) $row['media_id'], 'thumbnail', false, array(
+            'class' => 'deprat-section-icon deprat-section-icon-image',
+            'alt' => '', 'aria-hidden' => 'true', 'loading' => 'lazy',
+        ) );
+        if ( $image ) { return $image; }
+    }
+    $paths = deprat_catalog_section_icon_paths();
+    $icon = isset( $paths[ $row['icon'] ] ) ? $row['icon'] : 'autres';
+    return '<svg class="deprat-section-icon" aria-hidden="true" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round">' . $paths[ $icon ] . '</svg>';
 }
 
 /**
