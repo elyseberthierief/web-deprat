@@ -295,6 +295,16 @@ const assert = require( 'assert' );
         assert( await page.locator( '.deprat-mega-parent .deprat-mega-panel' ).count() > 0, 'Le menu principal Astra doit ouvrir le méga-menu des catégories.' );
         assert( ( await page.locator( '.deprat-mega-panel' ).first().textContent() ).includes( 'Embouts' ), 'Les sous-pages de catégorie apparaissent dans le méga-menu.' );
         assert( ( await page.locator( '.deprat-mega-parent' ).first().textContent() ).includes( 'Pièces détachées' ), 'Le menu Boutique est renommé Pièces détachées.' );
+        await page.locator( '.deprat-mega-parent' ).first().hover();
+        const megaPanel = page.locator( '.deprat-mega-panel' ).first();
+        await megaPanel.waitFor( { state: 'visible' } );
+        const megaRect = await megaPanel.boundingBox();
+        const viewportWidth = page.viewportSize().width;
+        assert( megaRect.x >= 0 && megaRect.x + megaRect.width <= viewportWidth + 2,
+            'Le méga-menu doit rester entièrement visible même depuis un lien à droite de l’en-tête.' );
+        assert( await megaPanel.locator( '.deprat-mega-family' ).count() >= 2, 'Les familles Tubes et Embouts figurent dans le méga-menu.' );
+        await page.screenshot( { path: process.env.RUNNER_TEMP + '/deprat-mega-menu.png', fullPage: false } );
+
         assert( ( await page.locator( '.deprat-catalog-header h1' ).textContent() ).includes( 'Tubes' ), 'La page Tubes a son propre titre.' );
         assert( await page.locator( '.deprat-catalog-filter-form' ).isVisible(), 'La page Tubes affiche ses filtres.' );
         assert.strictEqual( await page.locator( '[data-catalog-card]' ).count(), 1, 'La page Tubes contient uniquement le tube.' );
