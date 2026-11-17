@@ -410,6 +410,7 @@ function deprat_product_tech_save( $post_id ) {
         'package_count' => $count,
         'description' => deprat_product_tech_text( isset( $input['description'] ) ? $input['description'] : '', true ),
         'features' => deprat_product_tech_pairs( isset( $input['features'] ) ? $input['features'] : array() ),
+        'shape' => deprat_product_shape_normalize( isset( $input['shape'] ) ? $input['shape'] : '' ),
         'norms' => $norms,
         'tests' => deprat_product_tech_pairs( isset( $input['tests'] ) ? $input['tests'] : array() ),
         'delivery' => deprat_product_tech_text( isset( $input['delivery'] ) ? $input['delivery'] : '' ),
@@ -445,8 +446,8 @@ function deprat_product_tech_admin_assets( $hook ) {
     $current_product_id = isset( $_GET['post'] ) ? absint( $_GET['post'] )
         : ( isset( $post->ID ) ? (int) $post->ID : 0 );
     wp_enqueue_media();
-    wp_enqueue_style( 'deprat-product-tech-admin', plugins_url( 'assets/css/product-technical-admin.css', dirname( __DIR__ ) . '/deprat-core.php' ), array(), '0.1.25' );
-    wp_enqueue_script( 'deprat-product-tech-admin', plugins_url( 'assets/js/product-technical-admin.js', dirname( __DIR__ ) . '/deprat-core.php' ), array( 'jquery', 'media-views' ), '0.1.25', true );
+    wp_enqueue_style( 'deprat-product-tech-admin', plugins_url( 'assets/css/product-technical-admin.css', dirname( __DIR__ ) . '/deprat-core.php' ), array(), '0.1.29' );
+    wp_enqueue_script( 'deprat-product-tech-admin', plugins_url( 'assets/js/product-technical-admin.js', dirname( __DIR__ ) . '/deprat-core.php' ), array( 'jquery', 'media-views' ), '0.1.29', true );
     wp_localize_script( 'deprat-product-tech-admin', 'depratProductEditor', array(
         'ajaxUrl' => admin_url( 'admin-ajax.php' ),
         'categoryNonce' => wp_create_nonce( 'deprat_create_product_category' ),
@@ -484,6 +485,14 @@ function deprat_product_tech_render_front() {
     }
     $data = deprat_product_tech_data( $product->get_id() );
     $features = deprat_product_tech_display_pairs( isset( $data['features'] ) ? $data['features'] : array() );
+    $shape = deprat_product_shape( $product->get_id(), $data );
+    if ( $shape ) {
+        $has_shape = false;
+        foreach ( $features as $feature ) {
+            if ( in_array( sanitize_title( $feature['label'] ), array( 'forme', 'profil', 'forme-du-produit', 'section' ), true ) ) { $has_shape = true; break; }
+        }
+        if ( ! $has_shape ) { array_unshift( $features, array( 'label' => 'Forme', 'value' => deprat_product_shape_choices()[ $shape ] ) ); }
+    }
     $tests = deprat_product_tech_display_pairs( isset( $data['tests'] ) ? $data['tests'] : array() );
     $norms = isset( $data['norms'] ) && is_array( $data['norms'] ) ? array_filter( $data['norms'], static function ( $norm ) {
         return is_scalar( $norm ) && '' !== trim( (string) $norm );
