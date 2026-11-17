@@ -516,4 +516,34 @@ deprat_integration_assert( false !== strpos( $card_html, 'data-catalog-add' )
     && false !== strpos( $card_html, 'deprat-catalog-ref' ),
     'La carte Embouts doit offrir l’ajout rapide, la référence et ne pas inventer une vue 3D.' );
 
+deprat_integration_assert( false !== strpos( $tube_card_html, 'data-product-url=' )
+    && false !== strpos( $tube_card_html, 'data-multiple-packages="true"' )
+    && false !== strpos( $tube_card_html, 'data-package-options=' ),
+    'Le tube de test doit ouvrir une fenêtre de choix et toute la carte doit mener au détail.' );
+deprat_integration_assert( false === strpos( $tube_card_html, 'deprat-catalog-package-selectable' )
+    && false === strpos( $tube_card_html, 'deprat-catalog-package-fixed' )
+    && false !== strpos( $tube_card_html, 'class="deprat-catalog-action-row"' ),
+    'Aucun sélecteur ou bloc fixe de conditionnement ne doit allonger la carte.' );
+deprat_integration_assert( false !== strpos( $card_html, 'data-multiple-packages="true"' )
+    && false === strpos( $card_html, 'deprat-catalog-package-label' ),
+    'Une pièce proposant standard et unité doit ouvrir la popup, sans menu permanent.' );
+ob_start();
+deprat_catalog_render_card( wc_get_product( $priced_id ) );
+$unit_only_card = ob_get_clean();
+deprat_integration_assert( false !== strpos( $unit_only_card, 'data-multiple-packages="false"' )
+    && false !== strpos( $unit_only_card, 'name="deprat_package_choice" value="unitary"' )
+    && false === strpos( $unit_only_card, 'deprat-catalog-package-fixed' ),
+    'Une seule option unitaire doit être sélectionnée automatiquement, sans popup.' );
+// Une vraie sous-catégorie attribuée, jamais le nom de la famille racine.
+$child_category = wp_insert_term( 'Embouts de sécurité', 'product_cat', array( 'parent' => (int) $end_category['term_id'] ) );
+deprat_integration_assert( ! is_wp_error( $child_category ), 'Création d’une sous-catégorie de test impossible.' );
+wp_set_object_terms( $piece_id, array( (int) $end_category['term_id'], (int) $child_category['term_id'] ), 'product_cat' );
+ob_start();
+deprat_catalog_render_card( wc_get_product( $piece_id ) );
+$subcat_card_html = ob_get_clean();
+deprat_integration_assert( false !== strpos( $subcat_card_html, 'deprat-catalog-subcategories' )
+    && false !== strpos( $subcat_card_html, 'Embouts de sécurité</a>' )
+    && false === strpos( $subcat_card_html, '>Embouts</a>' ),
+    'La carte affiche une véritable sous-catégorie sans répéter la famille racine.' );
+
 WP_CLI::success( 'WordPress et WooCommerce : sauvegarde, médias et affichages vérifiés.' );
