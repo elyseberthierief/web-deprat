@@ -80,6 +80,10 @@ function deprat_catalog_private_menu_items( $items ) {
     $page = get_page_by_path( 'mes-demandes-devis', OBJECT, 'page' );
     return array_values( array_filter( $items, static function( $item ) use ( $page ) {
         if ( $page && 'post_type' === $item->type && (int) $item->object_id === (int) $page->ID ) { return false; }
+        // Les liens du bandeau portant « Mes demandes » ne doivent pas
+        // apparaître avant la connexion, même s'ils renvoient vers le panier.
+        $title = function_exists( 'remove_accents' ) ? remove_accents( wp_strip_all_tags( $item->title ) ) : wp_strip_all_tags( $item->title );
+        if ( preg_match( '/^\\s*(?:mes demandes|ma demande|mes devis)(?:\\b|\\s|$)/i', $title ) ) { return false; }
         $path = (string) wp_parse_url( $item->url, PHP_URL_PATH );
         return ! preg_match( '~/(?:mes-demandes-devis|mes-demandes)/?$~i', rtrim( $path, '/' ) . '/' );
     } ) );
