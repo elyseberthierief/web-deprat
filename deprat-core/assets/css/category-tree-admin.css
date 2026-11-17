@@ -488,3 +488,23 @@ body.deprat-tree-modal-open{overflow:hidden}
     width:100%;
  }
 }
+
+/* 0.1.40 — Le crayon doit rester cliquable, même quand les commandes ↑/↓
+   apparaissent sur une ligne de catégorie étroite. */
+.deprat-tree-admin .deprat-preview-item > .deprat-section-term-row > .deprat-preview-edit{
+    display:grid!important;place-items:center;position:relative;
+    flex:0 0 26px;width:26px;min-width:26px;max-width:26px;
+    margin:0;z-index:5;isolation:isolate;
+}
+.deprat-tree-admin .deprat-preview-item > .deprat-section-term-row > .deprat-section-toggle{
+    flex:0 0 24px!important;width:24px!important;min-width:24px!important;z-index:1;
+}
+.deprat-tree-admin .deprat-preview-item > .deprat-section-term-row > .deprat-section-term-link{
+    min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+@media(max-width:720px){
+    .deprat-tree-admin .deprat-preview-item > .deprat-section-term-row > .deprat-preview-actions{
+        order:4;flex:1 0 100%;max-width:100%;opacity:1;justify-content:flex-end;
+        overflow:visible;
+    }
+}
