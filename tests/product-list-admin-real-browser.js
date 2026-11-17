@@ -19,6 +19,9 @@ const assert = require( 'assert' );
 
         const listing = base + '/wp-admin/edit.php?post_type=product';
         await page.goto( listing, { waitUntil: 'domcontentloaded' } );
+        // Une propriété de window disparaîtrait si la navigation rechargeait
+        // tout WordPress. Elle doit survivre aux clics de tous les niveaux.
+        await page.evaluate( () => { window.__depratDocumentMarker = 'same-document'; } );
         await page.waitForSelector( 'body.deprat-product-list-active [data-deprat-products-ui]' );
 
         const ui = page.locator( '[data-deprat-products-ui]' );
@@ -102,6 +105,9 @@ const assert = require( 'assert' );
         // Première ligne : filtrer par section et conserver toutes les sections.
         await ui.locator( '.deprat-products-sections a', { hasText: 'Tubes acier & accessoires' } ).click();
         await page.waitForURL( /deprat_section=tubes/ );
+        assert.strictEqual( await page.evaluate( () => window.__depratDocumentMarker ), 'same-document',
+            'Le clic sur une section ne doit pas recharger le document WordPress.' );
+
         assert( await ui.locator( '.deprat-products-sections a' ).count() >= 10,
             'La barre de sections reste visible après choix d’une section.' );
         assert( await ui.locator( '.deprat-products-level-title', { hasText: 'Catégories' } ).isVisible(),
@@ -121,6 +127,8 @@ const assert = require( 'assert' );
         // Deuxième ligne : catégorie Tubes ; troisième ligne : niveaux inférieurs.
         await ui.locator( '.deprat-products-categories a', { hasText: 'Tubes' } ).click();
         await page.waitForURL( /deprat_cat=\d+/ );
+        assert.strictEqual( await page.evaluate( () => window.__depratDocumentMarker ), 'same-document',
+            'La catégorie charge uniquement les onglets et la table, sans rechargement.' );
         assert( await ui.locator( '.deprat-products-breadcrumb' ).isVisible() );
         assert( await ui.locator( '.deprat-products-level-title', { hasText: 'Sous-catégories' } ).isVisible(),
             'La troisième rangée dispose également de son titre.' );
@@ -136,6 +144,18 @@ const assert = require( 'assert' );
         await page.waitForURL( /deprat_cat=\d+/ );
         assert( ( await ui.locator( '.deprat-products-breadcrumb' ).textContent() ).includes( 'Tubes de test' ),
             'La navigation descend dans la hiérarchie sans masquer les sections.' );
+        assert.strictEqual( await page.evaluate( () => window.__depratDocumentMarker ), 'same-document',
+            'La sous-catégorie change le contenu sans charger une nouvelle page.' );
+        const selectedPath = page.url();
+        await page.goBack( { waitUntil: 'commit' } ).catch( () => {} );
+        await page.waitForFunction( () => !location.search.includes( 'Tubes de test' ) );
+        assert.strictEqual( await page.evaluate( () => window.__depratDocumentMarker ), 'same-document',
+            'Retour conserve le même document.' );
+        await page.goForward( { waitUntil: 'commit' } ).catch( () => {} );
+        await page.waitForURL( selectedPath );
+        assert( ( await ui.locator( '.deprat-products-breadcrumb' ).textContent() ).includes( 'Tubes de test' ),
+            'Suivant restaure la sélection et ses sous-catégories.' );
+
         assert( await ui.locator( '.deprat-products-sections a' ).count() >= 10 );
 
         // Filtrer instantanément les seules lignes actuellement paginées.
