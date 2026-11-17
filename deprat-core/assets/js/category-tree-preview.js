@@ -80,7 +80,8 @@
             }
             var edit = makeControl( '✎', 'data-preview-edit-category', 'Modifier la catégorie ' + name );
             edit.className = 'deprat-preview-edit';
-            actions.appendChild( edit );
+            // Toujours visible à droite de la ligne ; les options de tri
+            // restent séparées pour ne jamais masquer le crayon.
 
             var children = directItems( sourceChildList( real ), '[data-tree-item]' );
             var toggle = makeControl( '⌄', 'data-preview-toggle', 'Déplier les sous-catégories de ' + name );
@@ -98,7 +99,7 @@
                 sublist.appendChild( buildItem( item, depth + 1 ) );
             } );
             nested.appendChild( sublist );
-            row.append( drag, label, actions, toggle );
+            row.append( drag, label, actions, edit, toggle );
             li.append( row, nested );
             li.classList.toggle( 'has-children', children.length > 0 );
             return li;
