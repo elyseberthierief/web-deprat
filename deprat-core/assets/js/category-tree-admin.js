@@ -379,6 +379,160 @@
                     formError.hidden = false;
                 } ).finally( function () { creating = false; submit.disabled = false; } );
         } );
+        // Éditeur des sections visuelles (indépendant de product_cat).
+        var sectionOverlay = app.querySelector( '[data-section-editor-overlay]' );
+        var sectionForm = app.querySelector( '[data-section-editor-form]' );
+        var sectionName = app.querySelector( '[data-section-editor-name]' );
+        var sectionKey = app.querySelector( '[data-section-editor-key]' );
+        var sectionError = app.querySelector( '[data-section-editor-error]' );
+        var sectionMediaPreview = app.querySelector( '[data-section-media-preview]' );
+        var sectionMediaClear = app.querySelector( '[data-section-media-clear]' );
+        var sectionMediaId = 0;
+        var sectionBusy = false;
+        var sectionRestoreFocus = null;
+        function renderSectionMedia() {
+            if ( sectionMediaPreview ) {
+                sectionMediaPreview.textContent = sectionMediaId ? 'Image sélectionnée (n° ' + sectionMediaId + ')' : '';
+            }
+            if ( sectionMediaClear ) { sectionMediaClear.hidden = !sectionMediaId; }
+        }
+        function closeSectionEditor() {
+            if ( sectionBusy || !sectionOverlay ) { return; }
+            sectionOverlay.hidden = true;
+            document.body.classList.remove( 'deprat-tree-modal-open' );
+            sectionError.hidden = true;
+            if ( sectionRestoreFocus && sectionRestoreFocus.isConnected ) { sectionRestoreFocus.focus(); }
+        }
+        function openSectionEditor( key, trigger ) {
+            if ( !sectionOverlay ) { return; }
+            var values = config.sectionSettings && config.sectionSettings[ key ];
+            sectionRestoreFocus = trigger || document.activeElement;
+            sectionKey.value = key || '';
+            sectionName.value = values ? values.title : '';
+            sectionMediaId = values ? Number( values.media_id ) || 0 : 0;
+            var icon = values && config.sectionPalette[ values.icon ] ? values.icon : 'autres';
+            var radio = sectionForm.querySelector( 'input[name="deprat-section-icon"][value="' + icon + '"]' );
+            if ( radio ) { radio.checked = true; }
+            app.querySelector( '[data-section-editor-title]' ).textContent = key ? 'Modifier la section' : 'Ajouter une section';
+            sectionError.hidden = true;
+            sectionError.textContent = '';
+            renderSectionMedia();
+            sectionOverlay.hidden = false;
+            document.body.classList.add( 'deprat-tree-modal-open' );
+            sectionName.focus();
+        }
+        app.addEventListener( 'click', function ( event ) {
+            var add = event.target.closest( '[data-section-add]' );
+            var edit = event.target.closest( '[data-preview-edit-section]' );
+            if ( add ) { openSectionEditor( '', add ); }
+            else if ( edit ) {
+                var section = edit.closest( '[data-preview-section]' );
+                if ( section ) { openSectionEditor( section.getAttribute( 'data-preview-section' ), edit ); }
+            }
+        } );
+        if ( sectionOverlay ) {
+            sectionOverlay.addEventListener( 'click', function ( event ) {
+                if ( event.target === sectionOverlay || event.target.closest( '[data-section-editor-close]' ) ) {
+                    closeSectionEditor();
+                }
+            } );
+            sectionOverlay.addEventListener( 'keydown', function ( event ) {
+                if ( event.key === 'Escape' ) { event.preventDefault(); closeSectionEditor(); return; }
+                if ( event.key !== 'Tab' ) { return; }
+                var tabbable = Array.from( sectionForm.querySelectorAll( 'button, input:not([type="hidden"])' ) )
+                    .filter( function ( node ) { return !node.disabled && node.getClientRects().length; } );
+                if ( !tabbable.length ) { return; }
+                if ( event.shiftKey && document.activeElement === tabbable[ 0 ] ) {
+                    event.preventDefault(); tabbable[ tabbable.length - 1 ].focus();
+                } else if ( !event.shiftKey && document.activeElement === tabbable[ tabbable.length - 1 ] ) {
+                    event.preventDefault(); tabbable[ 0 ].focus();
+                }
+            } );
+            sectionForm.querySelectorAll( 'input[name="deprat-section-icon"]' ).forEach( function ( radio ) {
+                radio.addEventListener( 'change', function () {
+                    if ( radio.checked ) { sectionMediaId = 0; renderSectionMedia(); }
+                } );
+            } );
+            if ( sectionMediaClear ) {
+                sectionMediaClear.addEventListener( 'click', function () {
+                    sectionMediaId = 0;
+                    renderSectionMedia();
+                } );
+            }
+            var selectMedia = sectionForm.querySelector( '[data-section-media-pick]' );
+            if ( selectMedia ) {
+                selectMedia.addEventListener( 'click', function () {
+                    if ( !config.canUploadIcons || !window.wp || !window.wp.media ) { return; }
+                    var frame = window.wp.media( {
+                        title: 'Icône de section DEPRAT',
+                        button: { text: 'Utiliser cette image' },
+                        library: { type: 'image' },
+                        multiple: false
+                    } );
+                    frame.on( 'select', function () {
+                        var item = frame.state().get( 'selection' ).first();
+                        if ( !item ) { return; }
+                        var file = item.toJSON();
+                        if ( ![ 'image/png', 'image/jpeg', 'image/webp' ].includes( file.mime ) ) {
+                            sectionError.textContent = 'Choisissez une image PNG, JPG ou WebP (SVG non accepté).';
+                            sectionError.hidden = false;
+                            return;
+                        }
+                        sectionMediaId = Number( file.id ) || 0;
+                        renderSectionMedia();
+                    } );
+                    frame.open();
+                } );
+            }
+            sectionForm.addEventListener( 'submit', function ( event ) {
+                event.preventDefault();
+                if ( sectionBusy ) { return; }
+                var title = sectionName.value.trim();
+                var icon = sectionForm.querySelector( 'input[name="deprat-section-icon"]:checked' );
+                if ( !title || title.length > 90 || !icon ) {
+                    sectionError.textContent = 'Renseignez un nom (90 caractères maximum) et choisissez une icône.';
+                    sectionError.hidden = false;
+                    return;
+                }
+                sectionBusy = true;
+                var button = sectionForm.querySelector( '[data-section-editor-save]' );
+                button.disabled = true;
+                sectionError.hidden = true;
+                post( 'deprat_category_tree_section_upsert', {
+                    key: sectionKey.value,
+                    title: title,
+                    icon: icon.value,
+                    media_id: String( sectionMediaId )
+                } ).then( function ( response ) {
+                    config.sectionLabels[ response.key ] = response.title;
+                    if ( !config.sectionSettings ) { config.sectionSettings = {}; }
+                    config.sectionSettings[ response.key ] = {
+                        title: response.title, icon: response.icon, media_id: Number( response.media_id ) || 0
+                    };
+                    app.querySelectorAll( '[data-tree-section]' ).forEach( function ( select ) {
+                        var option = Array.from( select.options ).find( function ( item ) {
+                            return item.value === response.key;
+                        } );
+                        if ( !option ) {
+                            option = document.createElement( 'option' );
+                            option.value = response.key;
+                            select.appendChild( option );
+                        }
+                        option.textContent = response.title;
+                    } );
+                    app.dispatchEvent( new CustomEvent( 'deprat-tree-section-upsert', { detail: response } ) );
+                    sectionBusy = false;
+                    closeSectionEditor();
+                    message( 'Section enregistrée. Enregistrez le méga-menu pour conserver le nouvel ordre.', false );
+                } ).catch( function ( error ) {
+                    sectionError.textContent = error.message || 'Impossible d’enregistrer cette section.';
+                    sectionError.hidden = false;
+                } ).finally( function () {
+                    sectionBusy = false;
+                    button.disabled = false;
+                } );
+            } );
+        }
         function save() {
             if ( saving ) { return; }
             var tree = serialized( root );
@@ -390,7 +544,14 @@
             saving = true;
             saveButtons.forEach( function ( button ) { button.disabled = true; button.textContent = 'Enregistrement…'; } );
             message( 'Enregistrement de votre arborescence…', false );
-            post( 'deprat_category_tree_save', { tree: JSON.stringify( tree ), sections: JSON.stringify( sections ) } )
+            post( 'deprat_category_tree_save', {
+                tree: JSON.stringify( tree ),
+                sections: JSON.stringify( sections ),
+                section_order: JSON.stringify( Array.from( app.querySelectorAll(
+                    '[data-preview-grid] > [data-preview-section]' ) ).map( function ( item ) {
+                    return item.getAttribute( 'data-preview-section' );
+                } ) )
+            } )
                 .then( function ( response ) {
                     dirty = false;
                     dirtyLabel.hidden = true;
