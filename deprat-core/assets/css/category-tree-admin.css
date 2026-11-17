@@ -29,7 +29,7 @@
 .deprat-tree-actions{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
 .deprat-tree-actions .button{background:#fff;color:#205083;border:1px solid #c8d9eb;border-radius:6px;min-height:31px;line-height:29px;padding:0 10px;font-size:11px;font-weight:650}
 .deprat-tree-actions .button:is(:hover,:focus-visible){background:#123f80;color:#fff;border-color:#123f80}
-.deprat-tree-actions [data-tree-indent],.deprat-tree-actions [data-tree-outdent]{font-size:18px;min-width:34px;padding:0 4px}
+.deprat-tree-actions [data-tree-indent],.deprat-tree-actions [data-tree-outdent],.deprat-tree-actions [data-tree-up],.deprat-tree-actions [data-tree-down]{font-size:18px;min-width:34px;padding:0 4px}
 .deprat-tree-children{margin:7px 0 8px 32px;padding:4px 0 4px 23px;border-left:2px dashed #c6d8ee;min-height:29px;transition:background .15s}
 .deprat-tree-children::before{content:"Déposer ici pour créer une sous-catégorie";display:block;margin:0 0 4px 4px;padding:2px 8px;font-size:10px;line-height:1.4;color:#8da4c1;font-weight:500}
 .deprat-tree-children:has(>.deprat-tree-item)::before{display:none}
