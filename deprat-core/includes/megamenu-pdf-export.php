@@ -60,7 +60,17 @@ function deprat_megamenu_pdf_literal( $value ) {
 }
 function deprat_megamenu_pdf_wrap( $value, $width ) {
     $text = deprat_megamenu_pdf_cp1252( $value );
-    return explode( "\n", wordwrap( $text, max( 8, (int) $width ), "\n", true ) );
+    $lines = explode( "\n", wordwrap( $text, max( 8, (int) $width ), "\n", true ) );
+    // Les noms de catégories contiennent des accents : revenir en UTF-8
+    // avant de réutiliser la fonction de dessin, qui encode une seule fois.
+    if ( function_exists( 'iconv' ) ) {
+        foreach ( $lines as &$line ) {
+            $utf8 = @iconv( 'Windows-1252', 'UTF-8//IGNORE', $line );
+            if ( false !== $utf8 ) { $line = $utf8; }
+        }
+        unset( $line );
+    }
+    return $lines;
 }
 function deprat_megamenu_pdf_rgb( $hex ) {
     $hex = ltrim( $hex, '#' );
@@ -165,11 +175,11 @@ function deprat_megamenu_pdf_page_header( $page, $total, $date ) {
     $out .= deprat_megamenu_pdf_rect( 0, $h - 8, $w, 8, 'CA951F' );
     $out .= deprat_megamenu_pdf_text( 'CATALOGUE DEPRAT', 38, 801, 10, 'B17B16', true );
     $out .= deprat_megamenu_pdf_text( 'Nos composants', 38, 761, 27, '123B77', true );
-    $out .= deprat_megamenu_pdf_text( 'Arborescence du mega-menu', 39, 738, 11, '5A7291' );
+    $out .= deprat_megamenu_pdf_text( 'Arborescence du méga-menu', 39, 738, 11, '5A7291' );
     $out .= deprat_megamenu_pdf_text( 'Export WordPress - ' . $date, 936, 772, 10, '607B9B' );
     $out .= deprat_megamenu_pdf_line( 38, 721, 1153, 721, 'D9E4F1', 1 );
     $out .= deprat_megamenu_pdf_line( 38, 49, 1153, 49, 'D9E4F1', 1 );
-    $out .= deprat_megamenu_pdf_text( 'Titres de section > Categories > Sous-categories. Regroupements non cliquables.', 38, 31, 9, '68829F' );
+    $out .= deprat_megamenu_pdf_text( 'Titres de section > Catégories > Sous-catégories. Regroupements non cliquables.', 38, 31, 9, '68829F' );
     $out .= deprat_megamenu_pdf_text( sprintf( 'Page %d / %d', $page, $total ), 1091, 31, 9, '68829F' );
     return $out;
 }
