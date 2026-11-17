@@ -56,6 +56,9 @@
                     items: '> [data-tree-item]',
                     connectWith: '.deprat-tree-list',
                     handle: '[data-drag-handle]',
+                    // jQuery UI neutralise les clics sur tous les <button> par défaut.
+                    // La poignée est elle-même un bouton : il faut l'autoriser explicitement.
+                    cancel: 'input, textarea, select, option, button:not([data-drag-handle])',
                     placeholder: 'deprat-tree-placeholder',
                     tolerance: 'pointer',
                     dropOnEmpty: true,
@@ -113,6 +116,10 @@
             label.append( strong, hint );
             var actions = document.createElement( 'div' );
             actions.className = 'deprat-tree-actions';
+            var moveUp = makeButton( '↑', 'data-tree-up', 'Monter dans cette liste' );
+            moveUp.setAttribute( 'aria-label', 'Monter ' + name );
+            var moveDown = makeButton( '↓', 'data-tree-down', 'Descendre dans cette liste' );
+            moveDown.setAttribute( 'aria-label', 'Descendre ' + name );
             var indent = makeButton( '↳', 'data-tree-indent', 'Ranger dans la catégorie précédente' );
             indent.setAttribute( 'aria-label', 'Augmenter le niveau' );
             var outdent = makeButton( '↰', 'data-tree-outdent', 'Remonter d’un niveau' );
@@ -122,7 +129,7 @@
             edit.className = 'button';
             edit.href = config.editBase + id;
             edit.textContent = 'Modifier';
-            actions.append( indent, outdent, addChild, edit );
+            actions.append( moveUp, moveDown, indent, outdent, addChild, edit );
             row.append( handle, label, actions );
             var nested = document.createElement( 'ul' );
             nested.className = 'deprat-tree-list deprat-tree-children';
@@ -148,6 +155,21 @@
             if ( addRoot ) { openCreate( null ); return; }
             var addChild = event.target.closest( '[data-tree-add-child]' );
             if ( addChild ) { openCreate( addChild.closest( '[data-tree-item]' ) ); return; }
+            var up = event.target.closest( '[data-tree-up]' );
+            var down = event.target.closest( '[data-tree-down]' );
+            if ( up || down ) {
+                var moved = ( up || down ).closest( '[data-tree-item]' );
+                var neighbor = up ? moved.previousElementSibling : moved.nextElementSibling;
+                if ( !neighbor || !neighbor.matches( '[data-tree-item]' ) ) {
+                    message( up ? 'Cette catégorie est déjà en première position.' : 'Cette catégorie est déjà en dernière position.', true );
+                    return;
+                }
+                if ( up ) { neighbor.before( moved ); }
+                else { neighbor.after( moved ); }
+                initializeSortable();
+                changed();
+                return;
+            }
             var indent = event.target.closest( '[data-tree-indent]' );
             if ( indent ) {
                 var item = indent.closest( '[data-tree-item]' );
