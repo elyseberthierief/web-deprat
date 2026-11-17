@@ -27,7 +27,7 @@ deprat_integration_assert( '' === $no_price_tube->get_price_html(), 'Aucun 0 €
 $tube_category = wp_insert_term( 'Tubes', 'product_cat' );
 $end_category = wp_insert_term( 'Embouts', 'product_cat' );
 deprat_integration_assert( ! is_wp_error( $tube_category ) && ! is_wp_error( $end_category ), 'Création des catégories de test impossible.' );
-wp_set_object_terms( $product_id, array( (int) $tube_category['term_id'], (int) $end_category['term_id'] ), 'product_cat' );
+wp_set_object_terms( $product_id, array( (int) $tube_category['term_id'] ), 'product_cat' );
 deprat_integration_assert( deprat_packaging_is_tube_product( $product_id ), 'Un produit de la catégorie Tubes doit être reconnu comme tube.' );
 deprat_integration_assert( ! deprat_packaging_allow_unitary( $product_id ), 'La catégorie Tubes doit interdire le conditionnement unitaire.' );
 
