@@ -303,7 +303,7 @@ ob_start();
 deprat_catalog_render_card( wc_get_product( $piece_id ) );
 $card_html = ob_get_clean();
 deprat_integration_assert( false !== strpos( $card_html, 'data-catalog-add' )
-    && false !== strpos( $card_html, 'data-open-model' ) === false
+    && false === strpos( $card_html, 'data-open-model' )
     && false !== strpos( $card_html, 'deprat-catalog-ref' ),
     'La carte Embouts doit offrir l’ajout rapide, la référence et ne pas inventer une vue 3D.' );
 
