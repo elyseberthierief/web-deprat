@@ -129,7 +129,9 @@ add_shortcode('deprat_menu_pro', function () {
                     </form>
                 </div>
             </details>
-            <a class="deprat-pro-inscription" href="<?php echo esc_url( $compte ); ?>">Inscription</a>
+            <?php if ( ! function_exists( 'deprat_registration_is_open' ) || deprat_registration_is_open() ) : ?>
+                <a class="deprat-pro-inscription" href="<?php echo esc_url( $compte ); ?>">Inscription</a>
+            <?php endif; ?>
         </div>
         <?php
         $GLOBALS['deprat_menu_connexion_visible'] = true;
