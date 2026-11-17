@@ -1,24 +1,27 @@
 ( function () {
     'use strict';
     function init() {
-        var parents = document.querySelectorAll( '.deprat-mega-parent' );
-        parents.forEach( function ( parent ) {
+        document.querySelectorAll( '.deprat-mega-parent' ).forEach( function ( parent ) {
             var panel = parent.querySelector( ':scope > .deprat-mega-panel' );
             if ( ! panel ) { return; }
             function position() {
-                if ( window.matchMedia && window.matchMedia( '(max-width: 921px)' ).matches ) { return; }
-                // Le panneau est positionné dans le LI ; on compense sa position
-                // pour qu'il reste dans la largeur de l'écran, même tout à droite.
-                var parentRect = parent.getBoundingClientRect();
-                var width = panel.offsetWidth;
-                if ( ! width ) { return; }
-                var ideal = parentRect.left - width * .26;
-                var left = Math.max( 12, Math.min( ideal, window.innerWidth - width - 12 ) );
-                panel.style.left = Math.round( left - parentRect.left ) + 'px';
+                if ( window.matchMedia( '(max-width: 921px)' ).matches ) {
+                    panel.style.removeProperty( '--deprat-mega-top' );
+                    return;
+                }
+                // Déplier le méga-menu sur toute la largeur du viewport,
+                // immédiatement sous la ligne de navigation principale Astra.
+                var nav = parent.closest( '.ast-primary-header-bar, .main-header-bar, .site-header-primary-section, .ast-builder-grid-row' );
+                if ( ! nav ) { nav = parent; }
+                var bottom = Math.max( 0, Math.round( nav.getBoundingClientRect().bottom ) );
+                // Un menu fixe ne doit jamais recouvrir la barre d'administration.
+                panel.style.setProperty( '--deprat-mega-top', bottom + 'px' );
             }
             parent.addEventListener( 'mouseenter', position );
             parent.addEventListener( 'focusin', position );
+            parent.addEventListener( 'touchstart', position, { passive: true } );
             window.addEventListener( 'resize', position, { passive: true } );
+            window.addEventListener( 'scroll', position, { passive: true } );
             position();
         } );
     }
