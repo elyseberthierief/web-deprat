@@ -25,6 +25,27 @@ const assert = require( 'assert' );
         const sectionTabs = ui.locator( '.deprat-products-sections .deprat-products-tab' );
         assert( await sectionTabs.count() >= 10, 'Toutes les sections DEPRAT sont dans la barre persistante.' );
         assert( await ui.locator( '.deprat-products-title h1', { hasText: 'Produits' } ).isVisible() );
+        assert.strictEqual( await ui.locator( '.deprat-products-explainer' ).count(), 0,
+            'Le bandeau bleu expliquant les trois lignes ne doit plus être affiché.' );
+        const textStyles = await ui.evaluate( root => {
+            const css = selector => {
+                const node = root.querySelector( selector );
+                if ( !node ) { throw new Error( 'Sélecteur manquant : ' + selector ); }
+                const style = getComputedStyle( node );
+                return { size: parseFloat( style.fontSize ), weight: parseFloat( style.fontWeight ) };
+            };
+            return {
+                section: css( '.deprat-products-tab--section' ),
+                title: css( '.deprat-products-title h1' ),
+                filters: css( '.deprat-products-filters select' )
+            };
+        } );
+        assert( textStyles.section.size >= 12 && textStyles.section.weight <= 600,
+            'Les sections restent lisibles et ne sont plus en très gras.' );
+        assert( textStyles.title.weight <= 700, 'Le titre reste visuellement léger.' );
+        assert( textStyles.filters.size >= 13 && textStyles.filters.weight <= 500,
+            'Les filtres sont suffisamment grands et de graisse normale.' );
+
         assert( await ui.locator( '.deprat-products-header-search #post-search-input' ).isVisible(),
             'La vraie recherche WordPress doit être déplacée en haut.' );
         assert( await ui.locator( '.deprat-products-create' ).isVisible(),
