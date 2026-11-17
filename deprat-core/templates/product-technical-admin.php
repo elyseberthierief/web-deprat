@@ -58,6 +58,17 @@ $gallery_ids = $gallery_product ? $gallery_product->get_gallery_image_ids() : ar
         <div class="deprat-tech-main">
             <section class="deprat-tech-card">
                 <h3><span class="dashicons dashicons-admin-generic" aria-hidden="true"></span> Caractéristiques techniques</h3>
+                <div class="deprat-shape-admin-field">
+                    <label class="deprat-tech-field"><span>Forme du produit (section / profil)</span>
+                        <select name="deprat_product_tech[shape]" data-product-shape>
+                            <option value="">Non renseignée — ne pas afficher d'icône</option>
+                            <?php foreach ( deprat_product_shape_choices() as $shape_key => $shape_label ) : ?>
+                                <option value="<?php echo esc_attr( $shape_key ); ?>" <?php selected( deprat_product_shape( $post->ID, $data ), $shape_key ); ?>><?php echo esc_html( $shape_label ); ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </label>
+                    <p class="deprat-tech-help">La forme choisie crée automatiquement un pictogramme vectoriel sur la boutique. Aucune image à importer. La sélection sert aussi de filtre.</p>
+                </div>
                 <div class="deprat-tech-rows" data-rows="features">
                     <?php foreach ( $features as $index => $row ) :
                         $label = is_array( $row ) && isset( $row['label'] ) && is_scalar( $row['label'] ) ? (string) $row['label'] : '';
