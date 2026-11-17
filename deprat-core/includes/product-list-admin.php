@@ -255,12 +255,6 @@ function deprat_product_list_admin_markup() {
                 </div>
             </div>
             <?php endif; ?>
-            <div class="deprat-products-explainer">
-                <span class="deprat-products-info" aria-hidden="true">ⓘ</span>
-                <div><strong>Navigation hiérarchique des produits</strong>
-                    <p>1re ligne : section <b>|</b> 2e ligne : catégorie <b>|</b> 3e ligne : sous-catégorie et niveaux suivants</p>
-                </div>
-            </div>
             <div class="deprat-products-filters">
                 <label><span class="screen-reader-text">État du stock</span><select name="deprat_stock" data-deprat-filter>
                     <option value="">État du stock</option>
@@ -356,7 +350,7 @@ add_action( 'manage_product_posts_custom_column', static function ( $column, $po
 
 function deprat_product_list_admin_assets( $hook ) {
     if ( 'edit.php' !== $hook || ! deprat_product_list_is_screen() ) { return; }
-    wp_enqueue_style( 'deprat-product-list', plugins_url( 'assets/css/product-list-admin.css', dirname( __DIR__ ) . '/deprat-core.php' ), array(), '0.1.41' );
-    wp_enqueue_script( 'deprat-product-list', plugins_url( 'assets/js/product-list-admin.js', dirname( __DIR__ ) . '/deprat-core.php' ), array(), '0.1.41', true );
+    wp_enqueue_style( 'deprat-product-list', plugins_url( 'assets/css/product-list-admin.css', dirname( __DIR__ ) . '/deprat-core.php' ), array(), '0.1.42' );
+    wp_enqueue_script( 'deprat-product-list', plugins_url( 'assets/js/product-list-admin.js', dirname( __DIR__ ) . '/deprat-core.php' ), array(), '0.1.42', true );
 }
 add_action( 'admin_enqueue_scripts', 'deprat_product_list_admin_assets' );
