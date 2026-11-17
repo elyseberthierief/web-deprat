@@ -1,4 +1,4 @@
-/* DEPRAT 0.1.41 — Liste Produits B2B, conservant le tableau WordPress. */
+/* DEPRAT 0.1.42 — Liste Produits B2B, conservant le tableau WordPress. */
 body.deprat-product-list-active{--deprat-list-navy:#123b78;--deprat-list-blue:#0e4d9c;--deprat-list-soft:#eaf3ff;--deprat-list-line:#dce6f3;--deprat-list-gold:#e5ac3a;--deprat-list-muted:#56718f}
 body.deprat-product-list-active #wpbody-content>.wrap{max-width:100%;padding-right:9px}
 body.deprat-product-list-active #wpbody-content>.wrap>.wp-heading-inline,
@@ -55,11 +55,6 @@ body.deprat-product-list-active #wpbody-content>.wrap>.subsubsub{display:none!im
 .deprat-products-tab--child.is-active{background:#dbeaff;border-color:#b9d6fb;color:#0750a8!important}
 .deprat-products-tab--child.is-active .deprat-products-count{background:#c2dcff;color:#1b4a80}
 .deprat-products-hint,.deprat-products-empty{color:#8497ae;font-size:12px;line-height:1.5}
-.deprat-products-explainer{display:flex;gap:12px;align-items:center;background:linear-gradient(110deg,#dceaff,#eaf3ff);border:1px solid #d2e3ff;border-radius:10px;margin:0 0 15px;padding:11px 17px}
-.deprat-products-info{display:grid;place-items:center;flex:0 0 28px;width:28px;height:28px;color:#164eac;font-size:24px}
-.deprat-products-explainer strong{color:#123f85;font-weight:840;font-size:13px}
-.deprat-products-explainer p{color:#244f8a;font-size:11px;margin:2px 0 0!important;line-height:1.45}
-.deprat-products-explainer b{padding:0 11px;color:#718bad}
 .deprat-products-filters{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:2px 2px 14px}
 .deprat-products-filters label{display:block;margin:0}
 .deprat-products-filters select,.deprat-products-filters input[type=search]{width:185px;max-width:100%;min-height:38px;padding:7px 29px 7px 12px;border:1px solid #cddded;border-radius:8px;background:#fff;color:#194574;font-size:12px;font-weight:700;box-shadow:0 2px 5px rgba(12,51,105,.04)}
@@ -121,4 +116,355 @@ body.deprat-product-list-active #posts-filter .wp-list-table .row-actions{font-s
  .deprat-products-filters select{width:155px}
  .deprat-products-filters-right{width:100%;justify-content:space-between}
  .deprat-products-header-search{width:100%;max-width:none}
+}
+
+
+/* Lisibilité 0.1.42 : une hiérarchie par taille, nuance et espacement plutôt
+   que par graisse systématiquement forte. Aucun bandeau explicatif. */
+body.deprat-product-list-active .deprat-products-ui{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
+    font-size:13px;
+    line-height:1.5;
+    color:#203d64;
+    -webkit-font-smoothing:antialiased;
+}
+body.deprat-product-list-active .deprat-products-title h1{
+    font-size:28px!important;
+    letter-spacing:-.015em;
+    font-weight:650!important;
+    line-height:1.25!important;
+}
+body.deprat-product-list-active .deprat-products-cube{
+    width:42px;height:42px;font-size:30px;
+}
+body.deprat-product-list-active .deprat-products-header{
+    margin-bottom:17px;
+}
+body.deprat-product-list-active .deprat-products-create,
+body.deprat-product-list-active .deprat-products-header-actions .page-title-action{
+    font-size:13px!important;
+    font-weight:550!important;
+    line-height:1.4!important;
+}
+body.deprat-product-list-active .deprat-products-header-search #post-search-input{
+    font-size:13px;
+    min-height:40px;
+}
+body.deprat-product-list-active .deprat-products-header-search #search-submit{
+    font-size:12px;
+    font-weight:500;
+}
+body.deprat-product-list-active .deprat-products-sections{
+    min-height:70px;
+    margin-bottom:13px;
+}
+body.deprat-product-list-active .deprat-products-tab{
+    line-height:1.4;
+    font-weight:500;
+    letter-spacing:0;
+}
+body.deprat-product-list-active .deprat-products-tab--section{
+    min-width:128px;
+    flex:1 0 138px;
+    padding:12px 11px;
+    font-size:12px;
+    font-weight:500;
+}
+body.deprat-product-list-active .deprat-products-tab--section:first-child{
+    flex:0 0 142px;
+}
+body.deprat-product-list-active .deprat-products-tab--section.is-active{
+    font-weight:600;
+}
+body.deprat-product-list-active .deprat-products-count{
+    font-size:11px;
+    font-weight:550;
+    min-width:22px;
+    height:22px;
+}
+body.deprat-product-list-active .deprat-products-tab--category{
+    font-size:13px;
+    line-height:1.45;
+    font-weight:500;
+    min-height:50px;
+    padding:10px 14px;
+}
+body.deprat-product-list-active .deprat-products-tab--category.is-active{
+    font-weight:600;
+}
+body.deprat-product-list-active .deprat-products-tab--child{
+    min-height:36px;
+    font-size:12.5px;
+    line-height:1.45;
+    font-weight:500;
+    padding:8px 12px;
+}
+body.deprat-product-list-active .deprat-products-tab--child.is-active{
+    font-weight:600;
+}
+body.deprat-product-list-active .deprat-products-breadcrumb,
+body.deprat-product-list-active .deprat-products-breadcrumb a{
+    font-size:12px;
+    font-weight:450;
+    line-height:1.55;
+}
+body.deprat-product-list-active .deprat-products-breadcrumb a[aria-current=page]{
+    font-weight:600;
+}
+body.deprat-product-list-active .deprat-products-hint,
+body.deprat-product-list-active .deprat-products-empty{
+    font-size:12.5px;
+    color:#506b89;
+}
+body.deprat-product-list-active .deprat-products-filters{
+    padding-top:3px;
+    padding-bottom:14px;
+    gap:10px;
+}
+body.deprat-product-list-active .deprat-products-filters select,
+body.deprat-product-list-active .deprat-products-filters input[type=search]{
+    font-size:13px;
+    font-weight:450;
+    line-height:1.5;
+    min-height:40px;
+}
+body.deprat-product-list-active .deprat-products-filters-right strong{
+    font-size:12.5px;
+    font-weight:500;
+}
+body.deprat-product-list-active table.wp-list-table thead th,
+body.deprat-product-list-active table.wp-list-table thead td{
+    font-size:12.5px;
+    font-weight:600;
+    padding-top:12px;
+    padding-bottom:12px;
+}
+body.deprat-product-list-active table.wp-list-table tbody td,
+body.deprat-product-list-active table.wp-list-table tbody th{
+    font-size:13px;
+    line-height:1.5;
+    color:#344c68;
+    padding-top:11px;
+    padding-bottom:11px;
+}
+body.deprat-product-list-active table.wp-list-table tbody .row-title{
+    font-size:13px;
+    font-weight:600;
+    line-height:1.45;
+}
+body.deprat-product-list-active table.wp-list-table .column-sku{
+    font-size:12.5px;
+}
+body.deprat-product-list-active table.wp-list-table .column-is_in_stock mark{
+    font-size:12px;
+    font-weight:500;
+}
+body.deprat-product-list-active table.wp-list-table .column-product_cat a,
+body.deprat-product-list-active .deprat-products-section-pill{
+    font-size:12px;
+    font-weight:500;
+}
+body.deprat-product-list-active .deprat-products-row-menu>div a{
+    font-size:12px;
+    font-weight:500;
+}
+body.deprat-product-list-active #posts-filter .wp-list-table .row-actions{
+    font-size:11px;
+}
+@media(max-width:1450px){
+    body.deprat-product-list-active .deprat-products-tab--section{
+        min-width:136px;
+        flex-basis:140px;
+        font-size:12px;
+    }
+}
+@media(max-width:782px){
+    body.deprat-product-list-active .deprat-products-title h1{
+        font-size:25px!important;
+    }
+    body.deprat-product-list-active .deprat-products-tab--section{
+        min-width:145px;
+    }
+}
+
+
+/* 0.1.42 — titres de niveaux : discrets, pour baliser la navigation. */
+body.deprat-product-list-active .deprat-products-level-title{
+    display:block;margin:0 0 9px;padding:0;
+    font-size:13px;line-height:1.4;
+    font-weight:550;letter-spacing:.01em;
+    color:#42628a;
+}
+body.deprat-product-list-active .deprat-products-hierarchy{
+    padding-top:13px;
+}
+body.deprat-product-list-active .deprat-products-hierarchy>.deprat-products-level-title{
+    margin:0 0 9px;padding-left:2px;
+}
+body.deprat-product-list-active .deprat-products-subcategory-level{
+    display:flex;align-items:center;flex-wrap:wrap;gap:12px;min-width:0;
+    padding-left:15px;border-left:1px solid #c4d4e8;
+}
+body.deprat-product-list-active .deprat-products-level-title--sub{
+    flex:0 0 auto;font-size:12.5px;margin:0;
+}
+body.deprat-product-list-active .deprat-products-subcategory-level>.deprat-products-children{
+    border-left:0;padding-left:0;min-width:0;
+}
+
+/* Liste / Grille — commandes de présentation sur la même ligne que les filtres. */
+body.deprat-product-list-active .deprat-products-view-toggle{
+    display:flex;align-items:center;gap:2px;flex:0 0 auto;
+    padding:3px;border:1px solid #cbdbee;border-radius:9px;
+    background:#fff;box-shadow:0 2px 6px rgba(16,53,102,.04);
+}
+body.deprat-product-list-active .deprat-products-view-toggle button{
+    display:inline-flex;align-items:center;justify-content:center;gap:7px;
+    min-height:33px;padding:6px 12px;border:0;border-radius:6px;
+    background:transparent;color:#48688b;cursor:pointer;
+    font-size:12.5px;font-weight:500;line-height:1.4;white-space:nowrap;
+    transition:background .15s,color .15s;
+}
+body.deprat-product-list-active .deprat-products-view-toggle button span{
+    font-size:18px;line-height:1;font-weight:400;
+}
+body.deprat-product-list-active .deprat-products-view-toggle button:hover:not(.is-active){
+    background:#edf4fc;color:#164a84;
+}
+body.deprat-product-list-active .deprat-products-view-toggle button.is-active{
+    background:#144d94;color:#fff;font-weight:600;
+    box-shadow:0 1px 4px rgba(15,57,114,.13);
+}
+body.deprat-product-list-active .deprat-products-view-toggle button:focus-visible{
+    outline:2px solid #d4a039;outline-offset:2px;
+}
+
+/* Vue Grille : la table WooCommerce est seulement réorganisée visuellement.
+   Aucun produit dupliqué, aucun impact sur ses formulaires ou sur ses actions. */
+body.deprat-product-list-active.deprat-product-grid-mode #posts-filter>table.wp-list-table{
+    display:block;width:100%;max-width:100%;
+    border:0;background:transparent;box-shadow:none;overflow:visible;
+}
+body.deprat-product-list-active.deprat-product-grid-mode #posts-filter>table.wp-list-table thead,
+body.deprat-product-list-active.deprat-product-grid-mode #posts-filter>table.wp-list-table tfoot{
+    display:none;
+}
+body.deprat-product-list-active.deprat-product-grid-mode #posts-filter>table.wp-list-table tbody#the-list{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(min(100%,258px),1fr));
+    align-items:stretch;gap:15px;
+    width:100%;
+}
+body.deprat-product-list-active.deprat-product-grid-mode #the-list>tr:not(.no-items):not(.inline-edit-row){
+    position:relative;display:grid;
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+    grid-template-areas:
+       "check menu"
+       "thumb thumb"
+       "name name"
+       "sku sku"
+       "stock stock"
+       "category category"
+       "section section"
+       "date date";
+    grid-template-rows:30px 155px minmax(47px,auto) auto auto auto auto 1fr;
+    gap:0;
+    min-width:0;height:100%;
+    padding:12px 15px;
+    border:1px solid #dae5f2;border-radius:12px;
+    box-shadow:0 4px 15px rgba(20,61,113,.06);
+    background:#fff;
+    box-sizing:border-box;
+    transition:box-shadow .15s,border-color .15s;
+}
+body.deprat-product-list-active.deprat-product-grid-mode #the-list>tr:not(.no-items):not(.inline-edit-row):hover{
+    border-color:#a3c2e5;
+    background:#fff;
+    box-shadow:0 10px 23px rgba(20,61,113,.11);
+}
+body.deprat-product-list-active.deprat-product-grid-mode #the-list>tr:not(.no-items):not(.inline-edit-row) > :is(td,th){
+    display:block;
+    width:auto!important;min-width:0!important;max-width:100%!important;
+    padding:4px 0;border:0;background:transparent;
+    text-align:left;box-sizing:border-box;
+    white-space:normal;overflow-wrap:anywhere;
+}
+body.deprat-product-list-active.deprat-product-grid-mode #the-list>tr>.check-column{
+    grid-area:check;padding:0!important;align-self:start;
+}
+body.deprat-product-list-active.deprat-product-grid-mode #the-list>tr>.column-deprat_actions{
+    grid-area:menu;justify-self:end;align-self:start;
+    padding:0!important;
+}
+body.deprat-product-list-active.deprat-product-grid-mode #the-list>tr>.column-thumb{
+    grid-area:thumb;display:flex!important;align-items:center;justify-content:center;
+    padding:7px!important;
+    margin:1px 0 9px;
+    background:#f3f7fc!important;border-radius:9px;
+}
+body.deprat-product-list-active.deprat-product-grid-mode #the-list>tr>.column-thumb a{
+    display:flex;align-items:center;justify-content:center;width:100%;height:100%;
+}
+body.deprat-product-list-active.deprat-product-grid-mode #the-list>tr>.column-thumb img{
+    display:block;width:100%;height:132px;max-width:100%;
+    object-fit:contain;border-radius:6px;background:transparent;
+}
+body.deprat-product-list-active.deprat-product-grid-mode #the-list>tr>.column-name{
+    grid-area:name;min-height:47px;
+    display:block;align-self:start;
+    padding:5px 0 3px!important;
+}
+body.deprat-product-list-active.deprat-product-grid-mode #the-list>tr>.column-name .row-title{
+    display:block;font-size:14px;font-weight:600;line-height:1.4;color:#17477e;
+}
+body.deprat-product-list-active.deprat-product-grid-mode #the-list>tr>.column-name .row-actions{
+    display:block;margin-top:4px;
+}
+body.deprat-product-list-active.deprat-product-grid-mode #the-list>tr>.column-sku{
+    grid-area:sku;color:#40648a;font-size:12.5px;
+}
+body.deprat-product-list-active.deprat-product-grid-mode #the-list>tr>.column-sku::before{
+    content:"Réf. : ";color:#6985a1;font-weight:500;
+}
+body.deprat-product-list-active.deprat-product-grid-mode #the-list>tr>.column-is_in_stock{
+    grid-area:stock;padding-top:8px!important;
+}
+body.deprat-product-list-active.deprat-product-grid-mode #the-list>tr>.column-product_cat{
+    grid-area:category;padding-top:9px!important;
+}
+body.deprat-product-list-active.deprat-product-grid-mode #the-list>tr>.column-deprat_section{
+    grid-area:section;padding-top:5px!important;
+}
+body.deprat-product-list-active.deprat-product-grid-mode #the-list>tr>.column-date{
+    grid-area:date;align-self:end;margin-top:10px;
+    padding-top:9px!important;border-top:1px solid #e5ebf3!important;
+    font-size:11.5px!important;color:#657d99!important;
+}
+body.deprat-product-list-active.deprat-product-grid-mode #the-list>tr>.column-date::before{
+    content:"Date : ";font-size:11.5px;color:#6985a1;
+}
+body.deprat-product-list-active.deprat-product-grid-mode #the-list>tr>.column-product_cat a,
+body.deprat-product-list-active.deprat-product-grid-mode #the-list>tr>.column-deprat_section a{
+    display:inline-block;margin:2px 4px 2px 0;font-size:11.5px;
+}
+body.deprat-product-list-active.deprat-product-grid-mode #the-list>tr.no-items{
+    grid-column:1/-1;display:block;
+    padding:22px;background:#fff;border:1px solid #dae5f2;border-radius:10px;
+}
+body.deprat-product-list-active.deprat-product-grid-mode #the-list>tr.inline-edit-row{
+    grid-column:1/-1;
+}
+@media(max-width:900px){
+    body.deprat-product-list-active.deprat-product-grid-mode #posts-filter>table.wp-list-table{
+        overflow:visible;
+    }
+    body.deprat-product-list-active.deprat-product-grid-mode #posts-filter>table.wp-list-table tbody#the-list{
+        grid-template-columns:repeat(auto-fill,minmax(min(100%,235px),1fr));
+    }
+}
+@media(max-width:620px){
+    body.deprat-product-list-active .deprat-products-view-toggle{margin-left:0}
+    body.deprat-product-list-active.deprat-product-grid-mode #posts-filter>table.wp-list-table tbody#the-list{
+        grid-template-columns:repeat(auto-fill,minmax(min(100%,215px),1fr));
+    }
 }
