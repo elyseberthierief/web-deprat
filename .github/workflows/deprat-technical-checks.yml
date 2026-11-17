@@ -86,5 +86,6 @@ jobs:
           path: |
             ${{ runner.temp }}/deprat-editor-*.png
             ${{ runner.temp }}/deprat-fiche-client-*.png
+            ${{ runner.temp }}/deprat-catalogue-*.png
           if-no-files-found: ignore
           retention-days: 3
