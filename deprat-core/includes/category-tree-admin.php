@@ -90,8 +90,14 @@ add_action( 'admin_menu', static function () {
 
 function deprat_category_tree_admin_assets( $hook ) {
     if ( 'product_page_deprat-categories-tree' !== $hook ) { return; }
-    wp_enqueue_style( 'deprat-category-tree', plugins_url( 'assets/css/category-tree-admin.css', dirname( __DIR__ ) . '/deprat-core.php' ), array(), '0.1.33' );
-    wp_enqueue_script( 'deprat-category-tree', plugins_url( 'assets/js/category-tree-admin.js', dirname( __DIR__ ) . '/deprat-core.php' ), array( 'jquery', 'jquery-ui-sortable' ), '0.1.33', true );
+    wp_enqueue_style( 'deprat-category-tree', plugins_url( 'assets/css/category-tree-admin.css', dirname( __DIR__ ) . '/deprat-core.php' ), array(), '0.1.35' );
+    wp_enqueue_style( 'deprat-catalog-sections-editor',
+        plugins_url( 'assets/css/catalogue-sections.css', dirname( __DIR__ ) . '/deprat-core.php' ),
+        array( 'deprat-category-tree' ), '0.1.35' );
+    wp_enqueue_script( 'deprat-category-tree', plugins_url( 'assets/js/category-tree-admin.js', dirname( __DIR__ ) . '/deprat-core.php' ), array( 'jquery', 'jquery-ui-sortable' ), '0.1.35', true );
+    wp_enqueue_script( 'deprat-category-tree-preview',
+        plugins_url( 'assets/js/category-tree-preview.js', dirname( __DIR__ ) . '/deprat-core.php' ),
+        array( 'deprat-category-tree', 'jquery', 'jquery-ui-sortable' ), '0.1.35', true );
     wp_localize_script( 'deprat-category-tree', 'depratCategoryTree', array(
         'ajaxUrl' => admin_url( 'admin-ajax.php' ),
         'nonce' => wp_create_nonce( 'deprat_categories_tree' ),
@@ -119,7 +125,8 @@ function deprat_category_tree_render_item( $term, $terms, $depth = 0 ) {
     $children = deprat_category_tree_children( $terms, $id );
     $url = get_edit_term_link( $id, 'product_cat', 'product' );
     ?>
-    <li class="deprat-tree-item" data-tree-item data-term-id="<?php echo esc_attr( $id ); ?>">
+    <li class="deprat-tree-item" data-tree-item data-term-id="<?php echo esc_attr( $id ); ?>"
+        data-section-guess="<?php echo esc_attr( deprat_catalog_section_guess( $term ) ); ?>">
         <div class="deprat-tree-row">
             <button type="button" class="deprat-tree-handle" data-drag-handle title="Faire glisser pour réorganiser" aria-label="<?php echo esc_attr( 'Déplacer ' . $term->name ); ?>">⠿</button>
             <div class="deprat-tree-label">
@@ -152,6 +159,40 @@ function deprat_category_tree_render_item( $term, $terms, $depth = 0 ) {
     </li>
     <?php
 }
+/**
+ * Reproduit la mise en page du vrai méga-menu, avec les mêmes icônes
+ * SVG et classes CSS. Les rubriques sont VISUELLES, pas des termes WP.
+ * Les zones vides restent affichées en admin pour recevoir un glisser-déposer.
+ * Les catégories sont ajoutées en JS depuis l'arborescence WooCommerce.
+ */
+function deprat_category_tree_admin_visual_menu() {
+    $sections = deprat_catalog_section_definitions();
+    ?>
+    <section class="deprat-preview-shell" data-tree-preview aria-label="Prévisualisation modifiable du méga-menu">
+        <div class="deprat-preview-bar">
+            <div>
+                <strong>Nos composants</strong>
+                <p>Même présentation que le site. Déplacez les catégories entre les rubriques et ouvrez les sous-catégories avec la flèche.</p>
+            </div>
+            <span class="deprat-preview-help">⠿ Déplacer · ↑↓ Ordonner · ↳↰ Imbriquer</span>
+        </div>
+        <div class="deprat-catalog-sections deprat-catalog-sections--admin" data-preview-grid>
+            <?php foreach ( $sections as $key => $title ) : ?>
+                <section class="deprat-section" data-preview-section="<?php echo esc_attr( $key ); ?>" aria-label="<?php echo esc_attr( $title ); ?>">
+                    <div class="deprat-section-heading">
+                        <span class="deprat-section-icon-wrap"><?php echo deprat_catalog_section_icon( $key ); // SVG interne fixe. ?></span>
+                        <h2><?php echo esc_html( $title ); ?></h2>
+                    </div>
+                    <ul class="deprat-section-categories deprat-preview-list" data-preview-list
+                        data-section-key="<?php echo esc_attr( $key ); ?>" aria-label="<?php echo esc_attr( 'Catégories : ' . $title ); ?>"></ul>
+                </section>
+            <?php endforeach; ?>
+        </div>
+        <p class="deprat-preview-footnote">Les rubriques vides sont des zones de dépôt et n’apparaissent pas dans le méga-menu public. Seules vos catégories WooCommerce existantes seront affichées.</p>
+    </section>
+    <?php
+}
+
 function deprat_category_tree_admin_page() {
     if ( ! current_user_can( 'manage_product_terms' ) ) { wp_die( 'Vous ne pouvez pas organiser les catégories.' ); }
     $terms = deprat_category_tree_terms();
@@ -160,32 +201,36 @@ function deprat_category_tree_admin_page() {
         <div class="deprat-tree-heading">
             <div>
                 <p class="deprat-tree-overline">CATALOGUE DEPRAT</p>
-                <h1>Arborescence des catégories</h1>
-                <p>Construisez votre menu comme vous souhaitez le voir sur le site : catégories principales, sous-catégories et niveaux supplémentaires.</p>
+                <h1>Organiser le méga-menu</h1>
+                <p>Modifiez directement le menu « Nos composants » : les catégories que vous déplacez ici seront réorganisées sur le site après enregistrement.</p>
             </div>
             <div class="deprat-tree-heading-actions">
                 <a href="<?php echo esc_url( wc_get_page_permalink( 'shop' ) ); ?>" class="button" target="_blank" rel="noopener">Voir le catalogue ↗</a>
                 <button type="button" class="button button-primary" data-tree-save>Enregistrer l’arborescence</button>
             </div>
         </div>
+
         <div class="deprat-tree-instructions">
-            <strong>Comment organiser ?</strong> Faites glisser une catégorie avec la poignée <strong>⠿</strong>
-            pour changer l’ordre ou déposez-la dans la zone pointillée sous une autre pour en faire une sous-catégorie.
-            Utilisez <strong>↑ / ↓</strong> pour changer l’ordre sans glisser et les flèches <strong>↳ / ↰</strong> pour modifier le niveau.
-            Le sélecteur <strong>Rubrique</strong> classe une catégorie existante sous un simple titre visuel, sans créer de catégorie WooCommerce.
-            <strong>Enregistrez</strong> lorsque le plan vous convient.
+            <strong>Édition directe du méga-menu :</strong> faites glisser une catégorie par la poignée ⠿ vers une autre rubrique, ou utilisez ↑ ↓ pour son ordre.
+            Les chevrons déplient les sous-catégories ; ↳ ↰ changent le niveau. Les titres de rubriques et leurs icônes ne sont pas cliquables.
+            Cliquez sur <strong>Enregistrer</strong> pour répercuter les modifications sur le site.
         </div>
         <div class="deprat-tree-toolbar">
             <button type="button" class="button button-secondary" data-tree-create-root>+ Nouvelle catégorie principale</button>
             <span data-tree-unsaved class="deprat-tree-unsaved" hidden>Modifications non enregistrées</span>
             <span data-tree-status role="status" aria-live="polite"></span>
         </div>
-        <div class="deprat-tree-area">
-            <?php deprat_category_tree_render_list( 0, $terms ); ?>
-        </div>
+        <?php deprat_category_tree_admin_visual_menu(); ?>
+        <details class="deprat-tree-advanced" data-tree-advanced>
+            <summary>Gestion avancée de l’arborescence (optionnelle)</summary>
+            <p>Retrouvez ici la vue hiérarchique classique pour organiser des sous-catégories complexes, ou modifier individuellement les catégories. Les changements sont immédiatement reflétés dans le menu ci-dessus.</p>
+            <div class="deprat-tree-area">
+                <?php deprat_category_tree_render_list( 0, $terms ); ?>
+            </div>
+        </details>
         <div class="deprat-tree-bottom">
-            <p>La catégorie WooCommerce « Non classé » reste gérée séparément. L’organisation enregistrée est utilisée sur les pages de catégories et dans le méga-menu DEPRAT.</p>
-            <button type="button" class="button button-primary" data-tree-save>Enregistrer l’arborescence</button>
+            <p>Aucune rubrique visuelle ne crée de catégorie WooCommerce. Le menu et la boutique utilisent les mêmes références et sous-catégories. « Non classé » reste géré séparément.</p>
+            <button type="button" class="button button-primary" data-tree-save>Enregistrer le méga-menu</button>
         </div>
         <form class="deprat-tree-create-form" data-tree-create-form hidden>
             <h2 data-tree-create-title>Nouvelle catégorie</h2>
@@ -246,7 +291,8 @@ function deprat_category_tree_ajax_create() {
         wp_send_json_error( array( 'message' => $created->get_error_message() ), 400 );
     }
     $id = (int) $created['term_id'];
-    wp_send_json_success( array( 'id' => $id, 'name' => $name, 'parent' => $parent, 'count' => 0 ) );
+    wp_send_json_success( array( 'id' => $id, 'name' => $name, 'parent' => $parent, 'count' => 0,
+        'sectionGuess' => deprat_catalog_section_guess( get_term( $id, 'product_cat' ) ) ) );
 }
 add_action( 'wp_ajax_deprat_category_tree_create', 'deprat_category_tree_ajax_create' );
 
@@ -352,6 +398,6 @@ function deprat_category_tree_ajax_save() {
     }
     delete_transient( 'deprat_catalog_all_ix' );
     update_option( 'deprat_category_tree_saved_at', time(), false );
-    wp_send_json_success( array( 'message' => 'L’arborescence DEPRAT est enregistrée.' ) );
+    wp_send_json_success( array( 'message' => 'Le méga-menu DEPRAT est enregistré.' ) );
 }
 add_action( 'wp_ajax_deprat_category_tree_save', 'deprat_category_tree_ajax_save' );

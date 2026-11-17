@@ -66,3 +66,69 @@
 .deprat-tree-section-editor{display:inline-flex;align-items:center;gap:6px;color:#5a7190;font-size:11px;font-weight:700}
 .deprat-tree-section-editor select{width:175px;max-width:28vw;height:31px;min-height:31px;font-size:11px;border:1px solid #c8d9eb;border-radius:6px;background:#fff;color:#17447d;padding:2px 5px}
 @media(max-width:900px){.deprat-tree-section-editor select{max-width:65vw}}
+
+
+/* 0.1.35 — Éditeur fidèle au méga-menu public (mêmes titres, SVG et trois colonnes). */
+.deprat-tree-admin{max-width:calc(100% - 15px)}
+.deprat-preview-shell{border:1px solid #dce6f0;background:#fff;border-radius:12px;overflow:hidden;margin:17px 0 18px;box-shadow:0 5px 20px rgba(12,50,96,.06)}
+.deprat-preview-bar{background:#f1f6fc;padding:18px 26px;border-bottom:1px solid #dce6f0;display:flex;align-items:center;justify-content:space-between;gap:18px}
+.deprat-preview-bar strong{font-size:26px;color:#10366f;font-weight:850;line-height:1.1}
+.deprat-preview-bar p{color:#56728f;font-size:12px;line-height:1.5;margin:6px 0 0;max-width:800px}
+.deprat-preview-help{color:#507097;font-size:11px;white-space:nowrap}
+.deprat-tree-admin .deprat-catalog-sections--admin{max-width:none;width:100%;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;padding:8px 22px 16px;margin:0!important}
+.deprat-tree-admin .deprat-catalog-sections--admin>.deprat-section{padding:18px 18px 22px;min-width:0;border-right:1px solid #e1e8f2;border-bottom:1px solid #e1e8f2}
+.deprat-tree-admin .deprat-catalog-sections--admin>.deprat-section:nth-child(3n){border-right:0}
+.deprat-tree-admin .deprat-catalog-sections--admin .deprat-section-heading{margin-bottom:9px;min-height:50px}
+.deprat-tree-admin .deprat-catalog-sections--admin .deprat-section-heading h2{font-size:clamp(15px,1.2vw,19px)!important;font-weight:800!important;color:#103b80!important;margin:0!important;padding:0 0 14px!important;line-height:1.25!important}
+.deprat-tree-admin .deprat-catalog-sections--admin .deprat-section-icon{width:30px;height:30px}
+.deprat-tree-admin .deprat-catalog-sections--admin ul{margin:0!important;padding:0!important}
+.deprat-tree-admin .deprat-catalog-sections--admin .deprat-section-term{margin:0!important;list-style:none!important;padding:0!important}
+.deprat-tree-admin .deprat-catalog-sections--admin .deprat-section-term-row{display:flex;gap:0;align-items:center;min-height:37px;position:relative}
+.deprat-tree-admin .deprat-catalog-sections--admin .deprat-section-term-link{font-size:13px;font-weight:700!important;line-height:1.25;color:#14396d!important;padding:6px 3px!important;flex:1}
+.deprat-tree-admin .deprat-catalog-sections--admin button{border:0!important;background:transparent!important;box-shadow:none!important;color:#134682!important;cursor:pointer}
+.deprat-tree-admin .deprat-catalog-sections--admin button:focus-visible,.deprat-tree-admin .deprat-catalog-sections--admin a:focus-visible,.deprat-tree-admin .deprat-catalog-sections--admin select:focus-visible{outline:2px solid #c58a0b!important;outline-offset:1px}
+.deprat-tree-admin .deprat-preview-handle{display:grid;place-items:center;flex:0 0 23px;width:23px;min-height:32px;font-size:20px;line-height:1;border-radius:4px;cursor:grab!important;color:#8ca6c9!important;user-select:none;padding:0!important}
+.deprat-tree-admin .deprat-preview-handle:active{cursor:grabbing!important}
+.deprat-tree-admin .deprat-section-term-row:is(:hover,:focus-within) .deprat-preview-handle{color:#103b80!important;background:#e7f0fc!important}
+.deprat-tree-admin .deprat-preview-actions{display:flex;align-items:center;gap:1px;flex:0 0 auto;max-width:0;opacity:0;overflow:hidden;transition:opacity .12s;z-index:2}
+.deprat-tree-admin .deprat-section-term-row:is(:hover,:focus-within) .deprat-preview-actions{max-width:100%;opacity:1;overflow:visible}
+.deprat-tree-admin .deprat-preview-actions button{min-width:22px;width:22px;padding:0!important;min-height:27px;font-size:15px;font-weight:650}
+.deprat-tree-admin .deprat-preview-actions button:hover{background:#e4eef9!important}
+.deprat-tree-admin .deprat-preview-actions select{width:88px;max-width:88px;min-height:25px;height:25px;padding:0 2px;border:1px solid #c4d5e8;border-radius:4px;font-size:10px;background:#fff;color:#133c77;margin:0 2px}
+.deprat-tree-admin .deprat-preview-edit{display:grid;place-items:center;width:25px;height:26px;text-decoration:none!important;font-size:16px;color:#16518f}
+.deprat-tree-admin .deprat-preview-edit:hover{background:#e7f0fc}
+.deprat-tree-admin .deprat-section-toggle{min-width:24px!important;flex:0 0 25px!important;min-height:29px!important;font-size:19px!important;padding:0!important;display:grid!important}
+.deprat-tree-admin .deprat-section-toggle[aria-expanded="true"]{transform:rotate(180deg)}
+.deprat-tree-admin .deprat-section-toggle[disabled]{opacity:.14;cursor:default}
+.deprat-tree-admin .deprat-section-children{padding:3px 0 4px 10px;margin:2px 0 4px 12px;background:#f8fbff;border-left:2px solid #c9ddf2}
+.deprat-tree-admin .deprat-section-children[hidden]{display:none!important}
+.deprat-tree-admin .deprat-preview-sublist .deprat-section-term-link{font-size:12px!important;font-weight:550!important;color:#517093!important}
+.deprat-tree-admin .deprat-preview-sublist .deprat-section-term-row{min-height:30px;border:0}
+.deprat-tree-admin .deprat-preview-list:empty{min-height:27px;border:1px dashed transparent}
+.deprat-tree-admin .deprat-preview-list:empty::after{content:"Déposez une catégorie ici";display:block;font-size:11px;color:#99acc3;text-align:center;padding:6px 2px}
+.deprat-tree-admin .deprat-section.is-empty .deprat-section-heading{opacity:.55}
+.deprat-tree-admin .deprat-section.is-empty .deprat-section-icon-wrap{color:#6d8aac}
+.deprat-tree-admin .deprat-preview-placeholder{min-height:36px;border:2px dashed #5e95d2;border-radius:5px;background:#e3f1ff!important;margin:4px 0!important;list-style:none!important}
+.deprat-tree-admin .deprat-preview-shell.is-dragging .deprat-preview-list:empty{min-height:46px;border-color:#9bbce0;background:#f1f7ff}
+.deprat-tree-admin .deprat-preview-shell.is-dragging .deprat-section-children{min-height:32px}
+.deprat-tree-admin .deprat-preview-item.ui-sortable-helper>.deprat-section-term-row{background:#eaf4ff;box-shadow:0 10px 23px rgba(19,63,119,.16);border-radius:6px}
+.deprat-preview-footnote{font-size:11px;line-height:1.6;color:#627e9b;margin:0;padding:11px 24px 16px;border-top:1px solid #e1e8f2}
+.deprat-tree-advanced{border:1px solid #d5e1f0;border-radius:9px;background:#fff;margin:13px 0 4px}
+.deprat-tree-advanced>summary{cursor:pointer;padding:15px 20px;font-size:14px;font-weight:750;color:#113f7d}
+.deprat-tree-advanced>summary:hover{background:#f0f6fe}
+.deprat-tree-advanced>p{font-size:12px;color:#59728d;padding:0 19px;margin:0 0 12px}
+.deprat-tree-advanced .deprat-tree-area{border:0;box-shadow:none;margin:0;padding:14px}
+@media(max-width:1200px){
+ .deprat-tree-admin .deprat-catalog-sections--admin{grid-template-columns:repeat(2,minmax(0,1fr));padding:7px 12px}
+ .deprat-tree-admin .deprat-catalog-sections--admin>.deprat-section:nth-child(n){border-right:1px solid #e1e8f2}
+ .deprat-tree-admin .deprat-catalog-sections--admin>.deprat-section:nth-child(2n){border-right:0}
+ .deprat-preview-bar{flex-direction:column;align-items:flex-start}
+}
+@media(max-width:720px){
+ .deprat-tree-admin .deprat-catalog-sections--admin{grid-template-columns:1fr}
+ .deprat-tree-admin .deprat-catalog-sections--admin>.deprat-section:nth-child(n){border-right:0}
+ .deprat-tree-admin .deprat-preview-actions{max-width:100%;opacity:1;overflow:visible}
+ .deprat-tree-admin .deprat-section-term-row{flex-wrap:wrap}
+ .deprat-tree-admin .deprat-section-term-link{min-width:90px}
+ .deprat-tree-admin .deprat-preview-bar strong{font-size:23px}
+}

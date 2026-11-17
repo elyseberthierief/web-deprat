@@ -24,7 +24,8 @@
         function changed() {
             dirty = true;
             dirtyLabel.hidden = false;
-            message( 'Ordre modifié — pensez à enregistrer.', false );
+            message( 'Menu modifié — pensez à enregistrer.', false );
+            app.dispatchEvent( new CustomEvent( 'deprat-tree-changed' ) );
         }
         function directItems( list ) {
             return Array.from( list.children ).filter( function ( element ) {
@@ -100,6 +101,7 @@
             li.className = 'deprat-tree-item';
             li.setAttribute( 'data-tree-item', '' );
             li.setAttribute( 'data-term-id', String( id ) );
+            li.setAttribute( 'data-section-guess', 'autres' );
             var row = document.createElement( 'div' );
             row.className = 'deprat-tree-row';
             var handle = makeButton( '⠿', 'data-drag-handle', 'Faire glisser pour réorganiser' );
@@ -168,6 +170,10 @@
             form.scrollIntoView( { behavior: 'smooth', block: 'center' } );
             formName.focus( { preventScroll: true } );
         }
+        app.addEventListener( 'deprat-tree-preview-changed', function () {
+            initializeSortable();
+            changed();
+        } );
         app.addEventListener( 'change', function ( event ) {
             if ( event.target.matches( '[data-tree-section]' ) ) { changed(); }
         } );
@@ -254,7 +260,9 @@
             formError.hidden = true;
             post( 'deprat_category_tree_create', { name: name, parent: String( parentId ) } )
                 .then( function ( response ) {
-                    destination.appendChild( makeItem( response.id, response.name ) );
+                    var created = makeItem( response.id, response.name );
+                    created.setAttribute( 'data-section-guess', response.sectionGuess || 'autres' );
+                    destination.appendChild( created );
                     initializeSortable();
                     form.hidden = true;
                     changed();
@@ -279,12 +287,12 @@
                 .then( function ( response ) {
                     dirty = false;
                     dirtyLabel.hidden = true;
-                    message( response.message || 'Arborescence enregistrée.', false );
+                    message( response.message || 'Méga-menu enregistré.', false );
                 } ).catch( function ( error ) {
                     message( error.message, true );
                 } ).finally( function () {
                     saving = false;
-                    saveButtons.forEach( function ( button ) { button.disabled = false; button.textContent = 'Enregistrer l’arborescence'; } );
+                    saveButtons.forEach( function ( button ) { button.disabled = false; button.textContent = 'Enregistrer le méga-menu'; } );
                 } );
         }
         saveButtons.forEach( function ( button ) { button.addEventListener( 'click', save ); } );

@@ -368,6 +368,24 @@ deprat_integration_assert( is_wp_error( deprat_category_tree_validate( $bad_tree
     (int) $tube_category['term_id'], (int) $end_category['term_id'],
 ) ) ), 'Une arborescence contenant un doublon ou un cycle doit être rejetée.' );
 
+// L'administration reproduit le vrai méga-menu : mêmes sections et icônes,
+ // aucune catégorie n'est créée par l'aperçu ; les sous-catégories restent réelles.
+$terms_before_preview = wp_count_terms( array( 'taxonomy' => 'product_cat', 'hide_empty' => false ) );
+ob_start();
+deprat_category_tree_admin_visual_menu();
+$visual_menu_html = ob_get_clean();
+deprat_integration_assert(
+    false !== strpos( $visual_menu_html, 'deprat-catalog-sections--admin' )
+    && false !== strpos( $visual_menu_html, 'data-preview-section="tubes"' )
+    && false !== strpos( $visual_menu_html, 'data-preview-section="garage"' )
+    && false !== strpos( $visual_menu_html, 'deprat-section-icon' )
+    && false !== strpos( $visual_menu_html, '<h2>Tubes acier &amp; accessoires</h2>' )
+    && false === strpos( $visual_menu_html, '<a class="deprat-section-heading"' ),
+    'La grille d’administration doit reprendre le design et les titres NON cliquables du méga-menu.'
+);
+deprat_integration_assert( $terms_before_preview === wp_count_terms( array( 'taxonomy' => 'product_cat', 'hide_empty' => false ) ),
+    'La prévisualisation ne doit créer aucun terme WooCommerce.' );
+
 ob_start();
 deprat_category_tree_render_list( 0, deprat_category_tree_terms() );
 $tree_editor_html = ob_get_clean();

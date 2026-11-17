@@ -1,0 +1,281 @@
+( function ( $ ) {
+    'use strict';
+    $( function () {
+        var app = document.querySelector( '[data-deprat-category-tree]' );
+        if ( !app || !window.depratCategoryTree ) { return; }
+        var config = window.depratCategoryTree;
+        var preview = app.querySelector( '[data-tree-preview]' );
+        var sourceRoot = app.querySelector( '.deprat-tree-root' );
+        if ( !preview || !sourceRoot ) { return; }
+        var expanded = new Set();
+        var rebuilding = false;
+
+        function directItems( list, selector ) {
+            return list ? Array.from( list.children ).filter( function ( item ) {
+                return item.matches( selector );
+            } ) : [];
+        }
+        function sourceChildList( item ) {
+            return item && item.querySelector( ':scope > [data-tree-list]' );
+        }
+        function sourceName( item ) {
+            var title = item.querySelector( ':scope > .deprat-tree-row [data-tree-name]' );
+            return title ? title.textContent.trim() : '';
+        }
+        function sourceSection( item ) {
+            var select = item.querySelector( ':scope > .deprat-tree-row [data-tree-section]' );
+            var key = select && select.value ? select.value : item.getAttribute( 'data-section-guess' );
+            return config.sectionLabels[ key ] ? key : 'autres';
+        }
+        function listFor( section ) {
+            return preview.querySelector( '[data-section-key="' + section + '"]' );
+        }
+        function innerList( item ) {
+            return item && item.querySelector( ':scope > .deprat-section-children > [data-preview-list]' );
+        }
+        function makeControl( content, action, title ) {
+            var button = document.createElement( 'button' );
+            button.type = 'button';
+            button.textContent = content;
+            button.setAttribute( action, '' );
+            button.setAttribute( 'aria-label', title );
+            button.title = title;
+            return button;
+        }
+        function buildItem( real, depth ) {
+            var id = real.getAttribute( 'data-term-id' );
+            var name = sourceName( real );
+            var li = document.createElement( 'li' );
+            li.className = 'deprat-section-term deprat-preview-item';
+            li.setAttribute( 'data-preview-item', '' );
+            li.setAttribute( 'data-term-id', id );
+            var row = document.createElement( 'div' );
+            row.className = 'deprat-section-term-row';
+            var drag = makeControl( '⠿', 'data-preview-handle', 'Déplacer ' + name );
+            drag.className = 'deprat-preview-handle';
+            var label = document.createElement( 'span' );
+            label.className = 'deprat-section-term-link';
+            label.textContent = name;
+            var actions = document.createElement( 'div' );
+            actions.className = 'deprat-preview-actions';
+            actions.append(
+                makeControl( '↑', 'data-preview-up', 'Monter ' + name ),
+                makeControl( '↓', 'data-preview-down', 'Descendre ' + name ),
+                makeControl( '↳', 'data-preview-indent', 'Ranger sous la catégorie précédente : ' + name ),
+                makeControl( '↰', 'data-preview-outdent', 'Remonter d’un niveau : ' + name )
+            );
+            if ( depth === 0 ) {
+                var selection = document.createElement( 'select' );
+                selection.setAttribute( 'data-preview-section-select', '' );
+                selection.setAttribute( 'aria-label', 'Déplacer ' + name + ' vers une rubrique' );
+                Object.keys( config.sectionLabels ).forEach( function ( key ) {
+                    var option = document.createElement( 'option' );
+                    option.value = key;
+                    option.textContent = config.sectionLabels[ key ];
+                    selection.appendChild( option );
+                } );
+                selection.value = sourceSection( real );
+                actions.appendChild( selection );
+            }
+            var edit = document.createElement( 'a' );
+            edit.className = 'deprat-preview-edit';
+            edit.href = config.editBase + Number( id );
+            edit.title = 'Modifier la catégorie ' + name;
+            edit.setAttribute( 'aria-label', 'Modifier la catégorie ' + name );
+            edit.textContent = '✎';
+            actions.appendChild( edit );
+
+            var children = directItems( sourceChildList( real ), '[data-tree-item]' );
+            var toggle = makeControl( '⌄', 'data-preview-toggle', 'Déplier les sous-catégories de ' + name );
+            toggle.className = 'deprat-section-toggle';
+            toggle.setAttribute( 'aria-expanded', expanded.has( id ) ? 'true' : 'false' );
+            toggle.disabled = children.length === 0;
+            var nested = document.createElement( 'div' );
+            nested.className = 'deprat-section-children';
+            nested.hidden = !expanded.has( id );
+            var sublist = document.createElement( 'ul' );
+            sublist.className = 'deprat-section-categories deprat-preview-list deprat-preview-sublist';
+            sublist.setAttribute( 'data-preview-list', '' );
+            sublist.setAttribute( 'aria-label', 'Sous-catégories de ' + name );
+            children.forEach( function ( item ) {
+                sublist.appendChild( buildItem( item, depth + 1 ) );
+            } );
+            nested.appendChild( sublist );
+            row.append( drag, label, actions, toggle );
+            li.append( row, nested );
+            li.classList.toggle( 'has-children', children.length > 0 );
+            return li;
+        }
+        function render() {
+            rebuilding = true;
+            try {
+                $( preview ).find( '.deprat-preview-list.ui-sortable' ).sortable( 'destroy' );
+                preview.querySelectorAll( '[data-section-key]' ).forEach( function ( list ) {
+                    list.replaceChildren();
+                } );
+                directItems( sourceRoot, '[data-tree-item]' ).forEach( function ( real ) {
+                    var destination = listFor( sourceSection( real ) );
+                    if ( destination ) { destination.appendChild( buildItem( real, 0 ) ); }
+                } );
+                preview.querySelectorAll( '[data-preview-section]' ).forEach( function ( section ) {
+                    section.classList.toggle( 'is-empty', !directItems(
+                        section.querySelector( ':scope > [data-preview-list]' ), '[data-preview-item]'
+                    ).length );
+                } );
+                setupDrag();
+            } finally { rebuilding = false; }
+        }
+        function treeSnapshot( list ) {
+            return directItems( list, '[data-preview-item]' ).map( function ( item ) {
+                return {
+                    id: Number( item.getAttribute( 'data-term-id' ) ),
+                    children: treeSnapshot( innerList( item ) )
+                };
+            } );
+        }
+        function synchronize() {
+            var graph = [];
+            var sections = {};
+            preview.querySelectorAll( '[data-section-key]' ).forEach( function ( sectionList ) {
+                var key = sectionList.getAttribute( 'data-section-key' );
+                treeSnapshot( sectionList ).forEach( function ( item ) {
+                    graph.push( item );
+                    sections[ item.id ] = key;
+                } );
+            } );
+            var originals = new Map();
+            sourceRoot.querySelectorAll( '[data-tree-item]' ).forEach( function ( item ) {
+                originals.set( Number( item.getAttribute( 'data-term-id' ) ), item );
+            } );
+            var seen = new Set();
+            function validate( nodes, ancestry, depth ) {
+                if ( depth > 30 ) { throw new Error( 'Trop de niveaux de catégories.' ); }
+                nodes.forEach( function ( node ) {
+                    if ( !originals.has( node.id ) || seen.has( node.id ) || ancestry.has( node.id ) ) {
+                        throw new Error( 'Ce déplacement créerait une catégorie dupliquée ou circulaire.' );
+                    }
+                    seen.add( node.id );
+                    var path = new Set( ancestry );
+                    path.add( node.id );
+                    validate( node.children, path, depth + 1 );
+                } );
+            }
+            validate( graph, new Set(), 0 );
+            if ( seen.size !== originals.size ) {
+                throw new Error( 'Certaines catégories sont manquantes. Rechargez la page.' );
+            }
+            function apply( nodes, target ) {
+                nodes.forEach( function ( node ) {
+                    var real = originals.get( node.id );
+                    // Sécurité supplémentaire : ne jamais imbriquer un parent dans son enfant.
+                    if ( real.contains( target ) ) {
+                        throw new Error( 'Impossible de déposer une catégorie dans son propre enfant.' );
+                    }
+                    target.appendChild( real );
+                    apply( node.children, sourceChildList( real ) );
+                } );
+            }
+            apply( graph, sourceRoot );
+            Object.keys( sections ).forEach( function ( id ) {
+                var real = originals.get( Number( id ) );
+                var select = real.querySelector( ':scope > .deprat-tree-row [data-tree-section]' );
+                var section = sections[ id ];
+                if ( select && sourceSection( real ) !== section ) { select.value = section; }
+            } );
+            app.dispatchEvent( new CustomEvent( 'deprat-tree-preview-changed' ) );
+        }
+        function updateSafely() {
+            try { synchronize(); }
+            catch ( error ) {
+                render();
+                var status = app.querySelector( '[data-tree-status]' );
+                status.textContent = error.message;
+                status.classList.add( 'is-error' );
+            }
+        }
+        function setupDrag() {
+            $( preview ).find( '[data-preview-list]' ).sortable( {
+                items: '> [data-preview-item]',
+                connectWith: '.deprat-preview-list',
+                handle: '[data-preview-handle]',
+                cancel: 'a, input, select, textarea, button:not([data-preview-handle])',
+                placeholder: 'deprat-preview-placeholder',
+                forcePlaceholderSize: true,
+                dropOnEmpty: true,
+                tolerance: 'pointer',
+                scroll: true,
+                scrollSensitivity: 40,
+                scrollSpeed: 14,
+                start: function ( event, ui ) {
+                    preview.classList.add( 'is-dragging' );
+                    ui.placeholder.height( Math.max( 30, ui.item.children( '.deprat-section-term-row' ).outerHeight() ) );
+                    preview.querySelectorAll( '.deprat-section-children' ).forEach( function ( div ) {
+                        div.hidden = false;
+                    } );
+                },
+                receive: function ( event, ui ) {
+                    if ( ui.item[0].contains( this ) ) {
+                        $( this ).sortable( 'cancel' );
+                    }
+                },
+                stop: function () {
+                    preview.classList.remove( 'is-dragging' );
+                    updateSafely();
+                }
+            } );
+        }
+        function move( item, position ) {
+            var previous = item.previousElementSibling;
+            var next = item.nextElementSibling;
+            var list = item.parentElement;
+            if ( position === 'up' && previous ) { previous.before( item ); }
+            else if ( position === 'down' && next ) { next.after( item ); }
+            else if ( position === 'indent' && previous && previous.matches( '[data-preview-item]' ) ) {
+                var dest = innerList( previous );
+                expanded.add( previous.getAttribute( 'data-term-id' ) );
+                dest.appendChild( item );
+            } else if ( position === 'outdent' ) {
+                var parentItem = list.closest( '[data-preview-item]' );
+                if ( parentItem ) {
+                    parentItem.after( item );
+                }
+            } else { return; }
+            updateSafely();
+        }
+        preview.addEventListener( 'click', function ( event ) {
+            var toggle = event.target.closest( '[data-preview-toggle]' );
+            if ( toggle ) {
+                var li = toggle.closest( '[data-preview-item]' );
+                var id = li.getAttribute( 'data-term-id' );
+                if ( expanded.has( id ) ) { expanded.delete( id ); }
+                else { expanded.add( id ); }
+                var content = li.querySelector( ':scope > .deprat-section-children' );
+                content.hidden = !expanded.has( id );
+                toggle.setAttribute( 'aria-expanded', expanded.has( id ) ? 'true' : 'false' );
+                $( content ).find( '[data-preview-list].ui-sortable' ).sortable( 'refresh' );
+                return;
+            }
+            var actions = { 'data-preview-up': 'up', 'data-preview-down': 'down',
+                'data-preview-indent': 'indent', 'data-preview-outdent': 'outdent' };
+            Object.keys( actions ).some( function ( attr ) {
+                var control = event.target.closest( '[' + attr + ']' );
+                if ( !control ) { return false; }
+                move( control.closest( '[data-preview-item]' ), actions[ attr ] );
+                return true;
+            } );
+        } );
+        preview.addEventListener( 'change', function ( event ) {
+            var select = event.target.closest( '[data-preview-section-select]' );
+            if ( !select ) { return; }
+            var li = select.closest( '[data-preview-item]' );
+            var target = listFor( select.value );
+            if ( !li || !target ) { return; }
+            target.appendChild( li );
+            updateSafely();
+        } );
+        app.addEventListener( 'deprat-tree-changed', function () {
+            if ( !rebuilding ) { render(); }
+        } );
+        render();
+    } );
+} )( jQuery );
