@@ -434,6 +434,10 @@ function deprat_catalog_mega_assets() {
         plugins_url( 'assets/css/catalogue-mega-menu.css', dirname( __DIR__ ) . '/deprat-core.php' ),
         array(), '0.1.28'
     );
+    wp_enqueue_script( 'deprat-catalog-mega-menu',
+        plugins_url( 'assets/js/catalogue-mega-menu.js', dirname( __DIR__ ) . '/deprat-core.php' ),
+        array(), '0.1.28', true
+    );
 }
 add_action( 'wp_enqueue_scripts', 'deprat_catalog_mega_assets', 20 );
 
