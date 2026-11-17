@@ -211,7 +211,7 @@ function deprat_category_tree_ajax_create() {
     $name = isset( $_POST['name'] ) && is_scalar( $_POST['name'] )
         ? trim( sanitize_text_field( wp_unslash( $_POST['name'] ) ) ) : '';
     $parent = isset( $_POST['parent'] ) && is_scalar( $_POST['parent'] ) ? absint( $_POST['parent'] ) : 0;
-    if ( ! $name || mb_strlen( $name ) > 160 ) {
+    if ( ! $name || strlen( $name ) > 160 ) {
         wp_send_json_error( array( 'message' => 'Renseignez un nom de catégorie valide.' ), 400 );
     }
     if ( $parent && ! term_exists( $parent, 'product_cat' ) ) {
