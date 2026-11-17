@@ -438,6 +438,18 @@ const assert = require( 'assert' );
         // Éditeur visuel : catégories racines, création imbriquée sur trois niveaux
         // et enregistrement de la hiérarchie native WooCommerce.
         await page.goto( base + '/wp-admin/edit.php?post_type=product&page=deprat-categories-tree', { waitUntil: 'domcontentloaded' } );
+        await page.waitForSelector( '[data-deprat-category-tree] [data-tree-preview] .deprat-preview-item' );
+        const editor = page.locator( '[data-tree-preview]' );
+        assert( await editor.locator( '.deprat-catalog-sections--admin > [data-preview-section]' ).count() === 10,
+            'Les rubriques du vrai méga-menu, y compris les zones vides de dépôt, sont en administration.' );
+        assert( await editor.locator( '.deprat-section-heading h2' ).first().isVisible(), 'Les titres de section sont affichés.' );
+        assert.strictEqual( await editor.locator( '.deprat-section-heading a' ).count(), 0,
+            'Un titre de rubrique ne doit pas être cliquable, même en admin.' );
+        assert( await editor.locator( '[data-section-key="tubes"] > [data-preview-item]' ).count() >= 2,
+            'Les catégories Tubes et Embouts apparaissent réellement dans la grille administrable.' );
+        assert( await editor.locator( '[data-preview-handle]' ).first().isVisible(),
+            'La grille publique reproduite en admin permet de glisser les vraies catégories.' );
+        await page.locator( '[data-tree-advanced] > summary' ).click();
         await page.waitForSelector( '[data-deprat-category-tree] .deprat-tree-root' );
         assert( await page.locator( '[data-tree-item]' ).count() >= 2, 'Les catégories déjà présentes sont visibles dans l’arborescence.' );
         assert( await page.locator( '[data-tree-item] [data-drag-handle]' ).first().isVisible(), 'La poignée drag-and-drop est visible.' );
@@ -503,6 +515,37 @@ const assert = require( 'assert' );
             .locator( ':scope > .deprat-tree-list > [data-tree-item] > .deprat-tree-list > [data-tree-item]' )
             .filter( { hasText: 'Plaques fixation test' } ).count() === 1,
             'La nouvelle arborescence doit être sauvegardée définitivement dans WooCommerce.' );
+        // L'éditeur visuel doit reconstituer l'arborescence, pas seulement l'afficher.
+        const visual = page.locator( '[data-tree-preview]' );
+        const supportsVisual = visual.locator( '[data-section-key="autres"] > [data-preview-item]' )
+            .filter( { hasText: 'Supports DEPRAT test' } ).first();
+        await supportsVisual.waitFor();
+        const moveSection = supportsVisual.locator( ':scope > .deprat-section-term-row [data-preview-section-select]' );
+        await moveSection.selectOption( 'liaison' );
+        assert( await visual.locator( '[data-section-key="liaison"] > [data-preview-item]' )
+            .filter( { hasText: 'Supports DEPRAT test' } ).count() === 1,
+            'Changer de rubrique dans la vue visuelle doit déplacer la catégorie immédiatement.' );
+        // Le tri visuel doit alimenter la sauvegarde WooCommerce et la boutique.
+        const emboutVisual = visual.locator( '[data-section-key="tubes"] > [data-preview-item]' )
+            .filter( { hasText: 'Embouts' } ).first();
+        const tubeVisual = visual.locator( '[data-section-key="tubes"] > [data-preview-item]' )
+            .filter( { hasText: 'Tubes' } ).first();
+        await emboutVisual.locator( ':scope > .deprat-section-term-row [data-preview-handle]' )
+            .dragTo( tubeVisual.locator( ':scope > .deprat-section-term-row' ),
+                { targetPosition: { x: 15, y: 4 }, steps: 20 } );
+        assert.strictEqual( await visual.locator( '[data-section-key="tubes"] > [data-preview-item]' ).first()
+            .getAttribute( 'data-term-id' ),
+            await emboutVisual.getAttribute( 'data-term-id' ),
+            'Le glisser-déposer visuel change réellement l’ordre sous la rubrique.' );
+        await page.locator( '[data-tree-save]' ).first().click();
+        await page.waitForFunction( () => {
+            const status = document.querySelector( '[data-tree-status]' );
+            return status && status.textContent.includes( 'enregistré' );
+        }, { timeout: 25000 } );
+        await page.reload( { waitUntil: 'domcontentloaded' } );
+        assert( await page.locator( '[data-section-key="liaison"] > [data-preview-item]' )
+            .filter( { hasText: 'Supports DEPRAT test' } ).count() === 1,
+            'La rubrique choisie visuellement doit rester enregistrée après rechargement.' );
         await page.screenshot( { path: process.env.RUNNER_TEMP + '/deprat-arborescence-admin.png', fullPage: true } );
         await page.goto( base + '/?product_cat=tubes', { waitUntil: 'domcontentloaded' } );
         assert( ( await page.locator( '.deprat-mega-panel' ).first().textContent() ).includes( 'Plaques fixation test' ),
