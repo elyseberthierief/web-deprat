@@ -255,3 +255,19 @@ body.deprat-product-editor-ready .deprat-tech-save.deprat-tech-save-floating:foc
 .deprat-shape-admin-field{margin:2px 0 16px;padding:13px;border:1px solid #cbdcee;border-radius:10px;background:#f1f6fc;}
 .deprat-shape-admin-field select{width:100%;max-width:410px;border:1px solid #bad0e7;border-radius:7px;min-height:40px;}
 .deprat-shape-admin-field p{margin:8px 0 0;}
+
+/* L'éditeur produit reprend visuellement l'arborescence enregistrée. */
+.deprat-category-organize-button{
+ display:inline-flex!important;align-items:center;gap:6px;margin:8px 0 0 7px!important;
+ color:#123e7d!important;border:1px solid #acc5e2!important;
+ background:#f1f6fd!important;font-weight:700!important;text-decoration:none!important;
+}
+.deprat-category-organize-button:is(:hover,:focus-visible){
+ color:#fff!important;background:#104887!important;border-color:#104887!important;
+}
+.deprat-tech-category-options label[data-category-depth]:not([data-category-depth="0"]){
+ border-left:2px solid #c7dbef;margin:0 0 0 4px;color:#194677;
+}
+.deprat-tech-category-options .deprat-category-branch-mark{
+ display:inline-flex;color:#7b9cc6;font-size:13px;font-weight:800;margin-right:3px;
+}
