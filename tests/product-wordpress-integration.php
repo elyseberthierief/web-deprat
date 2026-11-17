@@ -343,6 +343,39 @@ ob_start();
 $mega_html = deprat_catalog_mega_menu( '<a href="#">Pièces détachées</a>', $menu_items[0], 0,
     (object) array( 'theme_location' => 'primary' ) );
 $extra_html = ob_get_clean();
+// Ordre défini par l'admin : aucune priorité codée en dur (Tubes, Embouts...).
+update_term_meta( (int) $tube_category['term_id'], 'order', 9 );
+update_term_meta( (int) $end_category['term_id'], 'order', 1 );
+$roots_ordered = deprat_catalog_root_categories();
+$ordered_ids = array_map( static function( $term ) { return (int) $term->term_id; }, $roots_ordered );
+deprat_integration_assert( array_search( (int) $end_category['term_id'], $ordered_ids, true )
+    < array_search( (int) $tube_category['term_id'], $ordered_ids, true ),
+    'Le méga-menu doit respecter l’ordre enregistré dans WooCommerce, et non placer Tubes en premier.' );
+
+$nested_tree = array( array( 'id' => (int) $end_category['term_id'], 'children' => array(
+    array( 'id' => (int) $tube_category['term_id'], 'children' => array() ),
+) ) );
+$validated_tree = deprat_category_tree_validate( $nested_tree, array(
+    (int) $tube_category['term_id'], (int) $end_category['term_id'],
+) );
+deprat_integration_assert( ! is_wp_error( $validated_tree )
+    && (int) $validated_tree['parents'][ $tube_category['term_id'] ] === (int) $end_category['term_id'],
+    'Une catégorie doit pouvoir devenir sous-catégorie à plusieurs niveaux.' );
+$bad_tree = array( array( 'id' => (int) $tube_category['term_id'], 'children' => array(
+    array( 'id' => (int) $tube_category['term_id'], 'children' => array() ),
+) ) );
+deprat_integration_assert( is_wp_error( deprat_category_tree_validate( $bad_tree, array(
+    (int) $tube_category['term_id'], (int) $end_category['term_id'],
+) ) ), 'Une arborescence contenant un doublon ou un cycle doit être rejetée.' );
+
+ob_start();
+deprat_category_tree_render_list( 0, deprat_category_tree_terms() );
+$tree_editor_html = ob_get_clean();
+deprat_integration_assert( false !== strpos( $tree_editor_html, 'data-drag-handle' )
+    && false !== strpos( $tree_editor_html, 'data-tree-add-child' )
+    && false !== strpos( $tree_editor_html, 'data-term-id="' . (int) $tube_category['term_id'] . '"' ),
+    'Le gestionnaire admin doit afficher les familles existantes et les poignées de déplacement.' );
+
 deprat_integration_assert( false !== strpos( $mega_html, 'deprat-mega-panel' )
     && false !== strpos( $mega_html, 'Tubes' ) && false !== strpos( $mega_html, 'Embouts' ),
     'Le méga-menu doit reprendre les catégories WooCommerce sans liens inventés.' );
