@@ -96,9 +96,43 @@ file_put_contents( $uploads['basedir'] . '/integration-test/fiche.pdf', "%PDF-1.
 file_put_contents( $uploads['basedir'] . '/integration-test/schema.png', base64_decode( 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jRr0AAAAASUVORK5CYII=' ) );
 file_put_contents( $uploads['basedir'] . '/integration-test/galerie.png', file_get_contents( $uploads['basedir'] . '/integration-test/schema.png' ) );
 file_put_contents( $uploads['basedir'] . '/integration-test/notice.pdf', "%PDF-1.4\\n%%EOF\\n" );
-$glb_json = '{"asset":{"version":"2.0"},"scene":0,"scenes":[{"nodes":[]}]}';
+// Modèle GLB réel de test : un cube composé de 12 triangles.
+// Sert à vérifier les angles nets sans montrer les diagonales du maillage.
+$vertex_positions = array(
+    array( -1, -1, -1 ), array( 1, -1, -1 ), array( 1, 1, -1 ), array( -1, 1, -1 ),
+    array( -1, -1, 1 ), array( 1, -1, 1 ), array( 1, 1, 1 ), array( -1, 1, 1 ),
+);
+$face_indices = array(
+    4, 5, 6, 4, 6, 7, 0, 2, 1, 0, 3, 2,
+    0, 4, 7, 0, 7, 3, 1, 2, 6, 1, 6, 5,
+    3, 7, 6, 3, 6, 2, 0, 1, 5, 0, 5, 4,
+);
+$glb_data = '';
+foreach ( $vertex_positions as $coords ) {
+    foreach ( $coords as $v ) { $glb_data .= pack( 'g', (float) $v ); }
+}
+foreach ( $face_indices as $v ) { $glb_data .= pack( 'v', $v ); }
+$glb_doc = array(
+    'asset' => array( 'version' => '2.0' ),
+    'scene' => 0,
+    'scenes' => array( array( 'nodes' => array( 0 ) ) ),
+    'nodes' => array( array( 'mesh' => 0 ) ),
+    'meshes' => array( array( 'primitives' => array( array( 'attributes' => array( 'POSITION' => 0 ), 'indices' => 1, 'mode' => 4 ) ) ) ),
+    'buffers' => array( array( 'byteLength' => strlen( $glb_data ) ) ),
+    'bufferViews' => array(
+        array( 'buffer' => 0, 'byteOffset' => 0, 'byteLength' => 96, 'target' => 34962 ),
+        array( 'buffer' => 0, 'byteOffset' => 96, 'byteLength' => 72, 'target' => 34963 ),
+    ),
+    'accessors' => array(
+        array( 'bufferView' => 0, 'componentType' => 5126, 'count' => 8, 'type' => 'VEC3', 'min' => array( -1, -1, -1 ), 'max' => array( 1, 1, 1 ) ),
+        array( 'bufferView' => 1, 'componentType' => 5123, 'count' => 36, 'type' => 'SCALAR' ),
+    ),
+);
+$glb_json = wp_json_encode( $glb_doc );
 $glb_json .= str_repeat( ' ', ( 4 - strlen( $glb_json ) % 4 ) % 4 );
-$glb_binary = 'glTF' . pack( 'V', 2 ) . pack( 'V', 20 + strlen( $glb_json ) ) . pack( 'V', strlen( $glb_json ) ) . 'JSON' . $glb_json;
+$glb_binary = 'glTF' . pack( 'V', 2 ) . pack( 'V', 28 + strlen( $glb_json ) + strlen( $glb_data ) )
+    . pack( 'V', strlen( $glb_json ) ) . 'JSON' . $glb_json
+    . pack( 'V', strlen( $glb_data ) ) . "BIN\0" . $glb_data;
 file_put_contents( $uploads['basedir'] . '/integration-test/modele.glb', $glb_binary );
 deprat_integration_assert( deprat_product_3d_valid_binary( $uploads['basedir'] . '/integration-test/modele.glb', strlen( $glb_binary ) ), 'Le GLB exemple doit être valide.' );
 set_post_thumbnail( $product_id, $image );
