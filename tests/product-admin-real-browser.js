@@ -321,10 +321,15 @@ const assert = require( 'assert' );
         assert( await page.locator( '[data-catalog-model-dialog]' ).isVisible(), 'La fenêtre 3D s’ouvre depuis la carte.' );
         assert( await page.locator( '[data-model-background]' ).isVisible(), 'Le bouton de fond 3D doit être visible.' );
         assert( await page.locator( '[data-model-render="contours"]' ).isVisible(), 'Le bouton de contours 3D doit être visible.' );
-        const catalogueBackgroundBefore = await page.locator( '.deprat-catalog-3d-stage' ).getAttribute( 'data-3d-background' );
-        await page.locator( '[data-model-background]' ).click();
-        const catalogueBackgroundAfter = await page.locator( '.deprat-catalog-3d-stage' ).getAttribute( 'data-3d-background' );
-        assert.notStrictEqual( catalogueBackgroundAfter, catalogueBackgroundBefore, 'Le fond change de contraste au premier clic quelle que soit la matière.' );
+        const catalogueBackgroundSwitch = await page.locator( '[data-model-background]' ).evaluate( button => {
+            const stage = document.querySelector( '.deprat-catalog-3d-stage' );
+            const before = stage.getAttribute( 'data-3d-background' );
+            // Le chargement GLB peut changer le fond automatique ENTRE deux appels
+            // Playwright ; mesurer avant et après clic dans le même tour JS.
+            button.click();
+            return { before, after: stage.getAttribute( 'data-3d-background' ) };
+        } );
+        assert.notStrictEqual( catalogueBackgroundSwitch.after, catalogueBackgroundSwitch.before, 'Le fond change de contraste au premier clic quelle que soit la matière.' );
         await page.locator( '[data-model-render="contours"]' ).click();
         await page.locator( '[data-model-outline] canvas' ).waitFor( { state: 'visible', timeout: 30000 } );
         const renderedOutline = await page.locator( '[data-model-outline] canvas' ).evaluate( c => ( { width: c.width, height: c.height } ) );
