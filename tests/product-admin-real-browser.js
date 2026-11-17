@@ -613,8 +613,67 @@ const assert = require( 'assert' );
             .filter( { hasText: 'Sous-catégorie garage créée depuis menu' } ).first().isVisible(),
             'Le lien entre parent et sous-catégorie est réellement conservé dans WooCommerce.' );
 
+        // Les titres de section ne sont PAS des termes WooCommerce :
+        // création, choix d’icône, modification, ajout d’une catégorie et tri global.
+        await page.locator( '[data-section-add]' ).click();
+        assert( await page.locator( '[data-section-editor-form]' ).isVisible(),
+            'Ajouter une section ouvre la popup de configuration.' );
+        await page.locator( '[data-section-editor-name]' ).fill( 'Motorisations DEPRAT test' );
+        await page.locator( 'input[name="deprat-section-icon"][value="treuil"]' ).check();
+        await page.locator( '[data-section-editor-save]' ).click();
+        await page.locator( '[data-section-editor-overlay]' ).waitFor( { state: 'hidden' } );
+        const newSection = page.locator( '[data-preview-section^="custom_"]' )
+            .filter( { has: page.locator( '.deprat-section-heading h2', { hasText: 'Motorisations DEPRAT test' } ) } ).first();
+        await newSection.waitFor();
+        const customKey = await newSection.getAttribute( 'data-preview-section' );
+        assert( /^custom_[a-f0-9]{12}$/.test( customKey ),
+            'Une section personnalisée a une clé stable, distincte des catégories.' );
+        assert( await newSection.locator( '.deprat-section-icon-wrap svg' ).isVisible(),
+            'L’icône issue de la palette apparaît dans la même grille.' );
+        await newSection.locator( '[data-preview-edit-section]' ).click();
+        await page.locator( '[data-section-editor-name]' ).fill( 'Motorisations et accessoires test' );
+        await page.locator( 'input[name="deprat-section-icon"][value="liaison"]' ).check();
+        await page.locator( '[data-section-editor-save]' ).click();
+        await page.locator( '[data-section-editor-overlay]' ).waitFor( { state: 'hidden' } );
+        const updatedSection = page.locator( '[data-preview-section="' + customKey + '"]' );
+        assert( ( await updatedSection.locator( '.deprat-section-heading h2' ).textContent() ).includes( 'Motorisations et accessoires test' ),
+            'Renommer une section garde sa clé et ses futures catégories.' );
+        await updatedSection.locator( '[data-preview-create-menu] summary' ).click();
+        await updatedSection.locator( '[data-preview-add-category]' ).click();
+        await page.locator( '[data-tree-create-name]' ).fill( 'Composants moteur test' );
+        await page.locator( '[data-tree-create-submit]' ).click();
+        await page.locator( '[data-tree-create-overlay]' ).waitFor( { state: 'hidden' } );
+        assert( await updatedSection.locator( '[data-preview-list] > [data-preview-item]' )
+            .filter( { hasText: 'Composants moteur test' } ).first().isVisible(),
+            'La nouvelle section peut recevoir une véritable catégorie WooCommerce.' );
+        const firstSection = page.locator( '[data-preview-grid] > [data-preview-section]' ).first();
+        await updatedSection.locator( '[data-section-drag-handle]' ).dragTo(
+            firstSection.locator( '.deprat-section-heading' ),
+            { targetPosition: { x: 20, y: 4 }, steps: 20 }
+        );
+        assert.strictEqual(
+            await page.locator( '[data-preview-grid] > [data-preview-section]' ).first().getAttribute( 'data-preview-section' ),
+            customKey, 'Glisser la section déplace l’intégralité du bloc et ses catégories.'
+        );
+        await page.locator( '[data-tree-save]' ).first().click();
+        await page.waitForFunction( () => {
+            const status = document.querySelector( '[data-tree-status]' );
+            return status && status.textContent.includes( 'enregistré' );
+        }, { timeout: 25000 } );
+        await page.reload( { waitUntil: 'domcontentloaded' } );
+        assert.strictEqual( await page.locator( '[data-preview-grid] > [data-preview-section]' ).first()
+            .getAttribute( 'data-preview-section' ), customKey,
+            'L’ordre des sections reste identique après sauvegarde et rechargement.' );
+        assert( ( await page.locator( '[data-preview-section="' + customKey + '"] .deprat-section-heading h2' ).textContent() )
+            .includes( 'Motorisations et accessoires test' ), 'Le nouveau nom est conservé.' );
+        assert( await page.locator( '[data-preview-section="' + customKey + '"] [data-preview-item]' )
+            .filter( { hasText: 'Composants moteur test' } ).count() === 1,
+            'Les catégories de la section déplacée restent rattachées.' );
         await page.screenshot( { path: process.env.RUNNER_TEMP + '/deprat-arborescence-admin.png', fullPage: true } );
         await page.goto( base + '/?product_cat=tubes', { waitUntil: 'domcontentloaded' } );
+        const megaSectionHeaders = page.locator( '.deprat-mega-panel .deprat-section-heading h2' );
+        assert( ( await megaSectionHeaders.first().textContent() ).includes( 'Motorisations et accessoires test' ),
+            'Le vrai méga-menu reprend l’ordre et le nom de la section créée en administration.' );
         assert( ( await page.locator( '.deprat-mega-panel' ).first().textContent() ).includes( 'Plaques fixation test' ),
             'Le méga-menu reprend toutes les sous-catégories de la nouvelle arborescence.' );
 
