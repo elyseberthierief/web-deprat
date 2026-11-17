@@ -516,4 +516,32 @@ deprat_integration_assert( false !== strpos( $card_html, 'data-catalog-add' )
     && false !== strpos( $card_html, 'deprat-catalog-ref' ),
     'La carte Embouts doit offrir l’ajout rapide, la référence et ne pas inventer une vue 3D.' );
 
+// La gestion des sections reste totalement indépendante des termes WooCommerce.
+$section_count_terms = wp_count_terms( array( 'taxonomy' => 'product_cat', 'hide_empty' => false ) );
+$old_section_settings = get_option( 'deprat_catalog_section_settings_v1', null );
+$registry = deprat_catalog_section_registry();
+$custom_key = 'custom_abc123abc123';
+$custom_section = array( 'title' => 'Motorisations test', 'icon' => 'garage', 'media_id' => 0 );
+$registry[ $custom_key ] = $custom_section;
+update_option( 'deprat_catalog_section_settings_v1', $registry, false );
+deprat_integration_assert( isset( deprat_catalog_section_definitions()[ $custom_key ] )
+    && 'Motorisations test' === deprat_catalog_section_definitions()[ $custom_key ],
+    'Une section créée doit porter son propre titre sans nouvelle catégorie WooCommerce.' );
+deprat_integration_assert( false !== strpos( deprat_catalog_section_icon( $custom_key ), '<svg' ),
+    'Une section personnalisée doit utiliser l’icône choisie dans la palette.' );
+$order = array_keys( $registry );
+array_unshift( $order, array_pop( $order ) );
+$reordered = deprat_catalog_section_validate_order( $order );
+deprat_integration_assert( ! is_wp_error( $reordered ) && array_key_first( $reordered ) === $custom_key,
+    'Les sections peuvent être déplacées sans modifier les termes WooCommerce.' );
+deprat_integration_assert( is_wp_error( deprat_catalog_section_validate_order( array( 'tubes', 'tubes' ) ) ),
+    'Un enregistrement incomplet ou dupliqué ne doit jamais passer.' );
+update_option( 'deprat_catalog_section_settings_v1', $reordered, false );
+deprat_integration_assert( array_key_first( deprat_catalog_section_definitions() ) === $custom_key,
+    'L’ordre des sections est relu dans le bon ordre après sauvegarde.' );
+deprat_integration_assert( $section_count_terms === wp_count_terms( array( 'taxonomy' => 'product_cat', 'hide_empty' => false ) ),
+    'Créer, renommer et déplacer des titres ne doit jamais créer de catégories.' );
+if ( null === $old_section_settings ) { delete_option( 'deprat_catalog_section_settings_v1' ); }
+else { update_option( 'deprat_catalog_section_settings_v1', $old_section_settings, false ); }
+
 WP_CLI::success( 'WordPress et WooCommerce : sauvegarde, médias et affichages vérifiés.' );
