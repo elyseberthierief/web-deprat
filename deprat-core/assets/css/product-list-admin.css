@@ -562,3 +562,59 @@ body.deprat-product-list-active.deprat-product-grid-mode #the-list>tr>.column-th
     max-height:172px!important;min-height:170px!important;
  }
 }
+
+
+/* Sous-catégories ouvertes à l'arrivée, repliables sans requête ni rechargement. */
+body.deprat-product-list-active details.deprat-products-subcategory-level{
+    display:block;
+    min-width:0;
+    padding-left:15px;
+    border-left:1px solid #c4d4e8;
+}
+body.deprat-product-list-active .deprat-products-subcategory-toggle{
+    display:flex;align-items:center;gap:7px;
+    cursor:pointer;list-style:none;
+    width:max-content;max-width:100%;
+    padding:4px 6px 7px 0;
+    border-radius:6px;
+    color:#42628a;
+}
+body.deprat-product-list-active .deprat-products-subcategory-toggle::-webkit-details-marker{
+    display:none;
+}
+body.deprat-product-list-active .deprat-products-subcategory-toggle::marker{content:""}
+body.deprat-product-list-active .deprat-products-subcategory-toggle:focus-visible{
+    outline:2px solid #bd8b21;outline-offset:2px;
+}
+body.deprat-product-list-active .deprat-products-subcategory-arrow{
+    display:inline-grid;place-items:center;width:18px;height:18px;
+    color:#32649a;font-size:18px;line-height:1;
+    transform:rotate(180deg);transition:transform .15s ease;
+}
+body.deprat-product-list-active details.deprat-products-subcategory-level:not([open])
+    .deprat-products-subcategory-arrow{transform:rotate(0)}
+body.deprat-product-list-active details.deprat-products-subcategory-level
+    >.deprat-products-children{display:flex;align-items:center;gap:7px;flex-wrap:wrap;padding:0 0 4px;border:0}
+body.deprat-product-list-active details.deprat-products-subcategory-level:not([open])
+    >.deprat-products-children{display:none}
+/* Titres de produits et informations secondaires moins gras. */
+body.deprat-product-list-active table.wp-list-table tbody .row-title{
+    font-weight:500!important;
+}
+body.deprat-product-list-active.deprat-product-grid-mode #the-list>tr>.column-name .row-title{
+    font-weight:500!important;
+}
+body.deprat-product-list-active table.wp-list-table thead th,
+body.deprat-product-list-active table.wp-list-table thead td{
+    font-weight:500!important;
+}
+body.deprat-product-list-active table.wp-list-table .column-sku,
+body.deprat-product-list-active table.wp-list-table tbody td{
+    font-weight:400;
+}
+body.deprat-product-list-active table.wp-list-table .column-is_in_stock mark{
+    font-weight:450!important;
+}
+body.deprat-product-list-active .deprat-products-section-pill{
+    font-weight:450!important;
+}
