@@ -185,7 +185,7 @@
         if ( backgroundButton ) {
             backgroundButton.addEventListener( 'click', function () {
                 backgroundOverride = backgroundOverride === 'auto'
-                    ? ( automaticBackground === 'dark' ? 'light' : 'dark' )
+                    ? ( stage && stage.getAttribute( 'data-3d-background' ) === 'dark' ? 'light' : 'dark' )
                     : backgroundOverride === 'dark' ? 'light' : 'auto';
                 applyBackground();
             } );
