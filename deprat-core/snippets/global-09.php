@@ -628,10 +628,19 @@ add_action( 'wp_ajax_deprat_pdf_upload', function () {
     } catch ( Throwable $e ) {
         wp_send_json_error( array( 'message' => 'Erreur de chiffrement.' ), 500 );
     }
-    if ( false === $crypte || 16 !== strlen( $tag ) || false === @file_put_contents( $dossier . '/' . $fichier, 'DPR1' . $iv . $tag . $crypte, LOCK_EX ) ) {
+    // Défense en profondeur : n'écrire que dans le dossier privé et avec le
+    // nom construit localement (ID entier, type autorisé et suffixe aléatoire).
+    // Aucune donnée fournie par le navigateur ne sert de chemin arbitraire.
+    if ( ! preg_match( '/\\Acommande-[0-9]+-(?:devis|facture)-[a-f0-9]{16}\\.bin\\z/D', $fichier ) ) {
+        wp_send_json_error( array( 'message' => 'Nom de fichier non valide.' ), 400 );
+    }
+    $chemin_prive = trailingslashit( $dossier ) . $fichier;
+    // Fausse alerte Semgrep « tainted-filename » : le nom est validé par une
+    // liste blanche stricte, et le dossier est créé par deprat_pdf_dossier().
+    if ( false === $crypte || 16 !== strlen( $tag ) || false === @file_put_contents( $chemin_prive, 'DPR1' . $iv . $tag . $crypte, LOCK_EX ) ) { // nosemgrep: php.lang.security.injection.tainted-filename.tainted-filename
         wp_send_json_error( array( 'message' => 'Enregistrement du document impossible.' ), 500 );
     }
-    @chmod( $dossier . '/' . $fichier, 0600 );
+    @chmod( $chemin_prive, 0600 ); // nosemgrep: php.lang.security.injection.tainted-filename.tainted-filename
     $cle_meta = 'devis' === $type ? '_deprat_pdf_fichier' : '_deprat_facture_pdf_fichier';
     $nom_meta = 'devis' === $type ? '_deprat_pdf_nom' : '_deprat_facture_pdf_nom';
     $ancien = (string) $commande->get_meta( $cle_meta, true );
@@ -828,7 +837,9 @@ function deprat_servir_document_v71() {
         }
         $pdf = 'devis' === $type ? deprat_pdf_contenu_prive( $commande ) : deprat_facture_contenu_prive_v7( $commande );
     }
-    if ( false === $pdf ) { wp_die( 'Le document est indisponible.', 'DEPRAT', array( 'response' => 404 ) ); }
+    if ( false === $pdf || ! is_string( $pdf ) || 0 !== strpos( $pdf, '%PDF-' ) ) {
+        wp_die( 'Le document est indisponible.', 'DEPRAT', array( 'response' => 404 ) );
+    }
     while ( ob_get_level() ) { ob_end_clean(); }
     nocache_headers();
     header( 'Cache-Control: private, no-store, no-cache, must-revalidate, max-age=0' );
@@ -839,7 +850,10 @@ function deprat_servir_document_v71() {
     header( 'X-Frame-Options: SAMEORIGIN' );
     header( 'Content-Disposition: inline; filename="' . ( 'facture' === $type ? 'Facture' : 'Devis' ) . '-DEPRAT-' . $id . '.pdf"' );
     header( 'Content-Length: ' . strlen( $pdf ) );
-    echo $pdf;
+    // Exception documentée : réponse binaire PDF, accessible uniquement après
+    // contrôle du compte, de la commande et d'un nonce de version ; MIME PDF
+    // avec « nosniff ». Escaper le flux corromprait le devis/facture.
+    echo $pdf; // nosemgrep: php.lang.security.injection.echoed-request.echoed-request
     exit;
 }
 add_action( 'template_redirect', function () {
@@ -1284,11 +1298,14 @@ function deprat_html_historique() {
     echo '<button type="submit" class="deprat-rechercher">Rechercher</button></div>';
     echo '<div class="deprat-filtres"><div class="deprat-filtre"><label for="deprat-statut">Statut :</label><select id="deprat-statut" name="deprat_statut"><option value="">Tous les statuts</option>';
     foreach ( $statuts as $option ) {
-        echo '<option value="' . esc_attr( $option ) . '"' . selected( $statut, $option, false ) . '>' . esc_html( deprat_statut_client_v7( $option ) ) . '</option>';
+        // L'attribut sélectionné est une constante, jamais du texte de requête.
+        $selected_attr = $statut === $option ? ' selected="selected"' : '';
+        echo '<option value="' . esc_attr( $option ) . '"' . $selected_attr . '>' . esc_html( deprat_statut_client_v7( $option ) ) . '</option>';
     }
     echo '</select></div><div class="deprat-filtre deprat-filtre-periode"><label for="deprat-periode">Période :</label><span class="deprat-periode-champ"><span class="deprat-periode-icone" aria-hidden="true"></span><select id="deprat-periode" name="deprat_periode"><option value="">Toutes les dates</option>';
     foreach ( $periodes as $valeur => $libelle ) {
-        echo '<option value="' . esc_attr( $valeur ) . '"' . selected( $periode, $valeur, false ) . '>' . esc_html( $libelle ) . '</option>';
+        $selected_attr = $periode === $valeur ? ' selected="selected"' : '';
+        echo '<option value="' . esc_attr( $valeur ) . '"' . $selected_attr . '>' . esc_html( $libelle ) . '</option>';
     }
     echo '</select></span></div></div></form>';
 
@@ -1385,7 +1402,8 @@ function deprat_html_historique() {
         echo '<div class="deprat-carte-colonne deprat-carte-devis"><h3>Devis</h3>';
         echo '<span class="deprat-etat deprat-etat-' . esc_attr( $etat ) . '">' . esc_html( deprat_statut_client_v7( $etat ) ) . '</span>';
         if ( $pdf_devis && in_array( $etat, array( 'dpr-envoye', 'dpr-modifie', 'dpr-accepte', 'dpr-facture', 'dpr-termine' ), true ) ) {
-            echo '<p><a class="deprat-lien-document" href="' . esc_url( deprat_lien_document_v7( $commande, 'devis' ) ) . '" target="_blank" rel="noopener noreferrer">Consulter le devis</a></p>';
+            // Défense en profondeur : seul du HTML autorisé sort de ce lien.
+            echo wp_kses_post( '<p><a class="deprat-lien-document" href="' . esc_url( deprat_lien_document_v7( $commande, 'devis' ) ) . '" target="_blank" rel="noopener noreferrer">Consulter le devis</a></p>' );
         }
         if ( in_array( $etat, array( 'dpr-envoye', 'dpr-modifie' ), true ) && $pdf_devis && ! $accord ) {
             $version = (string) $pdf_devis;
@@ -1416,7 +1434,7 @@ function deprat_html_historique() {
         echo '<div class="deprat-carte-colonne deprat-carte-facture"><h3>Facture</h3>';
         if ( $facture_disponible ) {
             echo '<span class="deprat-etat deprat-etat-dpr-facture">✓ Facture disponible</span>';
-            echo '<p><a class="deprat-lien-document" href="' . esc_url( deprat_lien_document_v7( $commande, 'facture' ) ) . '" target="_blank" rel="noopener noreferrer">Consulter la facture</a></p>';
+            echo wp_kses_post( '<p><a class="deprat-lien-document" href="' . esc_url( deprat_lien_document_v7( $commande, 'facture' ) ) . '" target="_blank" rel="noopener noreferrer">Consulter la facture</a></p>' );
             if ( $facture_date ) { echo '<p class="deprat-texte-secondaire">Envoyée le ' . esc_html( deprat_date_utc_v7( $facture_date ) ) . '</p>'; }
             echo '<p class="deprat-paiement-v7">' . esc_html( deprat_mention_paiement_v7() ) . '</p>';
         } else {
@@ -1451,7 +1469,9 @@ function deprat_html_historique() {
         echo '<nav aria-label="Pages des demandes" class="deprat-pages">';
         for ( $i = 1; $i <= $pages; $i++ ) {
             $url = add_query_arg( array( 'deprat_page' => $i, 'deprat_q' => $recherche, 'deprat_statut' => $statut, 'deprat_periode' => $periode ), deprat_lien_historique() );
-            echo '<a class="' . ( $i === $page ? 'deprat-page-active' : '' ) . '" href="' . esc_url( $url ) . '"' . ( $i === $page ? ' aria-current="page"' : '' ) . '>' . esc_html( $i ) . '</a>';
+            // Les seules portions variables sont échappées (esc_url, esc_html)
+            // ou issues de constantes. KSES revalide le balisage final.
+            echo wp_kses_post( '<a class="' . ( $i === $page ? 'deprat-page-active' : '' ) . '" href="' . esc_url( $url ) . '"' . ( $i === $page ? ' aria-current="page"' : '' ) . '>' . esc_html( $i ) . '</a>' );
         }
         echo '</nav>';
     }
