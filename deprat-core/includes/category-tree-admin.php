@@ -90,20 +90,24 @@ add_action( 'admin_menu', static function () {
 
 function deprat_category_tree_admin_assets( $hook ) {
     if ( 'product_page_deprat-categories-tree' !== $hook ) { return; }
-    wp_enqueue_style( 'deprat-category-tree', plugins_url( 'assets/css/category-tree-admin.css', dirname( __DIR__ ) . '/deprat-core.php' ), array(), '0.1.36' );
+    wp_enqueue_style( 'deprat-category-tree', plugins_url( 'assets/css/category-tree-admin.css', dirname( __DIR__ ) . '/deprat-core.php' ), array(), '0.1.39' );
     wp_enqueue_style( 'deprat-catalog-sections-editor',
         plugins_url( 'assets/css/catalogue-sections.css', dirname( __DIR__ ) . '/deprat-core.php' ),
-        array( 'deprat-category-tree' ), '0.1.36' );
-    wp_enqueue_script( 'deprat-category-tree', plugins_url( 'assets/js/category-tree-admin.js', dirname( __DIR__ ) . '/deprat-core.php' ), array( 'jquery', 'jquery-ui-sortable' ), '0.1.36', true );
+        array( 'deprat-category-tree' ), '0.1.39' );
+    wp_enqueue_script( 'deprat-category-tree', plugins_url( 'assets/js/category-tree-admin.js', dirname( __DIR__ ) . '/deprat-core.php' ), array( 'jquery', 'jquery-ui-sortable' ), '0.1.39', true );
     wp_enqueue_script( 'deprat-category-tree-preview',
         plugins_url( 'assets/js/category-tree-preview.js', dirname( __DIR__ ) . '/deprat-core.php' ),
-        array( 'deprat-category-tree', 'jquery', 'jquery-ui-sortable' ), '0.1.36', true );
+        array( 'deprat-category-tree', 'jquery', 'jquery-ui-sortable' ), '0.1.39', true );
+    if ( current_user_can( 'upload_files' ) ) { wp_enqueue_media(); }
     wp_localize_script( 'deprat-category-tree', 'depratCategoryTree', array(
         'ajaxUrl' => admin_url( 'admin-ajax.php' ),
         'nonce' => wp_create_nonce( 'deprat_categories_tree' ),
         'editBase' => admin_url( 'term.php?taxonomy=product_cat&post_type=product&tag_ID=' ),
         'maxDepth' => 30,
         'sectionLabels' => deprat_catalog_section_definitions(),
+        'sectionSettings' => deprat_catalog_section_registry(),
+        'sectionPalette' => deprat_catalog_section_palette(),
+        'canUploadIcons' => current_user_can( 'upload_files' ),
     ) );
 }
 add_action( 'admin_enqueue_scripts', 'deprat_category_tree_admin_assets' );
@@ -165,47 +169,50 @@ function deprat_category_tree_render_item( $term, $terms, $depth = 0 ) {
  * Les zones vides restent affichées en admin pour recevoir un glisser-déposer.
  * Les catégories sont ajoutées en JS depuis l'arborescence WooCommerce.
  */
+function deprat_category_tree_render_visual_section( $key, $title ) {
+    ?>
+    <section class="deprat-section" data-preview-section="<?php echo esc_attr( $key ); ?>" aria-label="<?php echo esc_attr( $title ); ?>">
+        <div class="deprat-section-heading">
+            <button type="button" class="deprat-section-drag-handle" data-section-drag-handle
+                aria-label="<?php echo esc_attr( 'Déplacer la section ' . $title ); ?>" title="Glisser pour réorganiser la section">⠿</button>
+            <span class="deprat-section-icon-wrap"><?php echo deprat_catalog_section_icon( $key ); // SVG interne ou média raster validé. ?></span>
+            <h2><?php echo esc_html( $title ); ?></h2>
+            <button type="button" class="deprat-section-edit" data-preview-edit-section
+                aria-label="<?php echo esc_attr( 'Modifier la section ' . $title ); ?>" title="Modifier le titre et l’icône">✎</button>
+            <details class="deprat-section-create-menu" data-preview-create-menu>
+                <summary aria-label="<?php echo esc_attr( 'Ajouter une catégorie dans ' . $title ); ?>" title="<?php echo esc_attr( 'Ajouter dans ' . $title ); ?>">
+                    <span aria-hidden="true">+</span>
+                </summary>
+                <div class="deprat-section-create-dropdown">
+                    <button type="button" data-preview-add-category><span aria-hidden="true">+</span> Créer une catégorie</button>
+                    <button type="button" data-preview-add-subcategory><span aria-hidden="true">↳</span> Créer une sous-catégorie</button>
+                </div>
+            </details>
+        </div>
+        <ul class="deprat-section-categories deprat-preview-list" data-preview-list
+            data-section-key="<?php echo esc_attr( $key ); ?>" aria-label="<?php echo esc_attr( 'Catégories : ' . $title ); ?>"></ul>
+    </section>
+    <?php
+}
 function deprat_category_tree_admin_visual_menu() {
-    $sections = deprat_catalog_section_definitions();
     ?>
     <section class="deprat-preview-shell" data-tree-preview aria-label="Prévisualisation modifiable du méga-menu">
         <div class="deprat-preview-bar">
             <div>
                 <strong>Nos composants</strong>
-                <p>Même présentation que le site. Déplacez les catégories entre les rubriques et ouvrez les sous-catégories avec la flèche.</p>
+                <p>La même présentation que sur le site : créez vos sections, choisissez leurs icônes et déplacez les blocs et les catégories.</p>
             </div>
-            <span class="deprat-preview-help">⠿ Déplacer · ↑↓ Ordonner · ↳↰ Imbriquer</span>
+            <span class="deprat-preview-help">⠿ Déplacer les sections et les catégories · + Ajouter</span>
         </div>
         <div class="deprat-catalog-sections deprat-catalog-sections--admin" data-preview-grid>
-            <?php foreach ( $sections as $key => $title ) : ?>
-                <section class="deprat-section" data-preview-section="<?php echo esc_attr( $key ); ?>" aria-label="<?php echo esc_attr( $title ); ?>">
-                    <div class="deprat-section-heading">
-                        <span class="deprat-section-icon-wrap"><?php echo deprat_catalog_section_icon( $key ); // SVG interne fixe. ?></span>
-                        <h2><?php echo esc_html( $title ); ?></h2>
-                        <details class="deprat-section-create-menu" data-preview-create-menu>
-                            <summary aria-label="<?php echo esc_attr( 'Ajouter une catégorie dans ' . $title ); ?>" title="<?php echo esc_attr( 'Ajouter dans ' . $title ); ?>">
-                                <span aria-hidden="true">+</span>
-                            </summary>
-                            <div class="deprat-section-create-dropdown">
-                                <button type="button" data-preview-add-category>
-                                    <span aria-hidden="true">+</span> Créer une catégorie
-                                </button>
-                                <button type="button" data-preview-add-subcategory>
-                                    <span aria-hidden="true">↳</span> Créer une sous-catégorie
-                                </button>
-                            </div>
-                        </details>
-                    </div>
-                    <ul class="deprat-section-categories deprat-preview-list" data-preview-list
-                        data-section-key="<?php echo esc_attr( $key ); ?>" aria-label="<?php echo esc_attr( 'Catégories : ' . $title ); ?>"></ul>
-                </section>
+            <?php foreach ( deprat_catalog_section_definitions() as $key => $title ) : ?>
+                <?php deprat_category_tree_render_visual_section( $key, $title ); ?>
             <?php endforeach; ?>
         </div>
-        <p class="deprat-preview-footnote">Les rubriques vides sont des zones de dépôt et n’apparaissent pas dans le méga-menu public. Seules vos catégories WooCommerce existantes seront affichées.</p>
+        <p class="deprat-preview-footnote">Les sections sont de simples regroupements visuels : elles ne créent pas de catégorie WooCommerce. Une section vide reste disponible en administration, mais n’apparaît pas sur le site.</p>
     </section>
     <?php
 }
-
 function deprat_category_tree_admin_page() {
     if ( ! current_user_can( 'manage_product_terms' ) ) { wp_die( 'Vous ne pouvez pas organiser les catégories.' ); }
     $terms = deprat_category_tree_terms();
@@ -224,11 +231,12 @@ function deprat_category_tree_admin_page() {
         </div>
 
         <div class="deprat-tree-instructions">
-            <strong>Édition directe du méga-menu :</strong> faites glisser une catégorie par la poignée ⠿ vers une autre rubrique, ou utilisez ↑ ↓ pour son ordre.
+            <strong>Édition directe du méga-menu :</strong> déplacez les sections avec leur poignée ⠿, modifiez leur titre et leur icône avec ✎, puis faites glisser vos catégories d’une rubrique à l’autre.
             Les chevrons déplient les sous-catégories ; ↳ ↰ changent le niveau. Les titres de rubriques et leurs icônes ne sont pas cliquables.
             Cliquez sur <strong>Enregistrer</strong> pour répercuter les modifications sur le site.
         </div>
         <div class="deprat-tree-toolbar">
+            <button type="button" class="button button-primary" data-section-add>+ Ajouter une section</button>
             <button type="button" class="button button-secondary" data-tree-create-root>+ Nouvelle catégorie principale</button>
             <span data-tree-unsaved class="deprat-tree-unsaved" hidden>Modifications non enregistrées</span>
             <span data-tree-status role="status" aria-live="polite"></span>
@@ -270,6 +278,46 @@ function deprat_category_tree_admin_page() {
                 </div>
             </form>
         </div>
+        <div class="deprat-section-editor-overlay" data-section-editor-overlay hidden>
+            <form class="deprat-section-editor-form" data-section-editor-form role="dialog"
+                aria-modal="true" aria-labelledby="deprat-section-editor-title">
+                <button type="button" class="deprat-section-editor-close" data-section-editor-close aria-label="Fermer">×</button>
+                <span class="deprat-tree-create-kicker">CATALOGUE DEPRAT</span>
+                <h2 id="deprat-section-editor-title" data-section-editor-title>Ajouter une section</h2>
+                <input type="hidden" data-section-editor-key value="">
+                <label>Nom de la section
+                    <input type="text" data-section-editor-name maxlength="90" autocomplete="off" required
+                        placeholder="Ex. Motorisations & accessoires">
+                </label>
+                <fieldset class="deprat-section-icon-fieldset">
+                    <legend>Choisir une icône</legend>
+                    <div class="deprat-section-icon-palette" data-section-icon-palette>
+                        <?php foreach ( deprat_catalog_section_palette() as $icon_key => $caption ) : ?>
+                            <label title="<?php echo esc_attr( $caption ); ?>">
+                                <input type="radio" name="deprat-section-icon" value="<?php echo esc_attr( $icon_key ); ?>" <?php checked( 'autres', $icon_key ); ?>>
+                                <span class="deprat-section-icon-choice">
+                                    <svg class="deprat-section-icon" aria-hidden="true" width="27" height="27" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round"><?php echo deprat_catalog_section_icon_paths()[ $icon_key ]; // Tracés constants. ?></svg>
+                                    <small><?php echo esc_html( $caption ); ?></small>
+                                </span>
+                            </label>
+                        <?php endforeach; ?>
+                    </div>
+                </fieldset>
+                <?php if ( current_user_can( 'upload_files' ) ) : ?>
+                    <div class="deprat-section-media-picker">
+                        <button type="button" class="button" data-section-media-pick>↑ Importer une image (PNG, JPG, WebP)</button>
+                        <button type="button" class="button" data-section-media-clear hidden>Retirer l’image</button>
+                        <span data-section-media-preview></span>
+                    </div>
+                <?php endif; ?>
+                <p class="deprat-section-editor-hint">La section n’est pas une catégorie WooCommerce. Les fichiers SVG importés ne sont pas acceptés.</p>
+                <p class="deprat-tree-create-error" data-section-editor-error role="alert" hidden></p>
+                <div class="deprat-tree-create-actions">
+                    <button type="button" class="button" data-section-editor-close>Annuler</button>
+                    <button type="submit" class="button button-primary" data-section-editor-save>Enregistrer la section</button>
+                </div>
+            </form>
+        </div>
     </div>
     <?php
 }
@@ -298,6 +346,47 @@ function deprat_category_tree_ajax_guard() {
         wp_send_json_error( array( 'message' => 'Votre session a expiré. Rechargez la page.' ), 403 );
     }
 }
+/** Création/édition de titres VISUELS : aucun nouveau terme product_cat. */
+function deprat_category_tree_ajax_section_upsert() {
+    deprat_category_tree_ajax_guard();
+    $title = isset( $_POST['title'] ) && is_scalar( $_POST['title'] )
+        ? trim( sanitize_text_field( wp_unslash( $_POST['title'] ) ) ) : '';
+    $key = isset( $_POST['key'] ) && is_scalar( $_POST['key'] )
+        ? sanitize_key( wp_unslash( $_POST['key'] ) ) : '';
+    $icon = isset( $_POST['icon'] ) && is_scalar( $_POST['icon'] )
+        ? sanitize_key( wp_unslash( $_POST['icon'] ) ) : 'autres';
+    $media_id = isset( $_POST['media_id'] ) && is_scalar( $_POST['media_id'] ) ? absint( $_POST['media_id'] ) : 0;
+    $registry = deprat_catalog_section_registry();
+    if ( '' === $title || strlen( $title ) > 180 ) {
+        wp_send_json_error( array( 'message' => 'Le nom de la section est obligatoire (90 caractères maximum).' ), 400 );
+    }
+    if ( ! isset( deprat_catalog_section_palette()[ $icon ] ) ) {
+        wp_send_json_error( array( 'message' => 'Cette icône n’appartient pas à la palette DEPRAT.' ), 400 );
+    }
+    if ( $media_id && ( ! current_user_can( 'upload_files' ) || ! deprat_catalog_section_media_allowed( $media_id ) ) ) {
+        wp_send_json_error( array( 'message' => 'Image invalide : utilisez PNG, JPG ou WebP.' ), 400 );
+    }
+    if ( $key && ! isset( $registry[ $key ] ) ) {
+        wp_send_json_error( array( 'message' => 'Cette section est introuvable.' ), 400 );
+    }
+    if ( ! $key ) {
+        if ( count( $registry ) >= 40 ) {
+            wp_send_json_error( array( 'message' => 'La limite de 40 sections est atteinte.' ), 400 );
+        }
+        do {
+            $key = 'custom_' . bin2hex( random_bytes( 6 ) );
+        } while ( isset( $registry[ $key ] ) );
+    }
+    $registry[ $key ] = array( 'title' => $title, 'icon' => $icon, 'media_id' => $media_id );
+    update_option( 'deprat_catalog_section_settings_v1', $registry, false );
+    ob_start();
+    deprat_category_tree_render_visual_section( $key, $title );
+    $html = ob_get_clean();
+    wp_send_json_success( array( 'key' => $key, 'title' => $title, 'icon' => $icon,
+        'media_id' => $media_id, 'html' => $html ) );
+}
+add_action( 'wp_ajax_deprat_category_tree_section_upsert', 'deprat_category_tree_ajax_section_upsert' );
+
 function deprat_category_tree_ajax_create() {
     deprat_category_tree_ajax_guard();
     $name = isset( $_POST['name'] ) && is_scalar( $_POST['name'] )
@@ -405,6 +494,15 @@ function deprat_category_tree_ajax_save() {
             $section_changes[ $id ] = $section;
         }
     }
+    $section_order = null;
+    if ( isset( $_POST['section_order'] ) ) {
+        $raw_order = is_scalar( $_POST['section_order'] ) ? wp_unslash( $_POST['section_order'] ) : '';
+        $requested_order = is_string( $raw_order ) ? json_decode( $raw_order, true ) : null;
+        $section_order = deprat_catalog_section_validate_order( $requested_order );
+        if ( is_wp_error( $section_order ) ) {
+            wp_send_json_error( array( 'message' => $section_order->get_error_message() ), 400 );
+        }
+    }
     $parents = $validated['parents'];
     // Détacher d'abord les parents modifiés pour éviter les cycles transitoires
     // (ex. A/B deviennent B/A) pendant l'application séquentielle WP.
@@ -435,6 +533,9 @@ function deprat_category_tree_ajax_save() {
     foreach ( $section_changes as $id => $section ) {
         if ( '' === $section ) { delete_term_meta( $id, '_deprat_catalog_section' ); }
         else { update_term_meta( $id, '_deprat_catalog_section', $section ); }
+    }
+    if ( null !== $section_order ) {
+        update_option( 'deprat_catalog_section_settings_v1', $section_order, false );
     }
     delete_transient( 'deprat_catalog_all_ix' );
     update_option( 'deprat_category_tree_saved_at', time(), false );
