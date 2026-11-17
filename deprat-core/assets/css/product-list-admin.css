@@ -545,3 +545,20 @@ body.deprat-product-list-active .deprat-products-ui.is-loading
     .deprat-products-count{
     opacity:.8;
 }
+
+/* WooCommerce impose parfois un max-height ancien aux miniatures admin :
+   lever explicitement cette limite pour les visuels agrandis. */
+body.deprat-product-list-active:not(.deprat-product-grid-mode) table.wp-list-table .column-thumb img{
+    max-height:84px!important;min-height:80px!important;min-width:80px!important;
+}
+body.deprat-product-list-active.deprat-product-grid-mode #the-list>tr>.column-thumb img{
+    max-height:190px!important;min-height:185px!important;min-width:0!important;
+}
+@media(max-width:782px){
+ body.deprat-product-list-active:not(.deprat-product-grid-mode) table.wp-list-table .column-thumb img{
+    max-height:72px!important;min-height:70px!important;min-width:70px!important;
+ }
+ body.deprat-product-list-active.deprat-product-grid-mode #the-list>tr>.column-thumb img{
+    max-height:172px!important;min-height:170px!important;
+ }
+}
