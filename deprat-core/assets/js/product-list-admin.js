@@ -43,6 +43,36 @@
             select.addEventListener( 'change', submitFilters );
         } );
 
+        // Une seule liste WooCommerce, deux présentations. La vue Grille ne
+        // clone pas les produits : cases à cocher, liens, pagination, tris et
+        // menus conservent leur comportement natif.
+        var viewButtons = Array.from( layout.querySelectorAll( '[data-deprat-view]' ) );
+        var viewStorageKey = 'deprat_products_admin_view_v1';
+        var table = form.querySelector( 'table.wp-list-table' );
+        function setProductView( view, remember ) {
+            view = view === 'grid' ? 'grid' : 'list';
+            document.body.classList.toggle( 'deprat-product-grid-mode', view === 'grid' );
+            if ( table ) { table.classList.toggle( 'deprat-product-grid', view === 'grid' ); }
+            viewButtons.forEach( function ( button ) {
+                var selected = button.getAttribute( 'data-deprat-view' ) === view;
+                button.setAttribute( 'aria-pressed', selected ? 'true' : 'false' );
+                button.classList.toggle( 'is-active', selected );
+            } );
+            if ( remember ) {
+                try { window.localStorage.setItem( viewStorageKey, view ); }
+                catch ( error ) { /* Le mode reste utilisable si le stockage est interdit. */ }
+            }
+        }
+        var initialView = 'list';
+        try { initialView = window.localStorage.getItem( viewStorageKey ) || 'list'; }
+        catch ( error ) { /* Le mode Liste reste le choix par défaut. */ }
+        setProductView( initialView, false );
+        viewButtons.forEach( function ( button ) {
+            button.addEventListener( 'click', function () {
+                setProductView( button.getAttribute( 'data-deprat-view' ), true );
+            } );
+        } );
+
         // Le champ secondaire filtre les lignes DÉJÀ visibles (pagination
         // WordPress inchangée). La recherche globale reste en haut à droite.
         var quickSearch = layout.querySelector( '[data-deprat-list-search]' );
