@@ -103,6 +103,9 @@ $roots = deprat_catalog_root_categories();
                     <?php // Maintenir la liste complète ou la catégorie après un filtre GET. ?>
                     <?php if ( $is_all ) : ?>
                         <input type="hidden" name="deprat_all" value="1">
+                        <?php foreach ( deprat_catalog_shop_route_params() as $route_key => $route_value ) : ?>
+                            <input type="hidden" name="<?php echo esc_attr( $route_key ); ?>" value="<?php echo esc_attr( $route_value ); ?>">
+                        <?php endforeach; ?>
                     <?php elseif ( false !== strpos( $current_url, '?' ) ) : ?>
                         <input type="hidden" name="product_cat" value="<?php echo esc_attr( $category->slug ); ?>">
                     <?php endif; ?>
@@ -184,6 +187,9 @@ $roots = deprat_catalog_root_categories();
                         <form method="get" action="<?php echo esc_url( $current_url ); ?>" class="deprat-catalog-sort">
                             <?php if ( $is_all ) : ?>
                                 <input type="hidden" name="deprat_all" value="1">
+                                <?php foreach ( deprat_catalog_shop_route_params() as $route_key => $route_value ) : ?>
+                                    <input type="hidden" name="<?php echo esc_attr( $route_key ); ?>" value="<?php echo esc_attr( $route_value ); ?>">
+                                <?php endforeach; ?>
                             <?php elseif ( false !== strpos( $current_url, '?' ) ) : ?>
                                 <input type="hidden" name="product_cat" value="<?php echo esc_attr( $category->slug ); ?>">
                             <?php endif; ?>
