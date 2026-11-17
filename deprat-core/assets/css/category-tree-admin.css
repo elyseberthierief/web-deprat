@@ -55,3 +55,9 @@
  .deprat-tree-actions{margin-left:49px;width:calc(100% - 49px)}
  .deprat-tree-children{margin-left:15px;padding-left:12px}
 }
+
+/* Des emplacements discrets au repos, bien visibles pendant un déplacement. */
+.deprat-tree-children {min-height:13px;margin-top:3px;margin-bottom:4px;padding-top:2px;padding-bottom:2px;}
+.deprat-tree-children::before {display:none;}
+.deprat-tree-admin.is-dragging .deprat-tree-children {min-height:34px;background:rgba(235,244,255,.55);}
+.deprat-tree-admin.is-dragging .deprat-tree-children:not(:has(>.deprat-tree-item))::before {display:block;}
