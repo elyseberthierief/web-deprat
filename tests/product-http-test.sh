@@ -50,3 +50,5 @@ for expected in "Fiche technique DEPRAT" "Acier galvanisé" "Mode de calcul" "Fi
 done
 echo "Pages Astra de la boutique et de l’administration, et téléchargement du PDF vérifiés."
 node "$GITHUB_WORKSPACE/tests/product-admin-real-browser.js" "$product_id" "$piece_id"
+
+node "$GITHUB_WORKSPACE/tests/product-list-admin-real-browser.js" "$product_id" "$piece_id"

@@ -591,4 +591,31 @@ deprat_integration_assert( $section_count_terms === wp_count_terms( array( 'taxo
 if ( null === $old_section_settings ) { delete_option( 'deprat_catalog_section_settings_v1' ); }
 else { update_option( 'deprat_catalog_section_settings_v1', $old_section_settings, false ); }
 
+// Administration Produits : les onglets reprennent les sections et les
+// véritables catégories, avec des comptes distincts (parents et enfants).
+$all_products_count = deprat_product_list_count();
+$tube_ids = deprat_product_list_section_ids( 'tubes' );
+deprat_integration_assert( $all_products_count >= 4
+    && in_array( (int) $tube_category['term_id'], $tube_ids, true )
+    && in_array( (int) $end_category['term_id'], $tube_ids, true ),
+    'Les onglets de produits regroupent les vraies catégories Tubes et Embouts.' );
+deprat_integration_assert( deprat_product_list_count( $tube_ids ) >= 2
+    && deprat_product_list_count( deprat_product_list_term_ids( get_term( (int) $tube_category['term_id'], 'product_cat' ) ) ) >= 1,
+    'Les compteurs incluent les produits des vraies catégories.' );
+$old_get_products = $_GET;
+$_GET = array( 'deprat_section' => 'tubes', 'deprat_cat' => (string) $tube_category['term_id'] );
+$product_nav_state = deprat_product_list_state();
+deprat_integration_assert( 'tubes' === $product_nav_state['section']
+    && (int) $product_nav_state['category']->term_id === (int) $tube_category['term_id'],
+    'Le niveau sélectionné de la navigation doit être conservé.' );
+$_GET['deprat_section'] = 'garage';
+deprat_integration_assert( null === deprat_product_list_state()['category'],
+    'Une URL ne peut pas associer une catégorie à une rubrique incompatible.' );
+$_GET['deprat_section'] = 'tubes';
+$url = deprat_product_list_url( array( 'deprat_cat' => null ) );
+deprat_integration_assert( false !== strpos( $url, 'deprat_section=tubes' )
+    && false === strpos( $url, 'deprat_cat=' ),
+    'Cliquer une rubrique réinitialise la catégorie sans perdre la rubrique.' );
+$_GET = $old_get_products;
+
 WP_CLI::success( 'WordPress et WooCommerce : sauvegarde, médias et affichages vérifiés.' );

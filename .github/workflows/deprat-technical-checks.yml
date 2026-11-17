@@ -19,6 +19,7 @@ jobs:
           php -l deprat-core/includes/product-technical-data.php
           php -l deprat-core/includes/product-shape.php
           php -l deprat-core/includes/category-tree-admin.php
+          php -l deprat-core/includes/product-list-admin.php
           php -l deprat-core/includes/product-single-layout.php
           php -l deprat-core/includes/product-3d.php
           php -l deprat-core/includes/product-client-layout.php
@@ -41,6 +42,8 @@ jobs:
           node --check deprat-core/assets/js/catalogue-mega-menu.js
           node --check deprat-core/assets/js/category-tree-admin.js
           node --check deprat-core/assets/js/category-tree-preview.js
+          node --check deprat-core/assets/js/product-list-admin.js
+          node --check tests/product-list-admin-real-browser.js
           node --check deprat-core/assets/js/product-autosave-admin.js
           node --check deprat-core/assets/js/product-3d-contours.js
           node --check tests/product-admin-real-browser.js
@@ -96,5 +99,6 @@ jobs:
             ${{ runner.temp }}/deprat-catalogue-*.png
             ${{ runner.temp }}/deprat-mega-menu.png
             ${{ runner.temp }}/deprat-arborescence-admin.png
+            ${{ runner.temp }}/deprat-produits-admin-*.png
           if-no-files-found: ignore
           retention-days: 3
