@@ -235,6 +235,9 @@
                 if ( status ) { status.textContent = 'Liste des produits mise à jour.'; }
             } catch ( error ) {
                 if ( error.name !== 'AbortError' && ticket === requestNumber ) {
+                    // Journal utile pour diagnostiquer un thème/plugin tiers :
+                    // aucune donnée client ni URL secrète n’est écrite.
+                    console.warn( 'DEPRAT navigation : retour à WordPress', error.message );
                     // Pour toute erreur réseau/session/plugin, laisser la
                     // navigation native reprendre la main plutôt que rester
                     // sur un catalogue incomplet.
