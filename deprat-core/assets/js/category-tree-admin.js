@@ -134,10 +134,8 @@
             var outdent = makeButton( '↰', 'data-tree-outdent', 'Remonter d’un niveau' );
             outdent.setAttribute( 'aria-label', 'Diminuer le niveau' );
             var addChild = makeButton( '+ Sous-catégorie', 'data-tree-add-child' );
-            var edit = document.createElement( 'a' );
-            edit.className = 'button';
-            edit.href = config.editBase + id;
-            edit.textContent = 'Modifier';
+            var edit = makeButton( '✎ Modifier', 'data-tree-edit-category', 'Modifier sans quitter le méga-menu' );
+            edit.setAttribute( 'aria-label', 'Modifier la catégorie ' + name );
             var sectionLabel = document.createElement( 'label' );
             sectionLabel.className = 'deprat-tree-section-editor';
             sectionLabel.textContent = 'Rubrique ';
@@ -379,6 +377,115 @@
                     formError.hidden = false;
                 } ).finally( function () { creating = false; submit.disabled = false; } );
         } );
+        // Le crayon des catégories (y compris les sous-catégories) reste
+        // dans le méga-menu : modifier le nom via une fenêtre modale.
+        var categoryEditOverlay = app.querySelector( '[data-tree-edit-overlay]' );
+        var categoryEditForm = app.querySelector( '[data-tree-edit-form]' );
+        var categoryEditId = app.querySelector( '[data-tree-edit-id]' );
+        var categoryEditName = app.querySelector( '[data-tree-edit-name]' );
+        var categoryEditError = app.querySelector( '[data-tree-edit-error]' );
+        var categoryEditContext = app.querySelector( '[data-tree-edit-context]' );
+        var categoryEditFullLink = app.querySelector( '[data-tree-edit-full-link]' );
+        var categoryEditBusy = false;
+        var categoryEditFocus = null;
+        function closeCategoryEdit() {
+            if ( categoryEditBusy ) { return; }
+            categoryEditOverlay.hidden = true;
+            document.body.classList.remove( 'deprat-tree-modal-open' );
+            categoryEditError.hidden = true;
+            if ( categoryEditFocus && categoryEditFocus.isConnected ) { categoryEditFocus.focus(); }
+        }
+        function openCategoryEdit( button ) {
+            var target = button.closest( '[data-tree-item], [data-preview-item]' );
+            if ( !target ) { return; }
+            var id = Number( target.getAttribute( 'data-term-id' ) );
+            var source = Number.isSafeInteger( id ) && id > 0
+                ? root.querySelector( '[data-tree-item][data-term-id="' + id + '"]' ) : null;
+            if ( !source ) {
+                message( 'Catégorie introuvable. Rechargez la page.', true );
+                return;
+            }
+            categoryEditFocus = button;
+            categoryEditId.value = String( id );
+            categoryEditName.value = itemName( source );
+            var parent = source.parentElement.closest( '[data-tree-item]' );
+            categoryEditContext.textContent = parent
+                ? 'Sous-catégorie de « ' + itemName( parent ) + ' »'
+                : 'Catégorie principale du catalogue';
+            categoryEditFullLink.href = config.editBase + id;
+            categoryEditError.hidden = true;
+            categoryEditError.textContent = '';
+            categoryEditOverlay.hidden = false;
+            document.body.classList.add( 'deprat-tree-modal-open' );
+            categoryEditName.focus();
+            categoryEditName.select();
+        }
+        app.addEventListener( 'click', function ( event ) {
+            var button = event.target.closest( '[data-preview-edit-category], [data-tree-edit-category]' );
+            if ( button ) { event.preventDefault(); openCategoryEdit( button ); }
+        } );
+        categoryEditOverlay.addEventListener( 'click', function ( event ) {
+            if ( event.target === categoryEditOverlay || event.target.closest( '[data-tree-edit-close]' ) ) {
+                closeCategoryEdit();
+            }
+        } );
+        categoryEditOverlay.addEventListener( 'keydown', function ( event ) {
+            if ( event.key === 'Escape' ) {
+                event.preventDefault();
+                closeCategoryEdit();
+                return;
+            }
+            if ( event.key !== 'Tab' ) { return; }
+            var focusable = Array.from( categoryEditForm.querySelectorAll( 'button, a[href], input:not([type="hidden"])' ) )
+                .filter( function ( field ) { return !field.disabled && field.getClientRects().length > 0; } );
+            if ( !focusable.length ) { return; }
+            if ( event.shiftKey && document.activeElement === focusable[ 0 ] ) {
+                event.preventDefault(); focusable[ focusable.length - 1 ].focus();
+            } else if ( !event.shiftKey && document.activeElement === focusable[ focusable.length - 1 ] ) {
+                event.preventDefault(); focusable[ 0 ].focus();
+            }
+        } );
+        categoryEditForm.addEventListener( 'submit', function ( event ) {
+            event.preventDefault();
+            if ( categoryEditBusy ) { return; }
+            var id = Number( categoryEditId.value );
+            var name = categoryEditName.value.trim();
+            if ( !Number.isSafeInteger( id ) || id <= 0 || !name || name.length > 160 ) {
+                categoryEditError.textContent = 'Saisissez un nom de catégorie valide.';
+                categoryEditError.hidden = false;
+                return;
+            }
+            var button = categoryEditForm.querySelector( '[data-tree-edit-save]' );
+            categoryEditBusy = true;
+            button.disabled = true;
+            categoryEditError.hidden = true;
+            post( 'deprat_category_tree_edit_category', {
+                term_id: String( id ), name: name
+            } ).then( function ( response ) {
+                var real = root.querySelector( '[data-tree-item][data-term-id="' + id + '"]' );
+                var label = real && real.querySelector( ':scope > .deprat-tree-row [data-tree-name]' );
+                if ( label ) { label.textContent = response.name; }
+                if ( real ) {
+                    var advancedButton = real.querySelector( ':scope > .deprat-tree-row [data-tree-edit-category]' );
+                    if ( advancedButton ) { advancedButton.setAttribute( 'aria-label', 'Modifier la catégorie ' + response.name ); }
+                }
+                // La sauvegarde AJAX du nom est immédiate ; le tri éventuellement
+                // en cours reste dans le DOM, sans changement de page ni reset.
+                app.dispatchEvent( new CustomEvent( 'deprat-tree-changed' ) );
+                categoryEditBusy = false;
+                closeCategoryEdit();
+                message( dirty
+                    ? 'Nom enregistré. Pensez aussi à enregistrer l’organisation du méga-menu.'
+                    : 'Nom de catégorie enregistré.', false );
+            } ).catch( function ( error ) {
+                categoryEditError.textContent = error.message || 'Impossible de modifier cette catégorie.';
+                categoryEditError.hidden = false;
+            } ).finally( function () {
+                categoryEditBusy = false;
+                button.disabled = false;
+            } );
+        } );
+
         // Éditeur des sections visuelles (indépendant de product_cat).
         var sectionOverlay = app.querySelector( '[data-section-editor-overlay]' );
         var sectionForm = app.querySelector( '[data-section-editor-form]' );
