@@ -161,3 +161,73 @@
  .deprat-catalog-sort{flex:1}
  .deprat-catalog-sort select{width:100%}
 }
+
+/* DEPRAT 0.1.29 — cartes lisibles et boutons toujours contrastés au survol. */
+.deprat-catalog .deprat-catalog-filter-form { border-color: #cfdef1; }
+.deprat-catalog .deprat-catalog-filter-form h2 {
+  font-size: 16px; padding: 12px 15px; line-height: 1.4;
+  background: #123d78; margin: 0 -17px;
+}
+.deprat-catalog-filter-form h2 small { font-size: 11px; font-weight: 500; opacity: .82; margin-left: 5px; }
+.deprat-catalog-filter-form fieldset { padding: 11px 0; }
+.deprat-catalog-filter-form legend { font-size: 13px; padding-bottom: 6px; }
+.deprat-filter-feature-heading { font-size: 13px; font-weight: 850; color: #173e77; padding-top: 12px; }
+.deprat-filter-feature { display: grid; gap: 5px; padding: 9px 0; font-size: 12px; font-weight: 700; color:#214773; }
+.deprat-filter-feature select { min-width:0; width:100%; border:1px solid #d1deed; border-radius:7px; background:#fff; color:#163e78; padding:8px 10px; font-size:12px; }
+.deprat-catalog-spec-list { display: grid; gap: 5px; padding: 8px 0; margin: 0 0 10px; border-top: 1px solid #e5ebf5; border-bottom:1px solid #e5ebf5; }
+.deprat-catalog-spec-list>div { display:grid; grid-template-columns:minmax(0,39%) minmax(0,61%); gap:5px; align-items:baseline; font-size:12px; line-height:1.42; }
+.deprat-catalog-spec-list dt { color:#556b86; margin:0; overflow-wrap:anywhere; font-weight:600; }
+.deprat-catalog-spec-list dd { color:#163e75; font-weight:750; margin:0; overflow-wrap:anywhere; }
+.deprat-catalog-shape-badge {
+ position:absolute; left:9px; bottom:9px; z-index:4; display:flex; align-items:center;
+ gap:6px; background:#fff; border:1px solid #c8d8e8; border-radius:8px; padding:6px 9px;
+ color:#0c448a; font-size:11px; font-weight:850; box-shadow:0 2px 10px rgba(13,43,76,.12);
+ pointer-events:none;
+}
+.deprat-catalog-shape-badge .deprat-shape-svg{width:24px;height:24px;flex:0 0 24px;}
+.deprat-catalog-image:has(.deprat-catalog-shape-badge) .deprat-catalog-gallery-dots {bottom:9px;}
+.deprat-catalog-package-selectable { background:#f0f6ff; border:1.5px solid #8bafd9; padding:9px; border-radius:9px; }
+.deprat-catalog-package-selectable > span { font-size:12px; font-weight:850; color:#0d407e; }
+.deprat-catalog-package-selectable small {font-size:10px;font-weight:600;color:#40668e;}
+.deprat-catalog-package-selectable select {
+ display:block; width:100%; min-height:45px; border:1px solid #79a8dc; border-radius:7px;
+ padding:7px 32px 7px 10px; color:#103b75; background-color:white; font-size:12px; font-weight:750;
+ cursor:pointer; outline-offset:2px;
+}
+.deprat-catalog-package-selectable select:focus-visible{outline:3px solid #e3ae3b;}
+.deprat-catalog-package-fixed {border:1px solid #d7e3f1; padding:8px 10px; border-radius:8px; background:#f7f9fc; margin-bottom:10px;}
+.deprat-catalog-package-fixed>span {font-size:11px;color:#345a84;font-weight:800;}
+.deprat-catalog-package-fixed .deprat-catalog-package-summary {margin:4px 0 0; min-height:0;}
+.deprat-catalog :is(.deprat-catalog-add-button,.deprat-catalog-apply):is(:hover,:focus-visible) {
+ background:#082c61 !important; color:#fff !important; border-color:#082c61 !important;
+ box-shadow:0 4px 12px rgba(6,45,104,.24) !important; text-decoration:none !important;
+}
+.deprat-catalog .deprat-catalog-3d:is(:hover,:focus-visible) {
+ background:#123f7e !important; color:#fff !important; border-color:#123f7e !important;
+}
+.deprat-catalog .deprat-catalog-details:is(:hover,:focus-visible) {
+ background:#113d7a !important; color:#fff !important; border-color:#113d7a !important;
+}
+.deprat-catalog .deprat-catalog-stepper button:is(:hover,:focus-visible) {background:#0d4b96!important;color:#fff!important;}
+.deprat-catalog :is(.deprat-catalog-add-button,.deprat-catalog-3d):focus-visible {outline:3px solid #e6ad2d;outline-offset:2px;}
+/* Fenêtre 3D : fond adaptatif, texture ou contours, contrôles visibles. */
+.deprat-catalog-model-dialog {width:min(840px,96vw); padding:18px 20px; max-height:94vh;}
+.deprat-catalog-3d-stage {height:min(62vh,480px); position:relative; background:#edf3fa; border-radius:12px; overflow:hidden; margin:12px 0 10px;}
+.deprat-catalog-3d-stage[data-3d-background="dark"]{background:#637080;}
+.deprat-catalog-3d-stage[data-3d-background="light"]{background:#edf3fa;}
+.deprat-catalog-model-dialog .deprat-catalog-3d-stage model-viewer {
+ display:block; width:100%; height:100%; border-radius:0; margin:0; background:transparent;
+}
+.deprat-catalog-model-dialog .deprat-catalog-3d-stage model-viewer[hidden]{display:none!important;}
+.deprat-catalog-3d-outline {width:100%;height:100%;position:absolute;inset:0;}
+.deprat-catalog-3d-outline[hidden]{display:none!important;}
+.deprat-catalog-3d-outline canvas {display:block;width:100%;height:100%;}
+.deprat-catalog-3d-controls {display:flex; flex-wrap:wrap; gap:8px; justify-content:center;}
+.deprat-catalog-3d-controls button {
+ min-height:38px; border:1px solid #c5d6e8; color:#163e77; background:#fff;
+ border-radius:8px; padding:8px 12px; font-size:12px; font-weight:800;
+}
+.deprat-catalog-3d-controls button.is-active {background:#103f7d;color:#fff;border-color:#103f7d;}
+.deprat-catalog-3d-controls button:is(:hover,:focus-visible) {
+ background:#0d3570!important; color:#fff!important; border-color:#0d3570!important;
+}
