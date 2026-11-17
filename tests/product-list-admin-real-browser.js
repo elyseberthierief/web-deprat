@@ -79,6 +79,9 @@ const assert = require( 'assert' );
             'La grille ne duplique, ne supprime et ne réordonne aucun produit.' );
         assert( await page.locator( '#the-list > tr[id^="post-"] .column-thumb img' ).first().isVisible(),
             'La grille conserve la photo des produits.' );
+        const gridImageHeight = await page.locator( '#the-list > tr[id^="post-"] .column-thumb img' )
+            .first().evaluate( img => img.getBoundingClientRect().height );
+        assert( gridImageHeight >= 185, 'Les photos en grille doivent être agrandies à environ 190 px.' );
         await page.screenshot( { path: process.env.RUNNER_TEMP + '/deprat-produits-admin-grille.png', fullPage: true } );
         await viewList.click();
         assert.strictEqual( await viewList.getAttribute( 'aria-pressed' ), 'true',
@@ -100,6 +103,9 @@ const assert = require( 'assert' );
             'La table WooCommerce et ses produits doivent rester présents.' );
         assert( await page.locator( '.column-deprat_section' ).count() >= 1,
             'La colonne Section doit refléter les rubriques du méga-menu.' );
+        const listImageHeight = await page.locator( '#the-list > tr[id^="post-"] .column-thumb img' )
+            .first().evaluate( img => img.getBoundingClientRect().height );
+        assert( listImageHeight >= 80, 'Les photos en liste doivent atteindre environ 84 px.' );
         await page.screenshot( { path: process.env.RUNNER_TEMP + '/deprat-produits-admin-tous.png', fullPage: true } );
 
         // Première ligne : filtrer par section et conserver toutes les sections.
@@ -140,6 +146,7 @@ const assert = require( 'assert' );
         assert( !( await page.locator( '#the-list' ).textContent() ).includes( 'Embout DEPRAT de test' ) );
         await page.screenshot( { path: process.env.RUNNER_TEMP + '/deprat-produits-admin-tubes.png', fullPage: true } );
 
+        const parentUrl = page.url();
         await ui.locator( '.deprat-products-children a', { hasText: 'Tubes de test' } ).click();
         await page.waitForURL( /deprat_cat=\d+/ );
         assert( ( await ui.locator( '.deprat-products-breadcrumb' ).textContent() ).includes( 'Tubes de test' ),
@@ -147,14 +154,22 @@ const assert = require( 'assert' );
         assert.strictEqual( await page.evaluate( () => window.__depratDocumentMarker ), 'same-document',
             'La sous-catégorie change le contenu sans charger une nouvelle page.' );
         const selectedPath = page.url();
-        await page.goBack( { waitUntil: 'commit' } ).catch( () => {} );
-        await page.waitForFunction( () => !location.search.includes( 'Tubes de test' ) );
+        await page.evaluate( () => window.history.back() );
+        await page.waitForURL( parentUrl );
+        await page.waitForFunction( () => {
+            const crumb = document.querySelector( '.deprat-products-breadcrumb' );
+            return crumb && !crumb.textContent.includes( 'Tubes de test' );
+        } );
         assert.strictEqual( await page.evaluate( () => window.__depratDocumentMarker ), 'same-document',
-            'Retour conserve le même document.' );
-        await page.goForward( { waitUntil: 'commit' } ).catch( () => {} );
+            'Le bouton Précédent conserve le même document WordPress.' );
+        await page.evaluate( () => window.history.forward() );
         await page.waitForURL( selectedPath );
-        assert( ( await ui.locator( '.deprat-products-breadcrumb' ).textContent() ).includes( 'Tubes de test' ),
-            'Suivant restaure la sélection et ses sous-catégories.' );
+        await page.waitForFunction( () => {
+            const crumb = document.querySelector( '.deprat-products-breadcrumb' );
+            return crumb && crumb.textContent.includes( 'Tubes de test' );
+        } );
+        assert.strictEqual( await page.evaluate( () => window.__depratDocumentMarker ), 'same-document',
+            'Le bouton Suivant retrouve la même catégorie sans rechargement.' );
 
         assert( await ui.locator( '.deprat-products-sections a' ).count() >= 10 );
 
@@ -176,6 +191,8 @@ const assert = require( 'assert' );
         // Stock : vrai filtrage côté serveur, et non simple masque des lignes.
         await ui.locator( 'select[name="deprat_stock"]' ).selectOption( 'outofstock' );
         await page.waitForURL( /deprat_stock=outofstock/ );
+        assert.strictEqual( await page.evaluate( () => window.__depratDocumentMarker ), undefined,
+            'Une navigation native précédente réinitialise le marqueur du document.' );
         const stockRows = ( await page.locator( '#the-list' ).textContent() );
         assert( stockRows.includes( 'Produit sans stock et sans prix' ), 'Le filtre rupture doit retourner le vrai produit hors stock.' );
         assert( !stockRows.includes( 'Tube de test modifié' ), 'Le tube en stock ne doit pas rester visible en rupture.' );
