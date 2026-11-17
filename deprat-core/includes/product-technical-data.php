@@ -447,10 +447,11 @@ function deprat_product_tech_admin_assets( $hook ) {
         : ( isset( $post->ID ) ? (int) $post->ID : 0 );
     wp_enqueue_media();
     wp_enqueue_style( 'deprat-product-tech-admin', plugins_url( 'assets/css/product-technical-admin.css', dirname( __DIR__ ) . '/deprat-core.php' ), array(), '0.1.29' );
-    wp_enqueue_script( 'deprat-product-tech-admin', plugins_url( 'assets/js/product-technical-admin.js', dirname( __DIR__ ) . '/deprat-core.php' ), array( 'jquery', 'media-views' ), '0.1.29', true );
+    wp_enqueue_script( 'deprat-product-tech-admin', plugins_url( 'assets/js/product-technical-admin.js', dirname( __DIR__ ) . '/deprat-core.php' ), array( 'jquery', 'media-views' ), '0.1.31', true );
     wp_localize_script( 'deprat-product-tech-admin', 'depratProductEditor', array(
         'ajaxUrl' => admin_url( 'admin-ajax.php' ),
         'categoryNonce' => wp_create_nonce( 'deprat_create_product_category' ),
+        'categoryTree' => deprat_category_tree_flat_options(),
         'uploadNonce' => wp_create_nonce( 'deprat_product_media_upload_' . $current_product_id ),
         'postId' => $current_product_id,
     ) );
