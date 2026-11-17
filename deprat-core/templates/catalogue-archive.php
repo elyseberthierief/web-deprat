@@ -84,6 +84,7 @@ $roots = deprat_catalog_root_categories();
         }
         asort( $material_facets );
         asort( $shape_facets );
+        $feature_facets = deprat_catalog_feature_facets( $index );
         $current_url = get_term_link( $category );
         ?>
         <div class="deprat-catalog-layout">
@@ -93,7 +94,7 @@ $roots = deprat_catalog_root_categories();
                     <?php if ( false !== strpos( $current_url, '?' ) ) : ?>
                         <input type="hidden" name="product_cat" value="<?php echo esc_attr( $category->slug ); ?>">
                     <?php endif; ?>
-                    <h2><span aria-hidden="true">☷</span> Filtrer les produits</h2>
+                    <h2><span aria-hidden="true">☷</span> Filtres <small>par famille</small></h2>
                     <?php if ( $material_facets ) : ?>
                         <fieldset>
                             <legend>Matière</legend>
@@ -120,6 +121,22 @@ $roots = deprat_catalog_root_categories();
                                 </label>
                             <?php endforeach; ?>
                         </fieldset>
+                    <?php endif; ?>
+                    <?php if ( $feature_facets ) : ?>
+                        <div class="deprat-filter-feature-heading">Autres caractéristiques</div>
+                        <?php foreach ( $feature_facets as $key => $facet ) : ?>
+                            <label class="deprat-filter-feature">
+                                <span><?php echo esc_html( $facet['label'] ); ?></span>
+                                <select name="deprat_feature[<?php echo esc_attr( $key ); ?>]">
+                                    <option value="">Toutes les valeurs</option>
+                                    <?php foreach ( $facet['options'] as $slug => $value ) : ?>
+                                        <option value="<?php echo esc_attr( $slug ); ?>" <?php selected( isset( $filters['features'][ $key ] ) ? $filters['features'][ $key ] : '', $slug ); ?>>
+                                            <?php echo esc_html( $value ); ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </label>
+                        <?php endforeach; ?>
                     <?php endif; ?>
                     <?php
                     foreach ( array( 'length' => 'Longueur (mm)', 'diameter' => 'Diamètre (mm)', 'thickness' => 'Épaisseur (mm)' ) as $dimension => $label ) :
@@ -156,6 +173,9 @@ $roots = deprat_catalog_root_categories();
                             <?php if ( false !== strpos( $current_url, '?' ) ) : ?>
                                 <input type="hidden" name="product_cat" value="<?php echo esc_attr( $category->slug ); ?>">
                             <?php endif; ?>
+                            <?php foreach ( $filters['features'] as $feature_key => $feature_value ) : ?>
+                                <input type="hidden" name="deprat_feature[<?php echo esc_attr( $feature_key ); ?>]" value="<?php echo esc_attr( $feature_value ); ?>">
+                            <?php endforeach; ?>
                             <?php foreach ( $_GET as $key => $value ) :
                                 if ( ! is_scalar( $value ) || 'deprat_sort' === $key || 'deprat_page' === $key || ! preg_match( '/^deprat_(?:material|shape|length_min|length_max|diameter_min|diameter_max|thickness_min|thickness_max|stock|view3d)$/', $key ) ) { continue; }
                                 ?>
@@ -190,6 +210,7 @@ $roots = deprat_catalog_root_categories();
                             if ( 'deprat_page' === $key || ! is_scalar( $value ) || ! preg_match( '/^deprat_(?:sort|material|shape|length_min|length_max|diameter_min|diameter_max|thickness_min|thickness_max|stock|view3d)$/', $key ) ) { continue; }
                             $args[$key] = sanitize_text_field( wp_unslash( $value ) );
                         }
+                        if ( $filters['features'] ) { $args['deprat_feature'] = $filters['features']; }
                         $base_url = add_query_arg( array_merge( $args, array( 'deprat_page' => '%#%' ) ), $current_url );
                         echo '<nav class="deprat-catalog-pagination" aria-label="Pagination des produits">';
                         echo paginate_links( array( 'base' => str_replace( '%25%23%25', '%#%', esc_url( $base_url ) ), 'format' => '', 'total' => $max, 'current' => $current_page, 'type' => 'list', 'prev_text' => '‹ Précédent', 'next_text' => 'Suivant ›' ) );
@@ -212,7 +233,15 @@ $roots = deprat_catalog_root_categories();
             <strong data-model-title>Vue 360°</strong>
             <button type="button" data-model-close aria-label="Fermer la vue 3D">×</button>
         </div>
-        <model-viewer data-model-viewer camera-controls auto-rotate shadow-intensity="0.7" loading="lazy" reveal="auto" interaction-prompt="auto"></model-viewer>
+        <div class="deprat-catalog-3d-stage" data-3d-background="light">
+            <model-viewer data-model-viewer camera-controls auto-rotate shadow-intensity="0.7" loading="lazy" reveal="auto" interaction-prompt="auto"></model-viewer>
+            <div class="deprat-catalog-3d-outline" data-model-outline hidden></div>
+        </div>
+        <div class="deprat-catalog-3d-controls" role="group" aria-label="Réglages du modèle 3D">
+            <button type="button" data-model-render="texture" class="is-active" aria-pressed="true">Pièce texturée</button>
+            <button type="button" data-model-render="contours" aria-pressed="false">Contours</button>
+            <button type="button" data-model-background aria-label="Changer la couleur du fond">Fond : automatique</button>
+        </div>
         <p>Faites glisser la pièce pour la faire tourner ; utilisez la molette pour zoomer.</p>
     </dialog>
 </main>
