@@ -20,6 +20,15 @@ curl -fsS "$base/wp-content/uploads/integration-test/fiche.pdf" -o /tmp/deprat-t
 test "$(head -c 4 /tmp/deprat-test.pdf)" = "%PDF" || { echo "Le PDF téléchargé ne correspond pas au fichier attendu." >&2; exit 1; }
 echo "Le PDF est téléchargeable."
 
+# Refuser les téléchargements des devis et factures depuis une session anonyme.
+private_status="$(curl -sS -o /tmp/deprat-private-denied.html -w '%{http_code}' \
+    "$base/?deprat_document=1&order_id=1&type=devis&_wpnonce=invalid")"
+if [ "$private_status" != 403 ]; then
+    echo "SÉCURITÉ : PDF privé anonyme non refusé (HTTP $private_status)." >&2
+    exit 1
+fi
+echo "L’accès anonyme aux documents privés est refusé (403)."
+
 status="$(curl -sS -b 'wordpress_test_cookie=WP%20Cookie%20check' -c /tmp/deprat-cookies -o /tmp/deprat-login.html -w '%{http_code}' \
     --data-urlencode 'log=deprat-test' --data-urlencode 'pwd=deprat-test' --data-urlencode 'wp-submit=Log In' \
     --data-urlencode "redirect_to=$base/wp-admin/" --data-urlencode 'testcookie=1' "$base/wp-login.php")"
