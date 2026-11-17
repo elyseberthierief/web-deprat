@@ -143,6 +143,16 @@ const assert = require( 'assert' );
         assert( await ui.locator( '.deprat-products-breadcrumb' ).isVisible() );
         assert( await ui.locator( '.deprat-products-level-title', { hasText: 'Sous-catégories' } ).isVisible(),
             'La troisième rangée dispose également de son titre.' );
+        const subsection = ui.locator( 'details[data-deprat-subcategories]' );
+        assert( await subsection.isVisible(), 'Les sous-catégories disposent d’un bloc repliable.' );
+        assert( await subsection.evaluate( node => node.open ),
+            'Les sous-catégories sont ouvertes automatiquement à l’arrivée.' );
+        await subsection.locator( 'summary' ).click();
+        assert( !await subsection.evaluate( node => node.open ),
+            'Un clic sur l’intitulé replie les sous-catégories sans rechargement.' );
+        await subsection.locator( 'summary' ).click();
+        assert( await subsection.evaluate( node => node.open ),
+            'Un second clic les redéplie immédiatement.' );
         assert( await ui.locator( '.deprat-products-children a', { hasText: 'Tous' } ).isVisible(),
             'Troisième niveau avec un onglet Tous.' );
         assert( await ui.locator( '.deprat-products-children a', { hasText: 'Tubes de test' } ).isVisible(),
