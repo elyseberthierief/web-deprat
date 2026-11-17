@@ -22,6 +22,7 @@ jobs:
           php -l deprat-core/includes/product-client-layout.php
           php -l deprat-core/includes/product-packaging.php
           php -l deprat-core/includes/product-quote-pricing.php
+          php -l deprat-core/includes/registration-lock.php
           php -l deprat-core/includes/product-autosave.php
           php -l deprat-core/templates/product-technical-admin.php
           php -l deprat-core/templates/product-technical-front.php
