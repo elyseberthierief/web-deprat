@@ -240,8 +240,12 @@ function deprat_product_list_admin_markup() {
                     </nav>
                     <?php if ( $selected ) :
                         $children = deprat_category_tree_front_children( (int) $selected->term_id ); ?>
-                        <div class="deprat-products-subcategory-level">
-                            <h2 class="deprat-products-level-title deprat-products-level-title--sub">Sous-catégories</h2>
+                        <details class="deprat-products-subcategory-level" data-deprat-subcategories open>
+                            <summary class="deprat-products-subcategory-toggle"
+                                aria-label="Déplier ou replier les sous-catégories">
+                                <h2 class="deprat-products-level-title deprat-products-level-title--sub">Sous-catégories</h2>
+                                <span aria-hidden="true" class="deprat-products-subcategory-arrow">⌄</span>
+                            </summary>
                             <nav class="deprat-products-children" aria-label="Sous-catégories de <?php echo esc_attr( $selected->name ); ?>">
                             <?php deprat_product_list_nav_item( 'Tous',
                                 deprat_product_list_count( deprat_product_list_term_ids( $selected ) ),
@@ -254,7 +258,7 @@ function deprat_product_list_admin_markup() {
                                     false, 'child' );
                             } ?>
                             </nav>
-                        </div>
+                        </details>
                     <?php else : ?>
                         <span class="deprat-products-hint">Choisissez une catégorie pour afficher ses sous-catégories.</span>
                     <?php endif; ?>
