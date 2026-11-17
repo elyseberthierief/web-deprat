@@ -118,9 +118,16 @@
                     if ( destination ) { destination.appendChild( buildItem( real, 0 ) ); }
                 } );
                 preview.querySelectorAll( '[data-preview-section]' ).forEach( function ( section ) {
-                    section.classList.toggle( 'is-empty', !directItems(
-                        section.querySelector( ':scope > [data-preview-list]' ), '[data-preview-item]'
-                    ).length );
+                    var sectionList = section.querySelector( ':scope > [data-preview-list]' );
+                    var empty = !directItems( sectionList, '[data-preview-item]' ).length;
+                    section.classList.toggle( 'is-empty', empty );
+                    var childAction = section.querySelector( '[data-preview-add-subcategory]' );
+                    if ( childAction ) {
+                        childAction.disabled = empty;
+                        childAction.title = empty
+                            ? 'Créez d’abord une catégorie dans cette rubrique.'
+                            : 'Créer une sous-catégorie sous une catégorie existante.';
+                    }
                 } );
                 setupDrag();
             } finally { rebuilding = false; }
@@ -243,6 +250,23 @@
             updateSafely();
         }
         preview.addEventListener( 'click', function ( event ) {
+            var createCategory = event.target.closest( '[data-preview-add-category]' );
+            var createChild = event.target.closest( '[data-preview-add-subcategory]' );
+            if ( createCategory || createChild ) {
+                var action = createCategory || createChild;
+                if ( action.disabled ) { return; }
+                var section = action.closest( '[data-preview-section]' );
+                var details = action.closest( '[data-preview-create-menu]' );
+                var key = section && section.getAttribute( 'data-preview-section' );
+                if ( details ) { details.open = false; }
+                if ( key && config.sectionLabels[ key ] ) {
+                    app.dispatchEvent( new CustomEvent( 'deprat-tree-create-from-section', {
+                        detail: { section: key, mode: createChild ? 'child' : 'root',
+                            trigger: details ? details.querySelector( 'summary' ) : action }
+                    } ) );
+                }
+                return;
+            }
             var toggle = event.target.closest( '[data-preview-toggle]' );
             if ( toggle ) {
                 var li = toggle.closest( '[data-preview-item]' );
@@ -272,6 +296,24 @@
             if ( !li || !target ) { return; }
             target.appendChild( li );
             updateSafely();
+        } );
+        // Refermer les autres menus lorsque l'on en ouvre un, comme un vrai menu déroulant.
+        preview.addEventListener( 'click', function ( event ) {
+            var summary = event.target.closest( '[data-preview-create-menu] > summary' );
+            if ( !summary ) { return; }
+            var current = summary.closest( '[data-preview-create-menu]' );
+            preview.querySelectorAll( '[data-preview-create-menu][open]' ).forEach( function ( menu ) {
+                if ( menu !== current ) { menu.open = false; }
+            } );
+        } );
+        document.addEventListener( 'click', function ( event ) {
+            if ( event.target.closest( '[data-preview-create-menu]' ) ) { return; }
+            preview.querySelectorAll( '[data-preview-create-menu][open]' ).forEach( function ( menu ) {
+                menu.open = false;
+            } );
+        } );
+        app.addEventListener( 'deprat-tree-expand-parent', function ( event ) {
+            if ( event.detail && event.detail.id ) { expanded.add( String( event.detail.id ) ); }
         } );
         app.addEventListener( 'deprat-tree-changed', function () {
             if ( !rebuilding ) { render(); }
