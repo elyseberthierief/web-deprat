@@ -133,8 +133,11 @@
         function isProductListUrl( href ) {
             try {
                 var target = new URL( href, window.location.href );
-                return target.origin === window.location.origin
-                    && target.pathname === window.location.pathname
+                // Les URL WordPress peuvent utiliser l'hôte canonique
+                // (ex. localhost) alors que l'admin est ouvert via un alias
+                // (ex. 127.0.0.1). Le chemin reste le même et l'AJAX doit
+                // toujours viser l'origine de la page actuelle.
+                return target.pathname === window.location.pathname
                     && target.searchParams.get( 'post_type' ) === 'product';
             } catch ( error ) { return false; }
         }
@@ -196,6 +199,12 @@
                 window.location.assign( href );
                 return;
             }
+            // Ne jamais effectuer de fetch cross-origin. Les URL des
+            // sections sont relatives au même admin que cette page.
+            var normalized = new URL( href, window.location.href );
+            normalized.protocol = window.location.protocol;
+            normalized.host = window.location.host;
+            href = normalized.href;
             if ( pendingNavigation ) { pendingNavigation.abort(); }
             var controller = new AbortController();
             pendingNavigation = controller;
