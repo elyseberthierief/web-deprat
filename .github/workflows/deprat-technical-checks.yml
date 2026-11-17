@@ -92,5 +92,6 @@ jobs:
             ${{ runner.temp }}/deprat-fiche-client-*.png
             ${{ runner.temp }}/deprat-catalogue-*.png
             ${{ runner.temp }}/deprat-mega-menu.png
+            ${{ runner.temp }}/deprat-arborescence-admin.png
           if-no-files-found: ignore
           retention-days: 3
