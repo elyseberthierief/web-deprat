@@ -6,6 +6,7 @@
         var config = window.depratCategoryTree;
         var preview = app.querySelector( '[data-tree-preview]' );
         var sourceRoot = app.querySelector( '.deprat-tree-root' );
+        var grid = preview && preview.querySelector( '[data-preview-grid]' );
         if ( !preview || !sourceRoot ) { return; }
         var expanded = new Set();
         var rebuilding = false;
@@ -130,6 +131,7 @@
                     }
                 } );
                 setupDrag();
+                setupSectionDrag();
             } finally { rebuilding = false; }
         }
         function treeSnapshot( list ) {
@@ -231,6 +233,42 @@
                 }
             } );
         }
+        function setupSectionDrag() {
+            if ( !grid ) { return; }
+            var node = $( grid );
+            if ( node.hasClass( 'ui-sortable' ) ) { node.sortable( 'refresh' ); return; }
+            node.sortable( {
+                items: '> [data-preview-section]',
+                handle: '[data-section-drag-handle]',
+                cancel: 'a, input, select, textarea, button:not([data-section-drag-handle]), summary',
+                placeholder: 'deprat-section-placeholder',
+                forcePlaceholderSize: true,
+                tolerance: 'pointer',
+                scroll: true,
+                scrollSensitivity: 55,
+                scrollSpeed: 13,
+                start: function ( event, ui ) {
+                    ui.placeholder.height( ui.item.outerHeight() );
+                    ui.placeholder.width( ui.item.outerWidth() );
+                },
+                stop: function () {
+                    app.dispatchEvent( new CustomEvent( 'deprat-tree-preview-changed' ) );
+                }
+            } );
+        }
+        app.addEventListener( 'deprat-tree-section-upsert', function ( event ) {
+            var entry = event.detail || {};
+            if ( !entry.key || !entry.html || !grid ) { return; }
+            var template = document.createElement( 'template' );
+            template.innerHTML = entry.html.trim();
+            var section = template.content.firstElementChild;
+            if ( !section || !section.matches( '[data-preview-section]' ) ) { return; }
+            var existing = grid.querySelector( '[data-preview-section="' + entry.key + '"]' );
+            if ( existing ) { existing.replaceWith( section ); }
+            else { grid.appendChild( section ); }
+            render();
+            app.dispatchEvent( new CustomEvent( 'deprat-tree-preview-changed' ) );
+        } );
         function move( item, position ) {
             var previous = item.previousElementSibling;
             var next = item.nextElementSibling;
@@ -250,6 +288,18 @@
             updateSafely();
         }
         preview.addEventListener( 'click', function ( event ) {
+            var sectionMoveUp = event.target.closest( '[data-section-up]' );
+            var sectionMoveDown = event.target.closest( '[data-section-down]' );
+            if ( sectionMoveUp || sectionMoveDown ) {
+                var sectionItem = ( sectionMoveUp || sectionMoveDown ).closest( '[data-preview-section]' );
+                var neighbor = sectionMoveUp ? sectionItem.previousElementSibling : sectionItem.nextElementSibling;
+                if ( neighbor && neighbor.matches( '[data-preview-section]' ) ) {
+                    if ( sectionMoveUp ) { neighbor.before( sectionItem ); }
+                    else { neighbor.after( sectionItem ); }
+                    app.dispatchEvent( new CustomEvent( 'deprat-tree-preview-changed' ) );
+                }
+                return;
+            }
             var createCategory = event.target.closest( '[data-preview-add-category]' );
             var createChild = event.target.closest( '[data-preview-add-subcategory]' );
             if ( createCategory || createChild ) {
