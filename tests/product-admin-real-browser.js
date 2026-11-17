@@ -382,14 +382,49 @@ const assert = require( 'assert' );
         assert.strictEqual( await page.locator( '[data-catalog-card]' ).count(), 1, 'Le filtre matière conserve le tube.' );
         await page.screenshot( { path: process.env.RUNNER_TEMP + '/deprat-catalogue-tubes.png', fullPage: true } );
         const tubeArchiveUrl = page.url();
+        const tubeCard = page.locator( '[data-catalog-card]' ).first();
+        assert( await tubeCard.getAttribute( 'data-product-url' ), 'La carte connaît l’URL de la fiche détaillée.' );
+        assert.strictEqual( await tubeCard.locator( '.deprat-catalog-package-fixed' ).count(), 0,
+            'Un conditionnement n’allonge plus les cartes de boutique.' );
         const archiveAdd = page.locator( '[data-catalog-add] [type="submit"]' );
         assert( await archiveAdd.isVisible(), 'Ajout rapide de la demande disponible pour le tube sans prix.' );
+        const compactActionLayout = await page.locator( '.deprat-catalog-action-row' ).evaluate( row => {
+            const quantity = row.querySelector( '.deprat-catalog-stepper' ).getBoundingClientRect();
+            const button = row.querySelector( '.deprat-catalog-add-button' ).getBoundingClientRect();
+            return { sameLine: Math.abs( quantity.bottom - button.bottom ) < 5,
+                nextTo: button.left >= quantity.right - 1, buttonWidth: button.width };
+        } );
+        assert( compactActionLayout.sameLine && compactActionLayout.nextTo && compactActionLayout.buttonWidth <= 160,
+            'Le bouton Ajouter reste compact et placé à côté de la quantité.' );
         await archiveAdd.hover();
         const hoverColor = await archiveAdd.evaluate( element => getComputedStyle( element ).color );
         assert( /rgb\(255,\s*255,\s*255\)/.test( hoverColor ), 'Au survol le texte du bouton reste blanc et lisible.' );
         await archiveAdd.click();
+        const packagePopup = page.locator( '[data-catalog-package-dialog]' );
+        assert( await packagePopup.isVisible(), 'Plusieurs conditionnements ouvrent une popup avant toute requête.' );
+        assert.strictEqual( await packagePopup.locator( 'input[name="deprat_popup_package"]' ).count(), 2 );
+        assert( ( await packagePopup.locator( '[data-package-dialog-product-name]' ).textContent() ).includes( 'Tube de test' ),
+            'La popup affiche la vraie fiche produit.' );
+        await packagePopup.locator( 'input[name="deprat_popup_package"][value="1"]' ).check();
+        await packagePopup.locator( '[data-package-dialog-quantity]' ).fill( '2' );
+        assert( ( await packagePopup.locator( '[data-package-dialog-summary]' ).textContent() ).replace( /\s/g, '' ).includes( '1008' ),
+            'Deux conditionnements de 504 mètres représentent 1 008 mètres.' );
+        await packagePopup.locator( '[data-package-dialog-close]' ).first().click();
+        assert( await packagePopup.isHidden(), 'Fermer la popup n’ajoute rien.' );
+        assert.strictEqual( await page.locator( '[data-catalog-feedback].is-success' ).count(), 0,
+            'La popup ne déclenche aucun ajout tant que le client ne confirme pas.' );
+        await archiveAdd.click();
+        await packagePopup.locator( '[data-package-dialog-confirm]' ).click();
         await page.locator( '[data-catalog-feedback].is-success' ).waitFor( { timeout: 20000 } );
+        assert( await packagePopup.isHidden(), 'La popup se ferme une fois le devis mis à jour.' );
         assert.strictEqual( page.url(), tubeArchiveUrl, 'Ajout à la demande sans quitter Tubes.' );
+        const productLink = await tubeCard.getAttribute( 'data-product-url' );
+        await Promise.all( [
+            page.waitForNavigation( { waitUntil: 'domcontentloaded' } ),
+            tubeCard.locator( '.deprat-catalog-matter' ).click()
+        ] );
+        assert( page.url().includes( 'product' ) || page.url() === productLink,
+            'Cliquer sur le texte de la carte ouvre la fiche produit complète.' );
 
         await page.goto( base + '/?product_cat=embouts', { waitUntil: 'domcontentloaded' } );
         await page.waitForSelector( '.deprat-catalog-layout' );
@@ -397,13 +432,31 @@ const assert = require( 'assert' );
         assert.strictEqual( await page.locator( '[data-catalog-card]' ).count(), 1, 'La page Embouts contient uniquement l’embout.' );
         assert( ( await page.locator( '[data-catalog-card]' ).textContent() ).includes( 'Embout DEPRAT de test' ), 'L’embout doit apparaître.' );
         assert.strictEqual( await page.locator( '[data-open-model]' ).count(), 0, 'Aucun bouton 360° inventé si le produit n’a pas de GLB.' );
-        await page.locator( '[data-catalog-add] select[name="deprat_package_choice"]' ).selectOption( 'unitary' );
-        assert( await page.locator( '[data-catalog-add] [data-unitary-warning]' ).isVisible(), 'La plus-value apparaît pour une quantité libre.' );
-        assert( await page.locator( '.deprat-catalog-package-selectable' ).count() === 1, 'Le sélecteur de conditionnement doit être identifié visuellement.' );
+        assert.strictEqual( await page.locator( '.deprat-catalog-package-selectable' ).count(), 0,
+            'La carte reste compacte et ne montre plus le sélecteur permanent.' );
         await page.locator( '[data-catalog-add] [name="quantity"]' ).fill( '7' );
         await page.locator( '[data-catalog-add] [type="submit"]' ).click();
+        const piecePopup = page.locator( '[data-catalog-package-dialog]' );
+        assert( await piecePopup.isVisible(), 'Les deux modes de conditionnement ouvrent la fenêtre.' );
+        await piecePopup.locator( 'input[name="deprat_popup_package"][value="unitary"]' ).check();
+        assert( await piecePopup.locator( '[data-package-dialog-warning]' ).isVisible(),
+            'La plus-value est bien signalée pour un conditionnement non standard.' );
+        assert( ( await piecePopup.locator( '[data-package-dialog-summary]' ).textContent() ).includes( '7 pièces à l’unité' ),
+            'Le récapitulatif est mis à jour avec la quantité de pièces.' );
+        await piecePopup.locator( '[data-package-dialog-confirm]' ).click();
         await page.locator( '[data-catalog-feedback].is-success' ).waitFor( { timeout: 20000 } );
         await page.screenshot( { path: process.env.RUNNER_TEMP + '/deprat-catalogue-embouts.png', fullPage: true } );
+
+        // Un produit sans aucun carton standard n'a qu'un seul choix (unité).
+        // Son ajout AJAX reste direct, sans ouverture de fenêtre.
+        await page.goto( fullShopUrl, { waitUntil: 'domcontentloaded' } );
+        const singleOptionCard = page.locator( '[data-catalog-card]' ).filter( { hasText: 'Référence avec prix explicite' } ).first();
+        assert( await singleOptionCard.isVisible(), 'La référence test avec une seule option est affichée.' );
+        assert.strictEqual( await singleOptionCard.locator( '[data-catalog-add]' ).getAttribute( 'data-multiple-packages' ), 'false' );
+        await singleOptionCard.locator( '[data-catalog-add] [type="submit"]' ).click();
+        await singleOptionCard.locator( '[data-catalog-feedback].is-success' ).waitFor( { timeout: 20000 } );
+        assert( await page.locator( '[data-catalog-package-dialog]' ).isHidden(),
+            'Une seule option est ajoutée directement, sans popup.' );
 
         await page.goto( base + '/boutique/', { waitUntil: 'domcontentloaded' } );
         if ( await page.locator( '.deprat-catalog-hub' ).count() ) {

@@ -236,6 +236,47 @@ $roots = deprat_catalog_root_categories();
             </section>
         </div>
     <?php endif; ?>
+    <dialog class="deprat-catalog-package-dialog" data-catalog-package-dialog aria-labelledby="deprat-package-dialog-title">
+        <div class="deprat-package-dialog-heading">
+            <div>
+                <span class="deprat-package-dialog-eyebrow">DEPRAT · DEMANDE DE DEVIS</span>
+                <h2 id="deprat-package-dialog-title">Choisir un conditionnement</h2>
+            </div>
+            <button type="button" class="deprat-package-dialog-close" data-package-dialog-close aria-label="Fermer sans ajouter">×</button>
+        </div>
+        <div class="deprat-package-dialog-product">
+            <img data-package-dialog-image alt="" hidden>
+            <div class="deprat-package-dialog-product-info">
+                <p class="deprat-package-dialog-ref" data-package-dialog-ref></p>
+                <h3 data-package-dialog-product-name></h3>
+                <p data-package-dialog-material hidden></p>
+                <p data-package-dialog-description hidden></p>
+                <a data-package-dialog-link href="#">Voir la fiche détaillée →</a>
+            </div>
+        </div>
+        <fieldset class="deprat-package-dialog-fieldset">
+            <legend>Quel conditionnement souhaitez-vous ?</legend>
+            <p class="deprat-package-dialog-help">Sélectionnez le conditionnement pour cette référence.</p>
+            <div class="deprat-package-dialog-options" data-package-dialog-options></div>
+        </fieldset>
+        <p class="deprat-package-dialog-warning" data-package-dialog-warning hidden><?php echo esc_html( deprat_packaging_surcharge_warning() ); ?></p>
+        <div class="deprat-package-dialog-bottom">
+            <label class="deprat-package-dialog-qty-label">
+                <span data-package-dialog-qty-label>Nombre de conditionnements</span>
+                <span class="deprat-package-dialog-stepper">
+                    <button type="button" data-package-dialog-minus aria-label="Diminuer la quantité">−</button>
+                    <input type="number" data-package-dialog-quantity min="1" step="1" max="999999" value="1" inputmode="numeric">
+                    <button type="button" data-package-dialog-plus aria-label="Augmenter la quantité">+</button>
+                </span>
+            </label>
+            <p class="deprat-package-dialog-summary" data-package-dialog-summary aria-live="polite"></p>
+        </div>
+        <p class="deprat-package-dialog-feedback" data-package-dialog-feedback role="status" aria-live="polite" hidden></p>
+        <div class="deprat-package-dialog-actions">
+            <button type="button" class="deprat-package-dialog-cancel" data-package-dialog-close>Annuler</button>
+            <button type="button" class="deprat-package-dialog-confirm" data-package-dialog-confirm>Ajouter à ma demande</button>
+        </div>
+    </dialog>
     <dialog class="deprat-catalog-model-dialog" data-catalog-model-dialog aria-label="Vue 3D du produit">
         <div class="deprat-catalog-model-header">
             <strong data-model-title>Vue 360°</strong>
