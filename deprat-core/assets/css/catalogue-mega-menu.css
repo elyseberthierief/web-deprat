@@ -253,3 +253,12 @@
   .deprat-mega-panel .deprat-mega-family:nth-child(n) { border-right: 1px solid #e5ebf3; }
   .deprat-mega-panel .deprat-mega-family:nth-child(3n) { border-right: none; }
 }
+
+@media (min-width:922px) {
+  /* Pont invisible entre le titre du premier niveau et le panneau déroulant.
+     Évite de fermer le méga-menu en déplaçant la souris vers le bas. */
+  .deprat-mega-parent:is(:hover,:focus-within)::after {
+    content:""; position:absolute; top:100%; left:0; height:45px;
+    width:100%; z-index:99998; background:transparent; pointer-events:auto;
+  }
+}
