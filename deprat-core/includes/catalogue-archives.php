@@ -216,3 +216,126 @@ function deprat_catalog_query( $term, $index, $filters ) {
     elseif ( 'name_desc' === $sort ) { $args['orderby'] = 'title'; $args['order'] = 'DESC'; }
     return new WP_Query( $args );
 }
+
+
+/** Carte professionnelle : données réelles du produit, images Woo et GLB facultatif. */
+function deprat_catalog_render_card( $product ) {
+    if ( ! $product || ! is_callable( array( $product, 'get_id' ) ) ) { return; }
+    $id = $product->get_id();
+    $data = deprat_product_tech_data( $id );
+    $spec = deprat_catalog_specs( $id );
+    $url = get_permalink( $id );
+    $images = array();
+    foreach ( array_merge( array( (int) $product->get_image_id() ), $product->get_gallery_image_ids() ) as $image_id ) {
+        $image_id = absint( $image_id );
+        if ( $image_id && wp_attachment_is_image( $image_id ) && ! in_array( $image_id, $images, true ) ) {
+            $images[] = $image_id;
+        }
+        if ( count( $images ) >= 7 ) { break; }
+    }
+    $glb_id = deprat_product_3d_model( $id );
+    $glb = $glb_id ? wp_get_attachment_url( $glb_id ) : '';
+    $description = isset( $data['description'] ) && is_scalar( $data['description'] )
+        ? trim( (string) $data['description'] ) : '';
+    if ( '' === $description ) { $description = $product->get_short_description(); }
+    if ( '' === trim( wp_strip_all_tags( $description ) ) ) { $description = $product->get_description(); }
+    $description = trim( wp_strip_all_tags( $description ) );
+    $excerpt = wp_trim_words( $description, 21, '…' );
+    $packages = deprat_product_tech_packages( $data );
+    $allow_unitary = deprat_packaging_allow_unitary( $id );
+    $can_add = $product->is_type( 'simple' ) && $product->is_purchasable()
+        && $product->is_in_stock() && ( $packages || $allow_unitary );
+    ?>
+    <article class="deprat-catalog-card" data-catalog-card>
+        <div class="deprat-catalog-image" data-catalog-gallery>
+            <a href="<?php echo esc_url( $url ); ?>" class="deprat-catalog-image-link" aria-label="<?php echo esc_attr( 'Voir la fiche ' . $product->get_name() ); ?>">
+                <?php if ( $images ) : ?>
+                    <?php foreach ( $images as $position => $image_id ) : ?>
+                        <?php echo wp_get_attachment_image( $image_id, 'woocommerce_thumbnail', false, array(
+                            'class' => 'deprat-catalog-photo' . ( 0 === $position ? ' is-active' : '' ),
+                            'data-gallery-slide' => $position,
+                            'loading' => 0 === $position ? 'eager' : 'lazy',
+                            'alt' => get_post_meta( $image_id, '_wp_attachment_image_alt', true ) ?: $product->get_name(),
+                        ) ); ?>
+                    <?php endforeach; ?>
+                <?php else : ?>
+                    <?php echo function_exists( 'wc_placeholder_img' ) ? wc_placeholder_img( 'woocommerce_thumbnail' ) : ''; ?>
+                <?php endif; ?>
+            </a>
+            <?php if ( count( $images ) > 1 ) : ?>
+                <button type="button" class="deprat-catalog-gallery-prev" data-gallery-prev aria-label="Photo précédente">‹</button>
+                <button type="button" class="deprat-catalog-gallery-next" data-gallery-next aria-label="Photo suivante">›</button>
+                <div class="deprat-catalog-gallery-dots" aria-hidden="true">
+                    <?php foreach ( $images as $position => $image_id ) : ?>
+                        <span class="<?php echo 0 === $position ? 'is-active' : ''; ?>" data-gallery-dot="<?php echo esc_attr( $position ); ?>"></span>
+                    <?php endforeach; ?>
+                </div>
+            <?php endif; ?>
+            <?php if ( $glb ) : ?>
+                <button type="button" class="deprat-catalog-3d" data-open-model
+                    data-model-src="<?php echo esc_url( $glb ); ?>"
+                    data-model-name="<?php echo esc_attr( $product->get_name() ); ?>"
+                    aria-label="<?php echo esc_attr( 'Voir ' . $product->get_name() . ' en 3D' ); ?>">⟳ Vue 360°</button>
+            <?php endif; ?>
+        </div>
+        <div class="deprat-catalog-card-info">
+            <?php if ( $product->get_sku() ) : ?>
+                <p class="deprat-catalog-ref">Réf. : <strong><?php echo esc_html( $product->get_sku() ); ?></strong></p>
+            <?php endif; ?>
+            <h2><a href="<?php echo esc_url( $url ); ?>"><?php echo esc_html( $product->get_name() ); ?></a></h2>
+            <?php if ( $spec['material'] ) : ?>
+                <p class="deprat-catalog-matter"><span aria-hidden="true">▱</span>
+                    <strong>Matière :</strong> <?php echo esc_html( $spec['material'] ); ?></p>
+            <?php endif; ?>
+            <?php if ( $excerpt ) : ?><p class="deprat-catalog-excerpt"><?php echo esc_html( $excerpt ); ?></p><?php endif; ?>
+            <a class="deprat-catalog-readmore" href="<?php echo esc_url( $url ); ?>">Lire la suite <span aria-hidden="true">→</span></a>
+        </div>
+        <div class="deprat-catalog-card-footer">
+            <?php if ( $can_add ) : ?>
+                <form class="deprat-catalog-add" data-catalog-add>
+                    <input type="hidden" name="product_id" value="<?php echo esc_attr( $id ); ?>">
+                    <?php if ( count( $packages ) > 1 || $allow_unitary ) : ?>
+                        <label class="deprat-catalog-package-label">
+                            <span>Conditionnement</span>
+                            <select name="deprat_package_choice" aria-label="Choisir un conditionnement">
+                                <?php foreach ( $packages as $index => $package ) : ?>
+                                    <option value="<?php echo esc_attr( $index ); ?>">
+                                        <?php echo esc_html( ( $package['title'] ? $package['title'] . ' – ' : '' ) . deprat_packaging_label( $package ) ); ?>
+                                    </option>
+                                <?php endforeach; ?>
+                                <?php if ( $allow_unitary ) : ?><option value="unitary">À l’unité – quantité libre</option><?php endif; ?>
+                            </select>
+                        </label>
+                    <?php else : ?>
+                        <input type="hidden" name="deprat_package_choice" value="0">
+                        <p class="deprat-catalog-package-summary"><?php echo esc_html( deprat_packaging_label( $packages[0] ) ); ?></p>
+                    <?php endif; ?>
+                    <p class="deprat-catalog-unitary-warning" data-unitary-warning hidden>
+                        <?php echo esc_html( deprat_packaging_surcharge_warning() ); ?>
+                    </p>
+                    <div class="deprat-catalog-action-row">
+                        <label class="deprat-catalog-qty-label">
+                            <span>Quantité</span>
+                            <span class="deprat-catalog-stepper">
+                                <button type="button" data-qty-minus aria-label="Diminuer la quantité">−</button>
+                                <input type="number" name="quantity" min="1" step="1" value="1" inputmode="numeric" aria-label="Quantité souhaitée">
+                                <button type="button" data-qty-plus aria-label="Augmenter la quantité">+</button>
+                            </span>
+                        </label>
+                        <button type="submit" class="deprat-catalog-add-button">Ajouter à ma demande</button>
+                    </div>
+                    <p class="deprat-catalog-feedback" data-catalog-feedback aria-live="polite" hidden></p>
+                </form>
+            <?php else : ?>
+                <?php if ( ! $product->is_in_stock() ) : ?>
+                    <span class="deprat-catalog-unavailable">Indisponible</span>
+                <?php elseif ( $product->is_type( 'variable' ) ) : ?>
+                    <a class="deprat-catalog-details" href="<?php echo esc_url( $url ); ?>">Choisir une variation</a>
+                <?php else : ?>
+                    <a class="deprat-catalog-details" href="<?php echo esc_url( $url ); ?>">Consulter la fiche</a>
+                <?php endif; ?>
+            <?php endif; ?>
+        </div>
+    </article>
+    <?php
+}
