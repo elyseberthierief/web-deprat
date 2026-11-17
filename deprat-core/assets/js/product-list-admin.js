@@ -158,9 +158,26 @@
                     document.importNode( nextHierarchy, true )
                 );
             }
-            var replacementTable = document.importNode( nextTable, true );
-            table.replaceWith( replacementTable );
-            table = replacementTable;
+            // Préserver les noeuds table/#the-list : WordPress et WooCommerce
+            // attachent parfois les handlers Quick Edit aux noeuds existants.
+            // Seul le contenu des lignes change ; ces handlers restent actifs.
+            var currentBody = table.querySelector( '#the-list' );
+            var newBody = nextTable.querySelector( '#the-list' );
+            if ( !currentBody || !newBody ) {
+                throw new Error( 'Lignes WooCommerce introuvables.' );
+            }
+            currentBody.replaceChildren( ...Array.from( newBody.childNodes ).map( function ( item ) {
+                return document.importNode( item, true );
+            } ) );
+            [ 'thead', 'tfoot' ].forEach( function ( section ) {
+                var existing = table.querySelector( ':scope > ' + section );
+                var next = nextTable.querySelector( ':scope > ' + section );
+                if ( existing && next ) {
+                    existing.replaceChildren( ...Array.from( next.childNodes ).map( function ( node ) {
+                        return document.importNode( node, true );
+                    } ) );
+                }
+            } );
 
             // Conserver les actions groupées et la vraie pagination WP,
             // sans toucher au formulaire principal ni aux cases cochées de la
@@ -185,6 +202,8 @@
             var ticket = ++requestNumber;
             layout.classList.add( 'is-loading' );
             layout.setAttribute( 'aria-busy', 'true' );
+            var status = layout.querySelector( '[data-deprat-navigation-status]' );
+            if ( status ) { status.textContent = 'Chargement des produits…'; }
             try {
                 var response = await fetch( href, {
                     method: 'GET',
@@ -213,6 +232,7 @@
                 layout.querySelectorAll( '[data-deprat-filter]' ).forEach( function ( select ) {
                     select.value = query.get( select.name ) || '';
                 } );
+                if ( status ) { status.textContent = 'Liste des produits mise à jour.'; }
             } catch ( error ) {
                 if ( error.name !== 'AbortError' && ticket === requestNumber ) {
                     // Pour toute erreur réseau/session/plugin, laisser la
