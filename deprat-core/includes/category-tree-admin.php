@@ -30,8 +30,14 @@ function deprat_category_tree_sort_terms( $terms ) {
 }
 function deprat_category_tree_children( $terms, $parent ) {
     $children = array();
+    // « Non classé » est masquée de l'éditeur ; ses éventuels enfants
+    // doivent cependant rester visibles et pouvoir être réorganisés.
+    $default = (int) get_option( 'default_product_cat', 0 );
     foreach ( $terms as $term ) {
-        if ( (int) $term->parent === (int) $parent ) { $children[] = $term; }
+        if ( (int) $term->parent === (int) $parent
+            || ( 0 === (int) $parent && $default && (int) $term->parent === $default ) ) {
+            $children[] = $term;
+        }
     }
     return deprat_category_tree_sort_terms( $children );
 }
