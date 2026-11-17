@@ -46,6 +46,49 @@ const assert = require( 'assert' );
         assert( textStyles.filters.size >= 13 && textStyles.filters.weight <= 500,
             'Les filtres sont suffisamment grands et de graisse normale.' );
 
+        assert( await ui.locator( '.deprat-products-level-title', { hasText: 'Sections' } ).isVisible(),
+            'La navigation affiche son titre Sections sans bandeau bleu.' );
+        assert.strictEqual( await ui.locator( '.deprat-products-explainer' ).count(), 0,
+            'Le bandeau explicatif bleu a été supprimé.' );
+        // Liste et Grille utilisent la même table et les mêmes produits.
+        const viewList = ui.locator( '[data-deprat-view="list"]' );
+        const viewGrid = ui.locator( '[data-deprat-view="grid"]' );
+        assert( await viewList.isVisible() && await viewGrid.isVisible(),
+            'Les deux modes sont accessibles depuis les filtres.' );
+        assert.strictEqual( await viewList.getAttribute( 'aria-pressed' ), 'true',
+            'La vue Liste est le mode initial.' );
+        const beforeGridIds = await page.locator( '#the-list > tr[id^="post-"]' )
+            .evaluateAll( nodes => nodes.map( row => row.id ) );
+        await viewGrid.click();
+        assert.strictEqual( await viewGrid.getAttribute( 'aria-pressed' ), 'true',
+            'La vue Grille est activée.' );
+        assert( await page.locator( 'body.deprat-product-grid-mode' ).count() === 1,
+            'Le mode Grille utilise un style dédié.' );
+        const gridStyles = await page.evaluate( () => ( {
+            container: getComputedStyle( document.querySelector( '#the-list' ) ).display,
+            product: getComputedStyle( document.querySelector( '#the-list > tr[id^="post-"]' ) ).display
+        } ) );
+        assert.strictEqual( gridStyles.container, 'grid', 'Les produits sont présentés dans une grille CSS.' );
+        assert.strictEqual( gridStyles.product, 'grid', 'Chaque produit devient une carte.' );
+        const afterGridIds = await page.locator( '#the-list > tr[id^="post-"]' )
+            .evaluateAll( nodes => nodes.map( row => row.id ) );
+        assert.deepStrictEqual( afterGridIds, beforeGridIds,
+            'La grille ne duplique, ne supprime et ne réordonne aucun produit.' );
+        assert( await page.locator( '#the-list > tr[id^="post-"] .column-thumb img' ).first().isVisible(),
+            'La grille conserve la photo des produits.' );
+        await page.screenshot( { path: process.env.RUNNER_TEMP + '/deprat-produits-admin-grille.png', fullPage: true } );
+        await viewList.click();
+        assert.strictEqual( await viewList.getAttribute( 'aria-pressed' ), 'true',
+            'Un clic sur Liste restaure le tableau WordPress.' );
+        assert.strictEqual( await page.locator( '#the-list' ).evaluate( node => getComputedStyle( node ).display ),
+            'table-row-group', 'La présentation native est restaurée.' );
+        await viewGrid.click();
+        await page.reload( { waitUntil: 'domcontentloaded' } );
+        assert.strictEqual( await ui.locator( '[data-deprat-view="grid"]' ).getAttribute( 'aria-pressed' ), 'true',
+            'Le mode Grille est mémorisé entre deux visites.' );
+        await ui.locator( '[data-deprat-view="list"]' ).click();
+        assert.strictEqual( await ui.locator( '[data-deprat-view="list"]' ).getAttribute( 'aria-pressed' ), 'true' );
+
         assert( await ui.locator( '.deprat-products-header-search #post-search-input' ).isVisible(),
             'La vraie recherche WordPress doit être déplacée en haut.' );
         assert( await ui.locator( '.deprat-products-create' ).isVisible(),
@@ -61,6 +104,8 @@ const assert = require( 'assert' );
         await page.waitForURL( /deprat_section=tubes/ );
         assert( await ui.locator( '.deprat-products-sections a' ).count() >= 10,
             'La barre de sections reste visible après choix d’une section.' );
+        assert( await ui.locator( '.deprat-products-level-title', { hasText: 'Catégories' } ).isVisible(),
+            'La deuxième rangée est identifiée par un titre discret.' );
         assert( await ui.locator( '.deprat-products-categories a', { hasText: 'Tubes' } ).count() === 1,
             'La deuxième ligne contient les catégories WooCommerce réelles.' );
         assert( await ui.locator( '.deprat-products-categories a', { hasText: 'Embouts' } ).count() === 1,
@@ -77,6 +122,8 @@ const assert = require( 'assert' );
         await ui.locator( '.deprat-products-categories a', { hasText: 'Tubes' } ).click();
         await page.waitForURL( /deprat_cat=\d+/ );
         assert( await ui.locator( '.deprat-products-breadcrumb' ).isVisible() );
+        assert( await ui.locator( '.deprat-products-level-title', { hasText: 'Sous-catégories' } ).isVisible(),
+            'La troisième rangée dispose également de son titre.' );
         assert( await ui.locator( '.deprat-products-children a', { hasText: 'Tous' } ).isVisible(),
             'Troisième niveau avec un onglet Tous.' );
         assert( await ui.locator( '.deprat-products-children a', { hasText: 'Tubes de test' } ).isVisible(),
