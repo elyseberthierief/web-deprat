@@ -508,7 +508,7 @@ const assert = require( 'assert' );
         await page.locator( '[data-tree-save]' ).first().click();
         await page.waitForFunction( () => {
             const status = document.querySelector( '[data-tree-status]' );
-            return status && status.textContent.includes( 'enregistrée' );
+            return status && status.textContent.includes( 'enregistré' );
         }, { timeout: 25000 } );
         await page.reload( { waitUntil: 'domcontentloaded' } );
         assert( await page.locator( '.deprat-tree-root > [data-tree-item]' ).filter( { hasText: 'Supports DEPRAT test' } )
