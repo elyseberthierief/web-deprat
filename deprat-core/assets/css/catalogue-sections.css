@@ -64,3 +64,9 @@
  .deprat-catalog .deprat-catalog-hub-footer{justify-content:stretch}
  .deprat-catalog .deprat-catalog-hub-viewall{justify-content:center;width:100%}
 }
+
+/* Les icônes importées via la médiathèque restent à la même taille que les SVG. */
+.deprat-catalog-sections .deprat-section-icon-image{
+    display:block;width:30px;height:30px;max-width:30px;max-height:30px;
+    object-fit:contain;border-radius:5px;
+}
