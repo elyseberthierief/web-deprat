@@ -162,7 +162,13 @@ const assert = require( 'assert' );
 
         const parentUrl = page.url();
         await ui.locator( '.deprat-products-children a', { hasText: 'Tubes de test' } ).click();
-        await page.waitForURL( /deprat_cat=\d+/ );
+        // Le parent possède DÉJÀ un deprat_cat : attendre une nouvelle URL
+        // exacte et non une regexp qui correspondait avant le clic.
+        await page.waitForURL( url => url.href !== parentUrl && url.searchParams.has( 'deprat_cat' ) );
+        await page.waitForFunction( () => {
+            const crumb = document.querySelector( '.deprat-products-breadcrumb' );
+            return crumb && crumb.textContent.includes( 'Tubes de test' );
+        } );
         assert( ( await ui.locator( '.deprat-products-breadcrumb' ).textContent() ).includes( 'Tubes de test' ),
             'La navigation descend dans la hiérarchie sans masquer les sections.' );
         assert.strictEqual( await page.evaluate( () => window.__depratDocumentMarker ), 'same-document',
