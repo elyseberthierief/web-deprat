@@ -318,6 +318,20 @@ if ( $shop_page_id <= 0 ) {
         'post_title' => 'Boutique', 'post_name' => 'boutique' ) );
     update_option( 'woocommerce_shop_page_id', $shop_page_id );
 }
+// « Voir toutes les pièces » doit être un vrai catalogue transversal, et
+// non un simple retour à la page qui liste les familles de produits.
+$all_url = deprat_catalog_all_products_url();
+deprat_integration_assert( false !== strpos( $all_url, 'deprat_all=1' ),
+    'Le bouton Voir toutes les pièces doit ouvrir la vue globale.' );
+$all_index = deprat_catalog_all_products_index();
+deprat_integration_assert( isset( $all_index[ $product_id ], $all_index[ $piece_id ] ),
+    'Toutes les pièces doit inclure les tubes ET les embouts sans limiter la catégorie.' );
+$all_filter = deprat_catalog_filters();
+$all_query = deprat_catalog_query( null, $all_index, $all_filter );
+deprat_integration_assert( $all_query->found_posts >= 2,
+    'La vue complète doit retourner plusieurs références de catégories différentes.' );
+wp_reset_postdata();
+
 $shop_item = (object) array(
     'type' => 'post_type', 'object' => 'page', 'object_id' => (int) $shop_page_id,
     'title' => 'Boutique', 'url' => get_permalink( $shop_page_id ),
@@ -332,6 +346,15 @@ $extra_html = ob_get_clean();
 deprat_integration_assert( false !== strpos( $mega_html, 'deprat-mega-panel' )
     && false !== strpos( $mega_html, 'Tubes' ) && false !== strpos( $mega_html, 'Embouts' ),
     'Le méga-menu doit reprendre les catégories WooCommerce sans liens inventés.' );
+deprat_integration_assert(
+    false !== strpos( $mega_html, 'deprat-mega-intro' )
+    && false !== strpos( $mega_html, 'Voir toutes les pièces' )
+    && false !== strpos( $mega_html, 'deprat_all=1' )
+    && false === strpos( $mega_html, 'Pièces détachées pour professionnels' )
+    && false === strpos( $mega_html, 'Voir les produits' ),
+    'Le bandeau doit être condensé et aucun lien de catégorie ne doit être dupliqué.'
+);
+
 
 $_GET = array();
 $requests_page = get_page_by_path( 'mes-demandes-devis' );

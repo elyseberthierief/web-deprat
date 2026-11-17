@@ -262,3 +262,39 @@
     width:100%; z-index:99998; background:transparent; pointer-events:auto;
   }
 }
+
+/* DEPRAT 0.1.30 : bandeau réduit, uniquement le titre et un lien compact. */
+@media (min-width:922px) {
+  .deprat-mega-panel .deprat-mega-intro {
+    min-height: 66px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    gap: 18px;
+    align-items: center;
+  }
+  .deprat-mega-panel .deprat-mega-intro > strong {
+    color: #10366f;
+    font-size: clamp(19px,1.65vw,24px);
+    line-height: 1.3;
+    font-weight: 850;
+    margin: 0;
+  }
+  .deprat-mega-panel a.deprat-mega-viewall {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: auto;
+    height: 41px;
+    min-height: 41px;
+    max-height: 41px;
+    padding: 0 17px;
+    margin: 0;
+    line-height: 1.2;
+    white-space: nowrap;
+    font-size: 13px;
+  }
+  .deprat-mega-panel .deprat-mega-family {
+    min-height: 82px;
+  }
+}
