@@ -388,13 +388,13 @@ const assert = require( 'assert' );
             'Un conditionnement n’allonge plus les cartes de boutique.' );
         const archiveAdd = page.locator( '[data-catalog-add] [type="submit"]' );
         assert( await archiveAdd.isVisible(), 'Ajout rapide de la demande disponible pour le tube sans prix.' );
-        const layout = await page.locator( '.deprat-catalog-action-row' ).evaluate( row => {
+        const compactActionLayout = await page.locator( '.deprat-catalog-action-row' ).evaluate( row => {
             const quantity = row.querySelector( '.deprat-catalog-stepper' ).getBoundingClientRect();
             const button = row.querySelector( '.deprat-catalog-add-button' ).getBoundingClientRect();
             return { sameLine: Math.abs( quantity.bottom - button.bottom ) < 5,
                 nextTo: button.left >= quantity.right - 1, buttonWidth: button.width };
         } );
-        assert( layout.sameLine && layout.nextTo && layout.buttonWidth <= 160,
+        assert( compactActionLayout.sameLine && compactActionLayout.nextTo && compactActionLayout.buttonWidth <= 160,
             'Le bouton Ajouter reste compact et placé à côté de la quantité.' );
         await archiveAdd.hover();
         const hoverColor = await archiveAdd.evaluate( element => getComputedStyle( element ).color );
