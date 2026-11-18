@@ -19,6 +19,7 @@ jobs:
           php -l deprat-core/includes/product-technical-data.php
           php -l deprat-core/includes/product-shape.php
           php -l deprat-core/includes/category-tree-admin.php
+          php -l deprat-core/includes/megamenu-pdf-export.php
           php -l deprat-core/includes/product-list-admin.php
           php -l deprat-core/includes/product-single-layout.php
           php -l deprat-core/includes/product-3d.php
