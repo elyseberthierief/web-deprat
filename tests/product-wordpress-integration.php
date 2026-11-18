@@ -618,4 +618,37 @@ deprat_integration_assert( false !== strpos( $url, 'deprat_section=tubes' )
     'Cliquer une rubrique réinitialise la catégorie sans perdre la rubrique.' );
 $_GET = $old_get_products;
 
+// Export PDF : mêmes rubriques que le méga-menu public, descendants réels,
+// ordre WooCommerce et document PDF directement téléchargeable.
+$tree_for_pdf = deprat_megamenu_pdf_tree();
+deprat_integration_assert( is_array( $tree_for_pdf ) && count( $tree_for_pdf ) >= 1,
+    'Le PDF doit retrouver les vraies rubriques du catalogue.' );
+$includes_real_tubes = false;
+foreach ( $tree_for_pdf as $item ) {
+    if ( 'tubes' === $item['key'] ) {
+        foreach ( $item['rows'] as $child ) {
+            if ( 'Tubes' === $child['name'] ) { $includes_real_tubes = true; }
+        }
+    }
+}
+deprat_integration_assert( $includes_real_tubes,
+    'L’arborescence PDF doit retrouver le vrai terme WooCommerce Tubes.' );
+$sample_pdf = deprat_megamenu_pdf_bytes( array(
+    array( 'key' => 'tubes', 'title' => 'Tubes acier & accessoires', 'rows' => array(
+        array( 'name' => 'Tubes', 'depth' => 0 ),
+        array( 'name' => 'Pièces (test)', 'depth' => 1 ),
+    ) ),
+), '17/11/2026' );
+deprat_integration_assert( str_starts_with( $sample_pdf, '%PDF-1.4' )
+    && str_contains( $sample_pdf, '/Type /Pages' )
+    && str_contains( $sample_pdf, '/Type /Page' )
+    && str_contains( $sample_pdf, '/MediaBox [0 0 1191 842]' )
+    && str_contains( $sample_pdf, '(Tubes)' )
+    && str_contains( $sample_pdf, 'Pi') 
+    && str_contains( $sample_pdf, '\\(test\\)' )
+    && str_contains( $sample_pdf, '%%EOF' ),
+    'Le PDF A3 doit inclure les catégories, les niveaux et un xref de fin valide.' );
+deprat_integration_assert( substr_count( $sample_pdf, 'xref' ) >= 2,
+    'Les références croisées du PDF doivent être présentes.' );
+
 WP_CLI::success( 'WordPress et WooCommerce : sauvegarde, médias et affichages vérifiés.' );
