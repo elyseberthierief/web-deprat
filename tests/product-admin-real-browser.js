@@ -491,6 +491,36 @@ const assert = require( 'assert' );
         // Éditeur visuel : catégories racines, création imbriquée sur trois niveaux
         // et enregistrement de la hiérarchie native WooCommerce.
         await page.goto( base + '/wp-admin/edit.php?post_type=product&page=deprat-categories-tree', { waitUntil: 'domcontentloaded' } );
+        // Export du méga-menu au format PDF, généré côté serveur depuis les
+        // vrais termes WooCommerce et protégé par nonce + droit admin.
+        const exportButton = page.locator( '[data-tree-export-pdf]' );
+        assert( await exportButton.isVisible(), 'Le bouton Exporter l’arborescence en PDF doit être visible.' );
+        const pdfUrl = await exportButton.getAttribute( 'href' );
+        assert( pdfUrl.includes( 'admin-post.php' ) && pdfUrl.includes( 'deprat_export_megamenu_pdf' ),
+            'Le lien pointe vers le gestionnaire sécurisé de PDF.' );
+        // Le banc de test ouvre WordPress via 127.0.0.1 alors que WP peut
+        // produire des URL localhost : conserver l’origine de la session.
+        const pdfSessionUrl = new URL( pdfUrl, page.url() );
+        const currentOrigin = new URL( page.url() );
+        pdfSessionUrl.protocol = currentOrigin.protocol;
+        pdfSessionUrl.host = currentOrigin.host;
+        const pdfResponse = await page.request.get( pdfSessionUrl.href );
+        assert.strictEqual( pdfResponse.status(), 200, 'Le téléchargement du PDF fonctionne en administrateur.' );
+        assert( ( pdfResponse.headers()['content-type'] || '' ).includes( 'application/pdf' ),
+            'Le serveur doit produire un vrai PDF, pas une page HTML.' );
+        assert( ( pdfResponse.headers()['content-disposition'] || '' ).includes( 'attachment' ),
+            'Le fichier PDF est téléchargeable.' );
+        const pdfBytes = await pdfResponse.body();
+        assert( pdfBytes.subarray( 0, 8 ).toString( 'latin1' ).startsWith( '%PDF-1.4' ),
+            'Le contenu est un document PDF valide.' );
+        assert( pdfBytes.toString( 'latin1' ).includes( '(Tubes)' ),
+            'La hiérarchie exportée contient les catégories existantes.' );
+        const invalidPdfUrl = new URL( pdfSessionUrl.href );
+        invalidPdfUrl.searchParams.set( '_wpnonce', 'nonce_invalide' );
+        const deniedPdf = await page.request.get( invalidPdfUrl.href, { maxRedirects: 0 } );
+        assert.strictEqual( deniedPdf.status(), 403,
+            'Le téléchargement est refusé sans nonce valide.' );
+
         await page.waitForSelector( '[data-deprat-category-tree] [data-tree-preview] .deprat-preview-item' );
         const editor = page.locator( '[data-tree-preview]' );
         assert( await editor.locator( '.deprat-catalog-sections--admin > [data-preview-section]' ).count() === 10,
