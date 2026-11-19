@@ -285,3 +285,22 @@ body #masthead .custom-logo-link img{
     body #masthead .deprat-header-desktop,
     body #masthead .deprat-header-quote-menu-item{display:none!important}
 }
+
+/* Astra Header Builder: libérer la colonne que le logo occupait avant de
+   déplacer son identité dans la bande centrale, afin de centrer le menu. */
+@media(min-width:922px){
+    body #masthead .ast-primary-header-bar .ast-builder-grid-row{
+        display:flex!important;justify-content:center!important;align-items:center!important;
+        gap:0!important;
+    }
+    body #masthead .ast-primary-header-bar .site-header-primary-section-left{
+        display:none!important;
+    }
+    body #masthead .ast-primary-header-bar .site-header-primary-section-right,
+    body #masthead .ast-primary-header-bar .site-header-primary-section-center{
+        width:auto;flex:0 1 auto;min-width:0;justify-content:center;
+    }
+    body #masthead .ast-primary-header-bar .site-header-primary-section-right .ast-builder-layout-element{
+        display:flex;align-items:center;
+    }
+}
