@@ -1,4 +1,4 @@
-DEPRAT Core 0.1.49
+DEPRAT Core 0.1.50
 
 Le plugin reprend les extraits PHP actifs dans la sauvegarde du 14 novembre 2026.
 Extraits globaux : 5 à 11 et 15.
@@ -59,3 +59,10 @@ Version 0.1.49 — Pictogrammes techniques officiels du PDF :
 - Tirage direct : illustration recadrée sur la poignée et une courte longueur de tige.
 - Les icônes Porte et Composants restent disponibles sans changement.
 - Les médias personnalisés déjà sélectionnés par l’ADV restent prioritaires ; les affectations par identifiants sont préservées.
+
+Version 0.1.50 — catégories lisibles :
+- Pictogrammes des titres de sections rendus plus visibles (dessins PDF renforcés et icônes agrandies).
+- Méga-menu « Nos composants » : titres de sections illustrés, catégories et sous-catégories en texte seul.
+- Prévisualisation admin du méga-menu : aucun pictogramme sur les lignes de catégories, mais les icônes restent dans la bibliothèque et dans la modification des catégories.
+- Page d’une catégorie WooCommerce (ex. « Tubes ») : cartes cliquables pour ses seules sous-catégories directes, avec icônes conservées.
+- Les filtres, références produits, catégories WooCommerce et leurs associations sont inchangés.
