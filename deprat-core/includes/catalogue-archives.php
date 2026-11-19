@@ -603,7 +603,7 @@ function deprat_catalog_mega_assets() {
     );
     wp_enqueue_style( 'deprat-catalog-sections',
         plugins_url( 'assets/css/catalogue-sections.css', dirname( __DIR__ ) . '/deprat-core.php' ),
-        array( 'deprat-catalog-mega-menu' ), '0.1.47'
+        array( 'deprat-catalog-mega-menu' ), '0.1.50'
     );
     wp_enqueue_script( 'deprat-catalog-mega-menu',
         plugins_url( 'assets/js/catalogue-mega-menu.js', dirname( __DIR__ ) . '/deprat-core.php' ),
