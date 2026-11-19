@@ -455,3 +455,17 @@
     .deprat-catalog-header--category .deprat-catalog-title-band{padding:18px 20px;border-radius:9px}
     .deprat-catalog-header--category .deprat-catalog-title-band h1{font-size:clamp(24px,6vw,32px)}
 }
+
+/* 0.1.50 — Cartes des sous-catégories : grille régulière, illustration au-dessus
+   du titre, centrée comme dans la bibliothèque. */
+.deprat-catalog-children-grid{grid-template-columns:repeat(auto-fill,minmax(165px,1fr));gap:14px}
+.deprat-catalog-child-card{position:relative;display:grid;grid-template-rows:66px minmax(38px,auto);place-items:center;align-content:center;gap:10px;min-height:156px;padding:19px 14px 16px;text-align:center}
+.deprat-catalog-child-icon{display:grid;place-items:center;justify-self:center;align-self:center;flex:none;width:66px;height:66px;margin:0;border-radius:12px}
+.deprat-catalog-child-icon>svg,.deprat-catalog-child-icon>img{display:block!important;width:48px!important;height:48px!important;max-width:48px!important;max-height:48px!important;object-fit:contain!important;object-position:center!important;margin:0!important}
+.deprat-catalog-child-name{display:block;align-self:start;flex:none;width:100%;font-size:13px;line-height:1.35}
+.deprat-catalog-child-arrow{position:absolute;top:11px;right:13px;line-height:1;font-size:17px}
+@media(max-width:650px){
+ .deprat-catalog-child-card{display:grid;grid-template-rows:62px minmax(34px,auto);min-height:142px;padding:14px 9px;gap:9px}
+ .deprat-catalog-child-icon{width:62px;height:62px}
+ .deprat-catalog-child-icon>svg,.deprat-catalog-child-icon>img{width:45px!important;height:45px!important}
+}
