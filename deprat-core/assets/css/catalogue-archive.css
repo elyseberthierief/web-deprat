@@ -425,3 +425,33 @@
     .deprat-catalog-child-arrow{display:none}
 }
 @media(max-width:380px){.deprat-catalog-children-grid{grid-template-columns:1fr}}
+
+/* 0.1.50 — Les archives de catégories reprennent le bleu et l'or DEPRAT. */
+.deprat-catalog-header--category{margin:0 0 24px}
+.deprat-catalog-header--category .deprat-catalog-title-band{
+    background:#103B80;
+    border-radius:12px;
+    border-bottom:4px solid #B68B24;
+    padding:22px 28px;
+    margin-bottom:15px;
+}
+.deprat-catalog-header--category .deprat-catalog-title-band h1{
+    color:#E1B95C!important;
+    font-size:clamp(28px,3vw,42px);
+    line-height:1.2;
+    font-weight:850;
+    margin:0;
+}
+.deprat-catalog-category-description{
+    padding:0 3px;
+    color:#536d8b;
+    font-size:15px;
+    line-height:1.7;
+}
+.deprat-catalog-category-description p{margin:0 0 9px}
+.deprat-catalog-category-description p:last-child{margin-bottom:0}
+.deprat-catalog-category-description a{color:#174b91;text-decoration:underline}
+@media(max-width:650px){
+    .deprat-catalog-header--category .deprat-catalog-title-band{padding:18px 20px;border-radius:9px}
+    .deprat-catalog-header--category .deprat-catalog-title-band h1{font-size:clamp(24px,6vw,32px)}
+}
