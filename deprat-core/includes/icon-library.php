@@ -135,6 +135,23 @@ add_action( 'admin_enqueue_scripts', static function ( $hook ) {
     ) );
 }, 30 );
 
+/**
+ * Empêcher la suppression d'une icône encore utilisée. Les associations
+ * demeurent valides, et les pictogrammes n'apparaissent jamais cassés.
+ */
+function deprat_icon_library_is_used( $key ) {
+    foreach ( deprat_catalog_section_registry() as $section ) {
+        if ( isset( $section['icon'] ) && $section['icon'] === $key ) { return true; }
+    }
+    $terms = get_terms( array(
+        'taxonomy' => 'product_cat',
+        'hide_empty' => false,
+        'fields' => 'ids',
+        'meta_query' => array( array( 'key' => '_deprat_category_icon', 'value' => $key ) ),
+    ) );
+    return ! is_wp_error( $terms ) && ! empty( $terms );
+}
+
 function deprat_icon_library_ajax_save() {
     if ( ! current_user_can( 'manage_product_terms' ) || ! check_ajax_referer( 'deprat_icon_library', 'nonce', false ) ) {
         wp_send_json_error( array( 'message' => 'Accès refusé ou session expirée.' ), 403 );
@@ -148,7 +165,10 @@ function deprat_icon_library_ajax_save() {
         if ( ! isset( $entries[ $key ] ) ) {
             wp_send_json_error( array( 'message' => 'Icône introuvable.' ), 404 );
         }
-        // Ne pas détruire les affectations déjà utilisées. L'icône devient simplement masquée.
+        if ( deprat_icon_library_is_used( $key ) ) {
+            wp_send_json_error( array( 'message' => 'Cette icône est utilisée sur le site. Choisissez une autre icône pour les rubriques et catégories concernées avant de la retirer.' ), 409 );
+        }
+        // Les pictogrammes initiaux peuvent être retirés, mais leurs tracés restent dans le code.
         $saved[ $key ] = array_merge( isset( $saved[ $key ] ) && is_array( $saved[ $key ] ) ? $saved[ $key ] : array(), array( 'hidden' => 1 ) );
         update_option( 'deprat_icon_library_v1', $saved, false );
         wp_send_json_success( array( 'message' => 'Icône retirée de la bibliothèque.' ) );
@@ -156,7 +176,7 @@ function deprat_icon_library_ajax_save() {
     if ( 'save' !== $action ) { wp_send_json_error( array( 'message' => 'Action invalide.' ), 400 ); }
     $name = isset( $_POST['name'] ) && is_scalar( $_POST['name'] ) ? trim( sanitize_text_field( wp_unslash( $_POST['name'] ) ) ) : '';
     $media = isset( $_POST['media_id'] ) && is_scalar( $_POST['media_id'] ) ? absint( $_POST['media_id'] ) : 0;
-    if ( '' === $name || mb_strlen( $name ) > 60 ) {
+    if ( '' === $name || strlen( $name ) > 180 ) {
         wp_send_json_error( array( 'message' => 'Renseignez un nom de 1 à 60 caractères.' ), 400 );
     }
     if ( $media && ( ! current_user_can( 'upload_files' ) || ! deprat_catalog_section_media_allowed( $media ) ) ) {
