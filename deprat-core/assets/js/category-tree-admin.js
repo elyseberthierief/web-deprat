@@ -29,7 +29,7 @@
          */
         function setupCategoryVisualPicker( formElement ) {
             var picker = formElement.querySelector( '[data-category-icon-picker]' );
-            if ( !picker ) { return { reset: function () {}, value: function () { return {icon:'autres',media_id:0}; } }; }
+            if ( !picker ) { return { reset: function () {}, value: function () { return {icon:'auto',media_id:0}; } }; }
             var preview = picker.querySelector( '[data-category-media-preview]' );
             var remove = picker.querySelector( '[data-category-media-clear]' );
             var select = picker.querySelector( '[data-category-media-pick]' );
@@ -59,7 +59,7 @@
                 values = values || {};
                 mediaId = Number( values.media_id ) || 0;
                 imageURL = String( values.image_url || '' );
-                var icon = config.sectionPalette && config.sectionPalette[ values.icon ] ? values.icon : 'autres';
+                var icon = values.icon === 'auto' || config.sectionPalette && config.sectionPalette[ values.icon ] ? values.icon : 'auto';
                 var radio = picker.querySelector( 'input[type="radio"][value="' + icon + '"]' );
                 if ( radio ) { radio.checked = true; }
                 render();
@@ -105,7 +105,7 @@
                 reset: reset,
                 value: function () {
                     var chosen = picker.querySelector( 'input[type="radio"]:checked' );
-                    return { icon: chosen ? chosen.value : 'autres', media_id: mediaId };
+                    return { icon: chosen ? chosen.value : 'auto', media_id: mediaId };
                 }
             };
         }
@@ -113,7 +113,7 @@
 
         function updateCategoryVisual( node, response ) {
             if ( !node ) { return; }
-            node.setAttribute( 'data-category-icon', response.icon || 'autres' );
+            node.setAttribute( 'data-category-icon', response.icon || 'auto' );
             node.setAttribute( 'data-category-media-id', String( Number( response.media_id ) || 0 ) );
             node.setAttribute( 'data-category-image-url', response.image_url || '' );
             var icon = node.querySelector( ':scope > .deprat-tree-row [data-tree-icon]' );
@@ -208,7 +208,7 @@
             li.setAttribute( 'data-tree-item', '' );
             li.setAttribute( 'data-term-id', String( id ) );
             li.setAttribute( 'data-section-guess', 'autres' );
-            li.setAttribute( 'data-category-icon', 'autres' );
+            li.setAttribute( 'data-category-icon', 'auto' );
             li.setAttribute( 'data-category-media-id', '0' );
             li.setAttribute( 'data-category-image-url', '' );
             var row = document.createElement( 'div' );
@@ -325,7 +325,7 @@
                 formParent.value = names[ 0 ].id;
             }
             formName.value = '';
-            createVisual.reset( { icon:'autres', media_id:0, image_url:'' } );
+            createVisual.reset( { icon:'auto', media_id:0, image_url:'' } );
             formError.hidden = true;
             formError.textContent = '';
             overlay.hidden = false;
@@ -520,7 +520,7 @@
             categoryEditId.value = String( id );
             categoryEditName.value = itemName( source );
             editVisual.reset( {
-                icon: source.getAttribute( 'data-category-icon' ) || 'autres',
+                icon: source.getAttribute( 'data-category-icon' ) || 'auto',
                 media_id: Number( source.getAttribute( 'data-category-media-id' ) ) || 0,
                 image_url: source.getAttribute( 'data-category-image-url' ) || ''
             } );
