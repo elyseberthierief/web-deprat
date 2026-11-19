@@ -403,3 +403,25 @@
  .deprat-catalog-package-dialog .deprat-package-dialog-summary{margin-top:10px!important}
  .deprat-catalog-package-dialog .deprat-package-dialog-actions{padding:14px 16px}
 }
+
+/* 0.1.50 — Sous-catégories visuelles uniquement sur les pages de catégorie.
+   Les cartes réutilisent les médias/illustrations de la bibliothèque DEPRAT. */
+.deprat-catalog-children{margin:0 0 28px}
+.deprat-catalog-children-heading{display:flex;align-items:baseline;justify-content:space-between;gap:10px 20px;flex-wrap:wrap;margin:0 0 15px}
+.deprat-catalog-children-heading h2{color:#103b80;font-size:clamp(19px,1.55vw,24px);font-weight:800;line-height:1.3;margin:0}
+.deprat-catalog-children-heading p{font-size:13px;color:#63809f;margin:0}
+.deprat-catalog-children-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(185px,1fr));gap:12px}
+.deprat-catalog-child-card{display:flex;min-width:0;align-items:center;gap:12px;min-height:93px;padding:17px 15px;border:1px solid #d7e3f0;border-radius:12px;background:#f8fbff;color:#173f78!important;text-decoration:none!important;transition:border-color .15s,box-shadow .15s,background .15s}
+.deprat-catalog-child-card:hover,.deprat-catalog-child-card:focus-visible{background:#eef6ff;border-color:#88acd9;box-shadow:0 6px 16px rgba(15,60,120,.085)}
+.deprat-catalog-child-card:focus-visible{outline:2px solid #b68b24;outline-offset:2px}
+.deprat-catalog-child-icon{flex:0 0 48px;display:grid;place-items:center;width:48px;height:48px;border-radius:9px;background:#fff;border:1px solid #e1e9f3;color:#174d91}
+.deprat-catalog-child-icon svg,.deprat-catalog-child-icon img{display:block!important;width:39px!important;height:39px!important;max-width:39px!important;max-height:39px!important;object-fit:contain}
+.deprat-catalog-child-name{flex:1;min-width:0;font-size:13px;font-weight:750;line-height:1.4;overflow-wrap:anywhere}
+.deprat-catalog-child-arrow{font-size:20px;line-height:1;color:#6584a9}
+@media(max-width:650px){
+    .deprat-catalog-children-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+    .deprat-catalog-child-card{min-height:100px;flex-direction:column;text-align:center;gap:7px;padding:12px 9px}
+    .deprat-catalog-child-name{flex:none;font-size:12px}
+    .deprat-catalog-child-arrow{display:none}
+}
+@media(max-width:380px){.deprat-catalog-children-grid{grid-template-columns:1fr}}
