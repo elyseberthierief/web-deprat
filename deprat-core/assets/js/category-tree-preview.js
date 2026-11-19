@@ -57,6 +57,13 @@
             var label = document.createElement( 'span' );
             label.className = 'deprat-section-term-link';
             label.textContent = name;
+            var sourceIcon = real.querySelector( ':scope > .deprat-tree-row [data-tree-icon]' );
+            if ( sourceIcon ) {
+                var previewIcon = sourceIcon.cloneNode( true );
+                previewIcon.className = 'deprat-preview-category-icon';
+                previewIcon.removeAttribute( 'data-tree-icon' );
+                row.appendChild( previewIcon );
+            }
             var actions = document.createElement( 'div' );
             actions.className = 'deprat-preview-actions';
             actions.append(
