@@ -104,15 +104,7 @@ function deprat_category_tree_render_icon_picker( $context ) {
                     <small>Automatique</small>
                 </span>
             </label>
-            <?php foreach ( deprat_catalog_section_palette() as $icon_key => $caption ) : ?>
-                <label title="<?php echo esc_attr( $caption ); ?>">
-                    <input type="radio" name="deprat-category-<?php echo esc_attr( $context ); ?>-icon" value="<?php echo esc_attr( $icon_key ); ?>">
-                    <span class="deprat-section-icon-choice">
-                        <svg class="deprat-section-icon" aria-hidden="true" width="27" height="27" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round"><?php echo deprat_catalog_section_icon_paths()[ $icon_key ]; // SVG interne. ?></svg>
-                        <small><?php echo esc_html( $caption ); ?></small>
-                    </span>
-                </label>
-            <?php endforeach; ?>
+            <?php deprat_icon_library_render_picker( 'deprat-category-' . $context . '-icon' ); ?>
         </div>
         <?php if ( current_user_can( 'upload_files' ) ) : ?>
             <div class="deprat-section-media-picker deprat-category-media-picker">
@@ -282,6 +274,7 @@ function deprat_category_tree_admin_page() {
             <span data-tree-unsaved class="deprat-tree-unsaved" hidden>Modifications non enregistrées</span>
             <span data-tree-status role="status" aria-live="polite"></span>
         </div>
+        <?php deprat_icon_library_render_admin(); ?>
         <?php deprat_category_tree_admin_visual_menu(); ?>
         <details class="deprat-tree-advanced" data-tree-advanced>
             <summary>Gestion avancée de l’arborescence (optionnelle)</summary>
@@ -357,15 +350,7 @@ function deprat_category_tree_admin_page() {
                 <fieldset class="deprat-section-icon-fieldset">
                     <legend>Choisir une icône</legend>
                     <div class="deprat-section-icon-palette" data-section-icon-palette>
-                        <?php foreach ( deprat_catalog_section_palette() as $icon_key => $caption ) : ?>
-                            <label title="<?php echo esc_attr( $caption ); ?>">
-                                <input type="radio" name="deprat-section-icon" value="<?php echo esc_attr( $icon_key ); ?>" <?php checked( 'autres', $icon_key ); ?>>
-                                <span class="deprat-section-icon-choice">
-                                    <svg class="deprat-section-icon" aria-hidden="true" width="27" height="27" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round"><?php echo deprat_catalog_section_icon_paths()[ $icon_key ]; // Tracés constants. ?></svg>
-                                    <small><?php echo esc_html( $caption ); ?></small>
-                                </span>
-                            </label>
-                        <?php endforeach; ?>
+                        <?php deprat_icon_library_render_picker( 'deprat-section-icon', 'autres' ); ?>
                     </div>
                 </fieldset>
                 <?php if ( current_user_can( 'upload_files' ) ) : ?>
