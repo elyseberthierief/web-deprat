@@ -58,6 +58,20 @@ function deprat_icon_library_markup( $key, $class = 'deprat-section-icon', $size
             'alt' => '', 'aria-hidden' => 'true', 'loading' => 'lazy',
         ) );
     }
+    // Essai 3D DEPRAT : remplacer trois icônes par des rendus produits
+    // homogènes. Ne jamais écraser une image choisie dans l'administration.
+    $trial_icons = array(
+        'liaison' => 'attache-3d.webp',
+        'treuil' => 'treuil-3d.webp',
+        'sangle' => 'sangle-3d.webp',
+    );
+    if ( isset( $trial_icons[ $key ] ) ) {
+        $url = plugins_url( 'assets/icons/' . $trial_icons[ $key ], dirname( __DIR__ ) . '/deprat-core.php' );
+        return '<img class="' . esc_attr( $class . ' deprat-library-3d-image' ) . '"'
+            . ' src="' . esc_url( $url ) . '"'
+            . ' alt="" aria-hidden="true" loading="lazy"'
+            . ' width="' . absint( $size ) . '" height="' . absint( $size ) . '">';
+    }
     // Illustrations techniques fournies par DEPRAT : priorite au PDF,
     // sauf si l'administrateur a choisi une image personnalisee.
     if ( function_exists( 'deprat_pdf_icon_markup' ) ) {
