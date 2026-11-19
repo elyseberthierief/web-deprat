@@ -219,3 +219,10 @@
 }
 
 .deprat-home-block.no-active-slides .deprat-home-category-nav { margin-top: 18px; }
+
+
+/* Préserver les pictogrammes individuels choisis pour les catégories WooCommerce. */
+.deprat-home-category-icon .deprat-category-icon { display: block; width: 40px; height: 40px; object-fit: contain; color: #103B80; }
+@media (max-width: 540px) {
+    .deprat-home-category-icon .deprat-category-icon { width: 34px; height: 34px; }
+}
