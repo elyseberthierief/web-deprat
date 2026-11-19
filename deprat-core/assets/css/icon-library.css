@@ -32,3 +32,15 @@
 .deprat-section-icon-choice .deprat-library-image{width:30px;height:30px;object-fit:contain}
 .deprat-section-icon-wrap .deprat-library-image,.deprat-category-link-icon .deprat-library-image{width:30px;height:30px;object-fit:contain}
 @media(max-width:800px){.deprat-library-heading{flex-direction:column;align-items:flex-start}.deprat-library-grid{grid-template-columns:repeat(auto-fill,minmax(120px,1fr))}.deprat-library-actions{opacity:1}.deprat-library-image-field{align-items:flex-start;flex-direction:column}}
+
+/* 0.1.50 — Bibliothèque : pictogrammes parfaitement centrés, libellés alignés. */
+.deprat-library-grid{grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:13px;align-items:stretch}
+.deprat-library-card{display:grid;grid-template-rows:70px minmax(34px,auto);place-items:center;align-content:center;gap:8px;min-height:166px;padding:32px 11px 17px}
+.deprat-library-art{display:grid;place-items:center;align-self:center;justify-self:center;width:70px;height:70px;padding:9px;border-radius:12px;background:#fff;border:1px solid #e0eaf5}
+.deprat-library-art>.deprat-library-icon{display:block!important;width:49px!important;height:49px!important;max-width:49px!important;max-height:49px!important;object-fit:contain;object-position:center;margin:auto}
+.deprat-library-art>svg.deprat-library-icon{overflow:visible}
+.deprat-library-card strong{display:block;align-self:start;width:100%;min-height:34px;margin:0;font-size:12px;line-height:1.4;text-align:center}
+.deprat-library-actions{z-index:2}
+.deprat-section-icon-choice{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px}
+.deprat-section-icon-choice svg,.deprat-section-icon-choice img{display:block;flex-shrink:0;object-fit:contain;object-position:center}
+@media(max-width:800px){.deprat-library-grid{grid-template-columns:repeat(auto-fill,minmax(125px,1fr))}}

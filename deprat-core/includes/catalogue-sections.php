@@ -225,7 +225,7 @@ function deprat_catalog_category_icon( $term ) {
  * Un lien navigue vers une VRAIE catégorie ; un bouton séparé déplie ses
  * VRAIES sous-catégories (plusieurs niveaux). Les titres de section ne lient rien.
  */
-function deprat_catalog_render_section_terms( $terms, $prefix, $depth = 0 ) {
+function deprat_catalog_render_section_terms( $terms, $prefix, $depth = 0, $show_icons = false ) {
     if ( ! $terms || $depth > 20 ) { return; }
     echo '<ul class="deprat-section-categories deprat-section-depth-' . esc_attr( $depth ) . '">';
     foreach ( $terms as $term ) {
@@ -236,7 +236,11 @@ function deprat_catalog_render_section_terms( $terms, $prefix, $depth = 0 ) {
         $id = $prefix . '-' . (int) $term->term_id;
         echo '<li class="deprat-section-term' . ( $has_children ? ' has-children' : '' ) . '">';
         echo '<div class="deprat-section-term-row">';
-        echo '<a class="deprat-section-term-link" href="' . esc_url( $url ) . '"><span class="deprat-category-link-icon">' . deprat_catalog_category_icon( $term ) . '</span><span class="deprat-category-link-name">' . esc_html( $term->name ) . '</span></a>';
+        echo '<a class="deprat-section-term-link" href="' . esc_url( $url ) . '">';
+        if ( $show_icons ) {
+            echo '<span class="deprat-category-link-icon">' . deprat_catalog_category_icon( $term ) . '</span>';
+        }
+        echo '<span class="deprat-category-link-name">' . esc_html( $term->name ) . '</span></a>';
         if ( $has_children ) {
             echo '<button type="button" class="deprat-section-toggle" aria-controls="' . esc_attr( $id ) . '" aria-expanded="false" aria-label="' . esc_attr( 'Déplier les sous-catégories de ' . $term->name ) . '" data-deprat-section-toggle>';
             echo '<svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>';
@@ -246,7 +250,7 @@ function deprat_catalog_render_section_terms( $terms, $prefix, $depth = 0 ) {
         echo '</div>';
         if ( $has_children ) {
             echo '<div id="' . esc_attr( $id ) . '" class="deprat-section-children" hidden>';
-            deprat_catalog_render_section_terms( $children, $prefix, $depth + 1 );
+            deprat_catalog_render_section_terms( $children, $prefix, $depth + 1, $show_icons );
             echo '</div>';
         }
         echo '</li>';
@@ -266,7 +270,7 @@ function deprat_catalog_render_sections( $context = 'mega' ) {
         echo '<span class="deprat-section-icon-wrap">' . deprat_catalog_section_icon( $key ) . '</span>';
         echo '<h2>' . esc_html( $titles[ $key ] ) . '</h2>';
         echo '</div>';
-        deprat_catalog_render_section_terms( $terms, $prefix );
+        deprat_catalog_render_section_terms( $terms, $prefix, 0, 'mega' !== $context );
         echo '</section>';
     }
     echo '</div>';

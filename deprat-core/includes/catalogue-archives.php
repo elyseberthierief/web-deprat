@@ -47,7 +47,7 @@ add_filter( 'template_include', 'deprat_catalog_template', 45 );
 
 function deprat_catalog_assets() {
     if ( ! deprat_catalog_is_archive() ) { return; }
-    wp_enqueue_style( 'deprat-catalogue', plugins_url( 'assets/css/catalogue-archive.css', dirname( __DIR__ ) . '/deprat-core.php' ), array(), '0.1.38' );
+    wp_enqueue_style( 'deprat-catalogue', plugins_url( 'assets/css/catalogue-archive.css', dirname( __DIR__ ) . '/deprat-core.php' ), array(), '0.1.50' );
     wp_enqueue_script( 'deprat-catalogue', plugins_url( 'assets/js/catalogue-archive.js', dirname( __DIR__ ) . '/deprat-core.php' ), array(), '0.1.38', true );
     wp_localize_script( 'deprat-catalogue', 'depratCatalogueConfig', array(
         'ajaxUrl' => class_exists( 'WC_AJAX' ) ? WC_AJAX::get_endpoint( 'add_to_cart' ) : '',
@@ -178,12 +178,20 @@ function deprat_catalog_specs( $id ) {
         }
         $fields['in_stock'] = $product->is_in_stock();
         foreach ( $product->get_attributes() as $attribute ) {
-            if ( ! is_object( $attribute ) || ! is_callable( array( $attribute, 'get_name' ) ) ) { continue; }
+            // La fiche publique ignore les attributs masqués : les facettes doivent
+            // suivre exactement la même règle pour ne rien révéler d'invisible.
+            if ( ! is_object( $attribute )
+                || ! is_callable( array( $attribute, 'get_name' ) )
+                || ! is_callable( array( $attribute, 'get_visible' ) )
+                || ! $attribute->get_visible() ) { continue; }
             $name = $attribute->get_name();
             $value = trim( wp_strip_all_tags( (string) $product->get_attribute( $name ) ) );
-            $key = sanitize_title( preg_replace( '/^pa_/', '', $name ) );
+            $label = wc_attribute_label( $name );
+            // Une caractéristique personnalisée DEPRAT et un attribut WooCommerce
+            // de même intitulé ne doivent créer qu'un seul filtre.
+            $key = sanitize_title( $label );
             if ( $value && $key && ! isset( $fields['features'][ $key ] ) ) {
-                $fields['features'][ $key ] = array( 'label' => wc_attribute_label( $name ), 'value' => $value );
+                $fields['features'][ $key ] = array( 'label' => $label, 'value' => $value );
             }
         }
     } else { $fields['in_stock'] = false; }
@@ -603,7 +611,7 @@ function deprat_catalog_mega_assets() {
     );
     wp_enqueue_style( 'deprat-catalog-sections',
         plugins_url( 'assets/css/catalogue-sections.css', dirname( __DIR__ ) . '/deprat-core.php' ),
-        array( 'deprat-catalog-mega-menu' ), '0.1.47'
+        array( 'deprat-catalog-mega-menu' ), '0.1.50'
     );
     wp_enqueue_script( 'deprat-catalog-mega-menu',
         plugins_url( 'assets/js/catalogue-mega-menu.js', dirname( __DIR__ ) . '/deprat-core.php' ),

@@ -13,8 +13,6 @@ $roots = deprat_catalog_root_categories();
 ?>
 <main id="primary" class="deprat-catalog" aria-label="Catalogue professionnel DEPRAT">
     <nav class="deprat-catalog-breadcrumb" aria-label="Fil d’Ariane">
-        <a href="<?php echo esc_url( home_url( '/' ) ); ?>">Accueil</a>
-        <span aria-hidden="true">/</span>
         <?php if ( $is_hub && ! $is_all ) : ?>
             <strong aria-current="page">Nos composants</strong>
         <?php elseif ( $is_all ) : ?>
@@ -23,22 +21,56 @@ $roots = deprat_catalog_root_categories();
             <strong aria-current="page">Tous les composants</strong>
         <?php else : ?>
             <a href="<?php echo esc_url( $shop_url ); ?>">Nos composants</a>
-            <span aria-hidden="true">/</span>
+            <?php
+            // La section est un regroupement éditorial, sans page WooCommerce propre.
+            // Le chemin des catégories provient exclusivement de leurs vrais parents WP.
+            $ancestors = $category && isset( $category->term_id )
+                ? array_reverse( array_map( 'intval', get_ancestors( (int) $category->term_id, 'product_cat', 'taxonomy' ) ) )
+                : array();
+            $default_cat = (int) get_option( 'default_product_cat', 0 );
+            $ancestors = array_values( array_filter( $ancestors, static function ( $id ) use ( $default_cat ) {
+                return (int) $id !== $default_cat;
+            } ) );
+            $root_id = $ancestors ? $ancestors[0] : ( $category && isset( $category->term_id ) ? (int) $category->term_id : 0 );
+            $root_term = $root_id ? get_term( $root_id, 'product_cat' ) : null;
+            if ( $root_term && ! is_wp_error( $root_term ) && function_exists( 'deprat_catalog_section_for_term' ) ) {
+                $section_key = deprat_catalog_section_for_term( $root_term );
+                $section_names = deprat_catalog_section_definitions();
+                if ( isset( $section_names[ $section_key ] ) ) : ?>
+                    <span class="deprat-catalog-breadcrumb-separator" aria-hidden="true">/</span>
+                    <span class="deprat-catalog-breadcrumb-section"><?php echo esc_html( $section_names[ $section_key ] ); ?></span>
+                <?php endif;
+            }
+            foreach ( $ancestors as $ancestor_id ) :
+                $ancestor = get_term( $ancestor_id, 'product_cat' );
+                if ( ! $ancestor || is_wp_error( $ancestor ) ) { continue; }
+                $ancestor_url = get_term_link( $ancestor );
+                if ( is_wp_error( $ancestor_url ) ) { continue; }
+                ?>
+                <span class="deprat-catalog-breadcrumb-separator" aria-hidden="true">/</span>
+                <a href="<?php echo esc_url( $ancestor_url ); ?>"><?php echo esc_html( $ancestor->name ); ?></a>
+            <?php endforeach; ?>
+            <span class="deprat-catalog-breadcrumb-separator" aria-hidden="true">/</span>
             <strong aria-current="page"><?php echo esc_html( single_term_title( '', false ) ); ?></strong>
         <?php endif; ?>
     </nav>
-    <header class="deprat-catalog-header">
-        <h1><?php echo $is_all ? 'Tous les composants' : ( $is_hub ? 'Nos composants' : esc_html( single_term_title( '', false ) ) ); ?></h1>
-        <p><?php
-            if ( $is_all ) {
-                echo 'Retrouvez toutes les références disponibles dans notre catalogue professionnel, quelle que soit leur catégorie.';
-            } elseif ( $is_hub ) {
-                echo 'L’ensemble de nos composants pour volets roulants, stores et portes de garage : tubes, liaisons, manœuvres, lames, coulisses, supports et accessoires.';
-            } else {
-                $description = $category && isset( $category->description ) ? wp_strip_all_tags( $category->description ) : '';
-                echo esc_html( $description ?: 'Consultez les références DEPRAT de cette catégorie et affinez votre recherche avec les filtres.' );
-            }
-        ?></p>
+    <header class="deprat-catalog-header<?php echo ! $is_hub ? ' deprat-catalog-header--category' : ''; ?>">
+        <div class="deprat-catalog-title-band">
+            <h1><?php echo $is_all ? 'Tous les composants' : ( $is_hub ? 'Nos composants' : esc_html( single_term_title( '', false ) ) ); ?></h1>
+        </div>
+        <?php
+        // La description renseignée dans Produits > Catégories est la source unique.
+        // Aucune phrase générique ne remplace une description vide.
+        $category_description = ! $is_hub && ! $is_all && $category && isset( $category->description )
+            ? trim( (string) $category->description ) : '';
+        ?>
+        <?php if ( $category_description ) : ?>
+            <div class="deprat-catalog-category-description"><?php echo wp_kses_post( wpautop( $category_description ) ); ?></div>
+        <?php elseif ( $is_all || $is_hub ) : ?>
+            <p><?php echo $is_all
+                ? 'Retrouvez toutes les références disponibles dans notre catalogue professionnel, quelle que soit leur catégorie.'
+                : 'L’ensemble de nos composants pour volets roulants, stores et portes de garage : tubes, liaisons, manœuvres, lames, coulisses, supports et accessoires.'; ?></p>
+        <?php endif; ?>
     </header>
     <?php if ( ! $is_hub || $is_all ) : ?>
     <nav class="deprat-catalog-nav" aria-label="Catégories des composants">
@@ -55,6 +87,34 @@ $roots = deprat_catalog_root_categories();
             </a>
         <?php endforeach; ?>
     </nav>
+    <?php endif; ?>
+
+    <?php
+    // Dans une famille comme « Tubes », afficher les sous-catégories directes
+    // sous forme de cartes illustrées, avant les produits et filtres.
+    // Les sous-niveaux ne sont pas mélangés avec ceux de la famille parente.
+    $direct_children = ! $is_hub && $category && isset( $category->term_id )
+        ? deprat_category_tree_front_children( (int) $category->term_id ) : array();
+    ?>
+    <?php if ( $direct_children ) : ?>
+        <section class="deprat-catalog-children" aria-labelledby="deprat-catalog-children-title">
+            <div class="deprat-catalog-children-heading">
+                <h2 id="deprat-catalog-children-title">Sous-catégories de <?php echo esc_html( $category->name ); ?></h2>
+                <p>Choisissez une famille de composants pour consulter ses références.</p>
+            </div>
+            <div class="deprat-catalog-children-grid">
+                <?php foreach ( $direct_children as $child ) :
+                    $child_url = get_term_link( $child );
+                    if ( is_wp_error( $child_url ) ) { continue; }
+                ?>
+                    <a class="deprat-catalog-child-card" href="<?php echo esc_url( $child_url ); ?>">
+                        <span class="deprat-catalog-child-icon" aria-hidden="true"><?php echo deprat_catalog_category_icon( $child ); // SVG DEPRAT interne ou image validée par WP. ?></span>
+                        <span class="deprat-catalog-child-name"><?php echo esc_html( $child->name ); ?></span>
+                        <span class="deprat-catalog-child-arrow" aria-hidden="true">→</span>
+                    </a>
+                <?php endforeach; ?>
+            </div>
+        </section>
     <?php endif; ?>
 
     <?php if ( $is_hub && ! $is_all ) : ?>

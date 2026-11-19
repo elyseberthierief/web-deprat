@@ -53,7 +53,7 @@ function deprat_pdf_icon_markup($key, $class = 'deprat-section-icon', $size = 30
     }
     return '<svg class="' . esc_attr($class) . '" role="img" aria-hidden="true" width="' . absint($size)
         . '" height="' . absint($size) . '" viewBox="0 0 80 80" preserveAspectRatio="xMidYMid meet"'
-        . ' fill="#20518F"><path d="' . $cache[$key] . '"/></svg>';
+        . ' fill="#20518F" stroke="#20518F" stroke-width="1.25" stroke-linejoin="round"><path d="' . $cache[$key] . '"/></svg>';
 }
 
 /**
