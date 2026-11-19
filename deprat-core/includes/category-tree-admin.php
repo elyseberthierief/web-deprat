@@ -158,8 +158,12 @@ function deprat_category_tree_render_list( $parent, $terms, $depth = 0 ) {
 function deprat_category_tree_render_item( $term, $terms, $depth = 0 ) {
     $id = (int) $term->term_id;
     $children = deprat_category_tree_children( $terms, $id );
+    $visual = deprat_catalog_category_visual( $id );
     ?>
     <li class="deprat-tree-item" data-tree-item data-term-id="<?php echo esc_attr( $id ); ?>"
+        data-category-icon="<?php echo esc_attr( $visual['icon'] ?: 'autres' ); ?>"
+        data-category-media-id="<?php echo esc_attr( $visual['media_id'] ); ?>"
+        data-category-image-url="<?php echo esc_url( $visual['image_url'] ); ?>"
         data-section-guess="<?php echo esc_attr( deprat_catalog_section_guess( $term ) ); ?>">
         <div class="deprat-tree-row">
             <button type="button" class="deprat-tree-handle" data-drag-handle title="Faire glisser pour réorganiser" aria-label="<?php echo esc_attr( 'Déplacer ' . $term->name ); ?>">⠿</button>
