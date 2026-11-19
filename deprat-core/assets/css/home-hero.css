@@ -16,7 +16,7 @@
     isolation: isolate;
 }
 .deprat-home-slides, .deprat-home-slide { width: 100%; height: 100%; }
-.deprat-home-slide { position: absolute; inset: 0; }
+.deprat-home-slide { position: absolute; inset: 0; isolation: isolate; }
 .deprat-home-slide[hidden] { display: none !important; }
 .deprat-home-slide-image {
     position: absolute; inset: 0;
