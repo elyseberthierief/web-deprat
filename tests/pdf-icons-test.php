@@ -23,8 +23,8 @@ foreach ( $expected as $key ) {
 if ( count( $sources ) !== 11 ) { exit( 1 ); }
 echo "11 icônes PDF DEPRAT validées (80 × 80, compression zlib).\n";
 
-/** Les trois illustrations 3D de démonstration doivent être livrées avec le plugin. */
-foreach ( array( 'attache', 'treuil', 'sangle' ) as $name ) {
+/** Les neuf illustrations 3D doivent être livrées avec le plugin, intactes. */
+foreach ( array( 'attache', 'treuil', 'sangle', 'support-arbres', 'flasque-guidage', 'porte-garage', 'persienne-jalousie', 'bras-projection', 'guide-sangle' ) as $name ) {
     $path = dirname( __DIR__ ) . '/deprat-core/assets/icons/' . $name . '-3d.webp';
     if ( ! is_file( $path ) || filesize( $path ) < 300
         || substr( (string) file_get_contents( $path ), 0, 4 ) !== 'RIFF'
@@ -33,4 +33,4 @@ foreach ( array( 'attache', 'treuil', 'sangle' ) as $name ) {
         exit( 1 );
     }
 }
-echo "3 rendus 3D valides dans DEPRAT Core.\\n";
+echo "9 rendus 3D valides dans DEPRAT Core.\\n";
