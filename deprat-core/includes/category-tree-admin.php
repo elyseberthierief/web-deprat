@@ -97,9 +97,16 @@ function deprat_category_tree_render_icon_picker( $context ) {
         <legend>Icône ou image de la catégorie</legend>
         <p class="description">Choisissez un pictogramme DEPRAT, ou importez une image JPG, PNG ou WebP. Cela fonctionne aussi pour les sous-catégories.</p>
         <div class="deprat-section-icon-palette deprat-category-icon-palette">
+            <label title="Choix automatique selon le nom de la catégorie">
+                <input type="radio" name="deprat-category-<?php echo esc_attr( $context ); ?>-icon" value="auto" checked>
+                <span class="deprat-section-icon-choice">
+                    <span class="deprat-category-auto-icon" aria-hidden="true">↻</span>
+                    <small>Automatique</small>
+                </span>
+            </label>
             <?php foreach ( deprat_catalog_section_palette() as $icon_key => $caption ) : ?>
                 <label title="<?php echo esc_attr( $caption ); ?>">
-                    <input type="radio" name="deprat-category-<?php echo esc_attr( $context ); ?>-icon" value="<?php echo esc_attr( $icon_key ); ?>" <?php checked( 'autres', $icon_key ); ?>>
+                    <input type="radio" name="deprat-category-<?php echo esc_attr( $context ); ?>-icon" value="<?php echo esc_attr( $icon_key ); ?>">
                     <span class="deprat-section-icon-choice">
                         <svg class="deprat-section-icon" aria-hidden="true" width="27" height="27" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round"><?php echo deprat_catalog_section_icon_paths()[ $icon_key ]; // SVG interne. ?></svg>
                         <small><?php echo esc_html( $caption ); ?></small>
@@ -161,7 +168,7 @@ function deprat_category_tree_render_item( $term, $terms, $depth = 0 ) {
     $visual = deprat_catalog_category_visual( $id );
     ?>
     <li class="deprat-tree-item" data-tree-item data-term-id="<?php echo esc_attr( $id ); ?>"
-        data-category-icon="<?php echo esc_attr( $visual['icon'] ?: 'autres' ); ?>"
+        data-category-icon="<?php echo esc_attr( $visual['icon'] ?: 'auto' ); ?>"
         data-category-media-id="<?php echo esc_attr( $visual['media_id'] ); ?>"
         data-category-image-url="<?php echo esc_url( $visual['image_url'] ); ?>"
         data-section-guess="<?php echo esc_attr( deprat_catalog_section_guess( $term ) ); ?>">
@@ -383,10 +390,10 @@ function deprat_category_tree_admin_page() {
 /** Valider le choix d'icône/image avant d'écrire une catégorie WooCommerce. */
 function deprat_category_tree_validate_category_visual_request() {
     $icon = isset( $_POST['icon'] ) && is_scalar( $_POST['icon'] )
-        ? sanitize_key( wp_unslash( $_POST['icon'] ) ) : 'autres';
+        ? sanitize_key( wp_unslash( $_POST['icon'] ) ) : 'auto';
     $media_id = isset( $_POST['media_id'] ) && is_scalar( $_POST['media_id'] )
         ? absint( wp_unslash( $_POST['media_id'] ) ) : 0;
-    if ( ! isset( deprat_catalog_section_palette()[ $icon ] ) ) {
+    if ( 'auto' !== $icon && ! isset( deprat_catalog_section_palette()[ $icon ] ) ) {
         return new WP_Error( 'invalid_icon', 'Icône de catégorie inconnue.' );
     }
     if ( $media_id && ( ! current_user_can( 'upload_files' ) || ! deprat_catalog_section_media_allowed( $media_id ) ) ) {
@@ -396,7 +403,8 @@ function deprat_category_tree_validate_category_visual_request() {
 }
 
 function deprat_category_tree_save_category_visual( $term_id, $visual ) {
-    update_term_meta( $term_id, '_deprat_category_icon', $visual['icon'] );
+    if ( 'auto' === $visual['icon'] ) { delete_term_meta( $term_id, '_deprat_category_icon' ); }
+    else { update_term_meta( $term_id, '_deprat_category_icon', $visual['icon'] ); }
     update_term_meta( $term_id, '_deprat_category_image_id', (int) $visual['media_id'] );
 }
 
@@ -404,7 +412,7 @@ function deprat_category_tree_save_category_visual( $term_id, $visual ) {
 function deprat_category_tree_visual_response( $term ) {
     $visual = deprat_catalog_category_visual( (int) $term->term_id );
     return array(
-        'icon' => $visual['icon'] ?: 'autres',
+        'icon' => $visual['icon'] ?: 'auto',
         'media_id' => (int) $visual['media_id'],
         'image_url' => $visual['image_url'],
         'icon_html' => deprat_catalog_category_icon( $term ),
