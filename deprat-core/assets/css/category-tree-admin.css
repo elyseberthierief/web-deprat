@@ -547,3 +547,9 @@ body.deprat-tree-modal-open{overflow:hidden}
     .deprat-tree-admin .deprat-category-icon-palette { grid-template-columns: repeat(3, minmax(0, 1fr)); }
     .deprat-tree-admin .deprat-tree-category-edit-overlay .deprat-tree-create-form { width: calc(100vw - 24px); }
 }
+
+
+.deprat-tree-admin .deprat-category-auto-icon {
+    display: grid; place-items: center; width: 27px; height: 27px;
+    color: #103B80; font-size: 26px; line-height: 1;
+}
