@@ -178,12 +178,20 @@ function deprat_catalog_specs( $id ) {
         }
         $fields['in_stock'] = $product->is_in_stock();
         foreach ( $product->get_attributes() as $attribute ) {
-            if ( ! is_object( $attribute ) || ! is_callable( array( $attribute, 'get_name' ) ) ) { continue; }
+            // La fiche publique ignore les attributs masqués : les facettes doivent
+            // suivre exactement la même règle pour ne rien révéler d'invisible.
+            if ( ! is_object( $attribute )
+                || ! is_callable( array( $attribute, 'get_name' ) )
+                || ! is_callable( array( $attribute, 'get_visible' ) )
+                || ! $attribute->get_visible() ) { continue; }
             $name = $attribute->get_name();
             $value = trim( wp_strip_all_tags( (string) $product->get_attribute( $name ) ) );
-            $key = sanitize_title( preg_replace( '/^pa_/', '', $name ) );
+            $label = wc_attribute_label( $name );
+            // Une caractéristique personnalisée DEPRAT et un attribut WooCommerce
+            // de même intitulé ne doivent créer qu'un seul filtre.
+            $key = sanitize_title( $label );
             if ( $value && $key && ! isset( $fields['features'][ $key ] ) ) {
-                $fields['features'][ $key ] = array( 'label' => wc_attribute_label( $name ), 'value' => $value );
+                $fields['features'][ $key ] = array( 'label' => $label, 'value' => $value );
             }
         }
     } else { $fields['in_stock'] = false; }
