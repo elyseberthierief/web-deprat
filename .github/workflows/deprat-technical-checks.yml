@@ -19,6 +19,7 @@ jobs:
           php -l deprat-core/includes/product-technical-data.php
           php -l deprat-core/includes/product-shape.php
           php -l deprat-core/includes/icon-library.php
+          php -l deprat-core/includes/pdf-icons.php
           php -l deprat-core/includes/category-tree-admin.php
           php -l deprat-core/includes/product-list-admin.php
           php -l deprat-core/includes/product-single-layout.php
@@ -35,6 +36,8 @@ jobs:
           php -l deprat-core/templates/product-technical-front.php
       - name: Vérifier la sauvegarde et le rendu
         run: php tests/product-technical-test.php
+      - name: Vérifier les 11 pictogrammes techniques du PDF
+        run: php tests/pdf-icons-test.php
       - name: Vérifier la syntaxe JavaScript
         run: |
           node --check deprat-core/assets/js/product-technical-admin.js
