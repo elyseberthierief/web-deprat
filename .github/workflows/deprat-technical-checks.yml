@@ -47,6 +47,8 @@ jobs:
           node --check tests/product-list-admin-real-browser.js
           node --check deprat-core/assets/js/product-autosave-admin.js
           node --check deprat-core/assets/js/home-hero.js
+          node --check deprat-core/assets/js/home-slide-admin.js
+          node --check deprat-core/assets/js/home-slide-order-admin.js
           node --check deprat-core/assets/js/product-3d-contours.js
           node --check tests/product-admin-real-browser.js
           node tests/product-technical-browser-test.js

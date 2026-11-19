@@ -599,7 +599,7 @@ add_filter( 'walker_nav_menu_start_el', 'deprat_catalog_mega_menu', 20, 4 );
 function deprat_catalog_mega_assets() {
     wp_enqueue_style( 'deprat-catalog-mega-menu',
         plugins_url( 'assets/css/catalogue-mega-menu.css', dirname( __DIR__ ) . '/deprat-core.php' ),
-        array(), '0.1.33'
+        array(), '0.1.46'
     );
     wp_enqueue_style( 'deprat-catalog-sections',
         plugins_url( 'assets/css/catalogue-sections.css', dirname( __DIR__ ) . '/deprat-core.php' ),

@@ -1,0 +1,64 @@
+/* DEPRAT — navigation principale Astra. Bleu #103B80 et or #B68B24. */
+/* Le ::before évite de toucher au ::after, utilisé pour la flèche du méga-menu. */
+@media (min-width: 922px) {
+    body #masthead .main-header-menu > .menu-item > a.menu-link,
+    body #masthead .main-header-menu > .menu-item > a:not(.ast-menu-toggle) {
+        position: relative;
+        color: #103B80;
+        transition: color .18s ease;
+    }
+    body #masthead .main-header-menu > .menu-item > a.menu-link::before,
+    body #masthead .main-header-menu > .menu-item > a:not(.ast-menu-toggle)::before {
+        content: "";
+        position: absolute;
+        display: block;
+        width: 34px; max-width: 50%;
+        height: 3px;
+        padding: 0;
+        left: 50%; bottom: 7px;
+        border-radius: 4px;
+        border: 0;
+        background-color: #B68B24;
+        transform: translateX(-50%) scaleX(0);
+        transform-origin: center;
+        opacity: 0;
+        pointer-events: none;
+        transition: transform .18s ease, opacity .18s ease;
+    }
+    body #masthead .main-header-menu > .menu-item:hover > a.menu-link::before,
+    body #masthead .main-header-menu > .menu-item:hover > a:not(.ast-menu-toggle)::before,
+    body #masthead .main-header-menu > .menu-item:focus-within > a.menu-link::before,
+    body #masthead .main-header-menu > .menu-item:focus-within > a:not(.ast-menu-toggle)::before,
+    body #masthead .main-header-menu > .current-menu-item > a.menu-link::before,
+    body #masthead .main-header-menu > .current-menu-item > a:not(.ast-menu-toggle)::before,
+    body #masthead .main-header-menu > .current_page_item > a.menu-link::before,
+    body #masthead .main-header-menu > .current_page_item > a:not(.ast-menu-toggle)::before,
+    body #masthead .main-header-menu > .current-menu-ancestor > a.menu-link::before,
+    body #masthead .main-header-menu > .current-menu-ancestor > a:not(.ast-menu-toggle)::before,
+    body #masthead .main-header-menu > .current-menu-parent > a.menu-link::before,
+    body #masthead .main-header-menu > .current-menu-parent > a:not(.ast-menu-toggle)::before,
+    body #masthead .main-header-menu > .current_page_parent > a.menu-link::before,
+    body #masthead .main-header-menu > .current_page_parent > a:not(.ast-menu-toggle)::before,
+    body #masthead .main-header-menu > .current_page_ancestor > a.menu-link::before,
+    body #masthead .main-header-menu > .current_page_ancestor > a:not(.ast-menu-toggle)::before,
+    /* Un produit ou une sous-catégorie appartient toujours à « Nos composants ». */
+    body.woocommerce-shop #masthead .main-header-menu > .deprat-mega-parent > a::before,
+    body.post-type-archive-product #masthead .main-header-menu > .deprat-mega-parent > a::before,
+    body.tax-product_cat #masthead .main-header-menu > .deprat-mega-parent > a::before,
+    body.single-product #masthead .main-header-menu > .deprat-mega-parent > a::before,
+    body #masthead .main-header-menu > .menu-item > a[aria-current="page"]::before {
+        transform: translateX(-50%) scaleX(1);
+        opacity: 1;
+    }
+    body #masthead .main-header-menu > .menu-item:hover > a,
+    body #masthead .main-header-menu > .menu-item:focus-within > a,
+    body #masthead .main-header-menu > .current-menu-item > a,
+    body #masthead .main-header-menu > .current-menu-ancestor > a {
+        color: #103B80;
+    }
+}
+@media (prefers-reduced-motion: reduce) {
+    body #masthead .main-header-menu > .menu-item > a::before {
+        transition: none !important;
+    }
+}

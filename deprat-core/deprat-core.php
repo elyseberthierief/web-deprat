@@ -2,7 +2,7 @@
 /**
  * Plugin Name: DEPRAT Core
  * Description: Fonctionnalités du portail professionnel DEPRAT et de l’interface ADV.
- * Version: 0.1.45
+ * Version: 0.1.46
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -61,3 +61,13 @@ add_action( 'wp_head', static function () {
     }
 }, 10 );
 
+
+/** Identité DEPRAT dans la navigation Astra (toutes les pages). */
+add_action( 'wp_enqueue_scripts', static function () {
+    wp_enqueue_style(
+        'deprat-navigation',
+        plugins_url( 'assets/css/navigation-deprat.css', __FILE__ ),
+        array(),
+        '0.1.46'
+    );
+}, 99 );
