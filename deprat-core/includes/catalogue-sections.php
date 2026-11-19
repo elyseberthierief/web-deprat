@@ -164,6 +164,48 @@ function deprat_catalog_section_icon( $key ) {
     return '<svg class="deprat-section-icon" aria-hidden="true" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round">' . $paths[ $icon ] . '</svg>';
 }
 
+
+/**
+ * Personnalisation par catégorie WooCommerce, y compris tous les niveaux enfants.
+ * Les images WooCommerce existantes sont reprises tant qu'aucun choix DEPRAT explicite n'a été fait.
+ */
+function deprat_catalog_category_visual( $term_id ) {
+    $term_id = absint( $term_id );
+    $icon = (string) get_term_meta( $term_id, '_deprat_category_icon', true );
+    $palette = deprat_catalog_section_palette();
+    $icon = isset( $palette[ $icon ] ) ? $icon : '';
+
+    $has_custom_media = metadata_exists( 'term', $term_id, '_deprat_category_image_id' );
+    $media_id = $has_custom_media
+        ? absint( get_term_meta( $term_id, '_deprat_category_image_id', true ) )
+        : absint( get_term_meta( $term_id, 'thumbnail_id', true ) );
+    if ( $media_id && ! deprat_catalog_section_media_allowed( $media_id ) ) { $media_id = 0; }
+    return array(
+        'icon' => $icon,
+        'media_id' => $media_id,
+        'image_url' => $media_id ? (string) wp_get_attachment_image_url( $media_id, 'thumbnail' ) : '',
+    );
+}
+
+function deprat_catalog_category_icon( $term ) {
+    $term = is_object( $term ) && isset( $term->term_id ) ? $term : get_term( absint( $term ), 'product_cat' );
+    if ( ! $term || is_wp_error( $term ) ) { return ''; }
+    $visual = deprat_catalog_category_visual( (int) $term->term_id );
+    if ( $visual['media_id'] ) {
+        $image = wp_get_attachment_image( $visual['media_id'], 'thumbnail', false, array(
+            'class' => 'deprat-category-icon deprat-category-icon-image',
+            'alt' => '', 'aria-hidden' => 'true', 'loading' => 'lazy',
+        ) );
+        if ( $image ) { return $image; }
+    }
+    if ( $visual['icon'] ) {
+        $paths = deprat_catalog_section_icon_paths();
+        return '<svg class="deprat-category-icon" aria-hidden="true" viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round">' . $paths[ $visual['icon'] ] . '</svg>';
+    }
+    // Avant toute personnalisation, on conserve les pictogrammes historiques.
+    return deprat_catalog_section_icon( deprat_catalog_section_for_term( $term ) );
+}
+
 /**
  * Un lien navigue vers une VRAIE catégorie ; un bouton séparé déplie ses
  * VRAIES sous-catégories (plusieurs niveaux). Les titres de section ne lient rien.
@@ -179,7 +221,7 @@ function deprat_catalog_render_section_terms( $terms, $prefix, $depth = 0 ) {
         $id = $prefix . '-' . (int) $term->term_id;
         echo '<li class="deprat-section-term' . ( $has_children ? ' has-children' : '' ) . '">';
         echo '<div class="deprat-section-term-row">';
-        echo '<a class="deprat-section-term-link" href="' . esc_url( $url ) . '">' . esc_html( $term->name ) . '</a>';
+        echo '<a class="deprat-section-term-link" href="' . esc_url( $url ) . '"><span class="deprat-category-link-icon">' . deprat_catalog_category_icon( $term ) . '</span><span class="deprat-category-link-name">' . esc_html( $term->name ) . '</span></a>';
         if ( $has_children ) {
             echo '<button type="button" class="deprat-section-toggle" aria-controls="' . esc_attr( $id ) . '" aria-expanded="false" aria-label="' . esc_attr( 'Déplier les sous-catégories de ' . $term->name ) . '" data-deprat-section-toggle>';
             echo '<svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>';
