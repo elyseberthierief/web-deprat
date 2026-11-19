@@ -23,7 +23,36 @@ $roots = deprat_catalog_root_categories();
             <strong aria-current="page">Tous les composants</strong>
         <?php else : ?>
             <a href="<?php echo esc_url( $shop_url ); ?>">Nos composants</a>
-            <span aria-hidden="true">/</span>
+            <?php
+            // La section est un regroupement éditorial, sans page WooCommerce propre.
+            // Le chemin des catégories provient exclusivement de leurs vrais parents WP.
+            $ancestors = $category && isset( $category->term_id )
+                ? array_reverse( array_map( 'intval', get_ancestors( (int) $category->term_id, 'product_cat', 'taxonomy' ) ) )
+                : array();
+            $default_cat = (int) get_option( 'default_product_cat', 0 );
+            $ancestors = array_values( array_filter( $ancestors, static function ( $id ) use ( $default_cat ) {
+                return (int) $id !== $default_cat;
+            } ) );
+            $root_id = $ancestors ? $ancestors[0] : ( $category && isset( $category->term_id ) ? (int) $category->term_id : 0 );
+            $root_term = $root_id ? get_term( $root_id, 'product_cat' ) : null;
+            if ( $root_term && ! is_wp_error( $root_term ) && function_exists( 'deprat_catalog_section_for_term' ) ) {
+                $section_key = deprat_catalog_section_for_term( $root_term );
+                $section_names = deprat_catalog_section_definitions();
+                if ( isset( $section_names[ $section_key ] ) ) : ?>
+                    <span class="deprat-catalog-breadcrumb-separator" aria-hidden="true">/</span>
+                    <span class="deprat-catalog-breadcrumb-section"><?php echo esc_html( $section_names[ $section_key ] ); ?></span>
+                <?php endif;
+            }
+            foreach ( $ancestors as $ancestor_id ) :
+                $ancestor = get_term( $ancestor_id, 'product_cat' );
+                if ( ! $ancestor || is_wp_error( $ancestor ) ) { continue; }
+                $ancestor_url = get_term_link( $ancestor );
+                if ( is_wp_error( $ancestor_url ) ) { continue; }
+                ?>
+                <span class="deprat-catalog-breadcrumb-separator" aria-hidden="true">/</span>
+                <a href="<?php echo esc_url( $ancestor_url ); ?>"><?php echo esc_html( $ancestor->name ); ?></a>
+            <?php endforeach; ?>
+            <span class="deprat-catalog-breadcrumb-separator" aria-hidden="true">/</span>
             <strong aria-current="page"><?php echo esc_html( single_term_title( '', false ) ); ?></strong>
         <?php endif; ?>
     </nav>
