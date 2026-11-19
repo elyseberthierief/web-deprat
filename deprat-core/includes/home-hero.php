@@ -35,7 +35,8 @@ add_action( 'init', 'deprat_home_register_slides' );
 
 function deprat_home_slide_fields() {
     add_meta_box( 'deprat-home-slide-content', 'Texte et bouton du slide', 'deprat_home_slide_fields_html', 'deprat_slide', 'normal', 'high' );
-    add_meta_box( 'deprat-home-slide-photo-guide', 'Format conseillé pour l’image', 'deprat_home_slide_photo_guide', 'deprat_slide', 'side', 'high' );
+    add_meta_box( 'deprat-home-slide-image', 'Image du slide', 'deprat_home_slide_image_html', 'deprat_slide', 'side', 'high' );
+    add_meta_box( 'deprat-home-slide-photo-guide', 'Format conseillé pour l’image', 'deprat_home_slide_photo_guide', 'deprat_slide', 'side', 'default' );
     add_meta_box( 'deprat-home-slide-visibility', 'Affichage sur l’accueil', 'deprat_home_slide_visibility_html', 'deprat_slide', 'side', 'high' );
 }
 add_action( 'add_meta_boxes_deprat_slide', 'deprat_home_slide_fields' );
@@ -50,11 +51,52 @@ function deprat_home_slide_visibility_html( $post ) {
     echo '<p class="description">Le slide reste enregistré avec sa photo et son texte. Décochez cette case et enregistrez pour le réafficher. Plusieurs slides peuvent être visibles en même temps.</p>';
 }
 
+/**
+ * Sélecteur d'image indépendant du thème Astra.
+ * La metabox native « Image mise en avant » dépend du support du thème pour ce post type.
+ */
+function deprat_home_slide_image_id( $post_id ) {
+    $id = absint( get_post_meta( $post_id, '_deprat_home_slide_image_id', true ) );
+    if ( $id && wp_attachment_is_image( $id ) ) {
+        return $id;
+    }
+    // Compatibilité avec les images mises en avant déjà renseignées auparavant.
+    $legacy = (int) get_post_thumbnail_id( $post_id );
+    return $legacy && wp_attachment_is_image( $legacy ) ? $legacy : 0;
+}
+
+function deprat_home_slide_image_html( $post ) {
+    $id = deprat_home_slide_image_id( $post->ID );
+    $url = $id ? wp_get_attachment_image_url( $id, 'medium_large' ) : '';
+    echo '<div class="deprat-home-image-picker" data-deprat-home-image-picker>';
+    echo '<input type="hidden" name="deprat_home_slide_image_id" data-deprat-image-id value="' . esc_attr( $id ) . '">';
+    echo '<div data-deprat-image-preview style="margin-bottom:12px">';
+    if ( $url ) {
+        echo '<img src="' . esc_url( $url ) . '" alt="Aperçu de l’image du slide" style="width:100%;height:auto;max-height:220px;object-fit:cover;border:1px solid #ccd0d4;border-radius:5px">';
+    } else {
+        echo '<p class="description">Aucune image sélectionnée. Choisissez une photo pour l’arrière-plan du slide.</p>';
+    }
+    echo '</div>';
+    echo '<p><button type="button" class="button button-primary" data-deprat-image-select>' . ( $id ? 'Remplacer l’image' : 'Ajouter une image' ) . '</button> ';
+    echo '<button type="button" class="button" data-deprat-image-remove' . ( $id ? '' : ' hidden' ) . '>Retirer</button></p>';
+    echo '<p class="description">Format recommandé : <strong>1920 × 650 px</strong>. L’image sera recadrée automatiquement selon l’écran.</p>';
+    echo '</div>';
+}
+
+function deprat_home_slide_image_assets( $hook ) {
+    if ( ! in_array( $hook, array( 'post.php', 'post-new.php' ), true ) ) { return; }
+    $screen = get_current_screen();
+    if ( ! $screen || 'deprat_slide' !== $screen->post_type ) { return; }
+    wp_enqueue_media();
+    wp_enqueue_script( 'deprat-slide-image-admin', plugins_url( 'assets/js/home-slide-admin.js', dirname( __DIR__ ) . '/deprat-core.php' ), array( 'jquery', 'media-views' ), '0.1.46', true );
+}
+add_action( 'admin_enqueue_scripts', 'deprat_home_slide_image_assets' );
+
 function deprat_home_slide_photo_guide() {
     echo '<p><strong>Format recommandé : 1920 × 650 pixels</strong> (horizontal, environ 3:1).</p>';
     echo '<p>JPG ou WebP, idéalement <strong>moins de 500 Ko</strong> après optimisation.</p>';
     echo '<p>Privilégiez une photo avec le produit ou la porte à <strong>droite</strong> et une zone dégagée à gauche : le texte sera ajouté par le site.</p>';
-    echo '<p>Ajoutez l’image dans le bloc <strong>Image du slide</strong> (image mise en avant), puis publiez.</p>';
+    echo '<p>Ajoutez votre photo dans le bloc <strong>Image du slide</strong>, puis cliquez sur <strong>Mettre à jour</strong> ou <strong>Publier</strong>.</p>';
     echo '<p>Pour définir l’ordre des slides, utilisez le champ <strong>Ordre</strong> (0 pour le premier) dans les attributs de l’élément.</p>';
 }
 
@@ -87,6 +129,18 @@ function deprat_home_save_slide( $post_id ) {
         'deprat_home_slide_button_url' => '_deprat_home_slide_button_url',
     );
     update_post_meta( $post_id, '_deprat_home_slide_hidden', isset( $_POST['deprat_home_slide_hidden'] ) && '1' === sanitize_text_field( wp_unslash( $_POST['deprat_home_slide_hidden'] ) ) ? '1' : '0' );
+    // Toujours vérifier le type de média côté serveur, même si l’interface limite aux images.
+    if ( isset( $_POST['deprat_home_slide_image_id'] ) && is_scalar( $_POST['deprat_home_slide_image_id'] ) ) {
+        $image_id = absint( wp_unslash( $_POST['deprat_home_slide_image_id'] ) );
+        if ( $image_id && ! wp_attachment_is_image( $image_id ) ) {
+            $image_id = 0;
+        }
+        update_post_meta( $post_id, '_deprat_home_slide_image_id', $image_id );
+        // Éviter qu'une ancienne image mise en avant réapparaisse après « Retirer ».
+        if ( ! $image_id && get_post_thumbnail_id( $post_id ) ) {
+            delete_post_thumbnail( $post_id );
+        }
+    }
 
     foreach ( $fields as $field => $meta_key ) {
         $raw = isset( $_POST[ $field ] ) && is_string( $_POST[ $field ] ) ? wp_unslash( $_POST[ $field ] ) : '';
@@ -113,7 +167,8 @@ add_filter( 'manage_deprat_slide_posts_columns', 'deprat_home_slide_admin_column
 
 function deprat_home_slide_admin_column( $column, $post_id ) {
     if ( 'deprat_slide_image' === $column ) {
-        echo get_the_post_thumbnail( $post_id, array( 110, 60 ) ) ?: '—';
+        $image_id = deprat_home_slide_image_id( $post_id );
+        echo $image_id ? wp_get_attachment_image( $image_id, array( 110, 60 ) ) : '—';
     } elseif ( 'deprat_slide_visibility' === $column ) {
         if ( 'publish' !== get_post_status( $post_id ) ) {
             echo 'Brouillon / non publié';
@@ -178,7 +233,7 @@ function deprat_home_get_slides() {
             'description' => (string) get_post_meta( $item->ID, '_deprat_home_slide_description', true ),
             'button_text' => (string) get_post_meta( $item->ID, '_deprat_home_slide_button_text', true ),
             'button_url'  => (string) get_post_meta( $item->ID, '_deprat_home_slide_button_url', true ),
-            'image_id'    => (int) get_post_thumbnail_id( $item->ID ),
+            'image_id'    => deprat_home_slide_image_id( $item->ID ),
         );
     }
     // Afficher la démonstration seulement si aucun slide n'a encore été créé.
