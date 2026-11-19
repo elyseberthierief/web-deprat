@@ -132,3 +132,83 @@
 @media (prefers-reduced-motion: reduce) {
     .deprat-home-cta { transition: none; }
 }
+
+
+/* Slide sans titre, description ni bouton : aucune superposition sur l’image. */
+.deprat-home-slide.is-image-only::before { display: none; }
+.deprat-home-slide.is-image-only .deprat-home-overlay,
+.deprat-home-slide.is-image-only .deprat-home-slide-inner { display: none; }
+
+/* Rubrique de catégories flottante à cheval sur le bas du bandeau. */
+.deprat-home-category-nav {
+    position: relative; z-index: 7;
+    display: flex; align-items: stretch;
+    width: min(1380px, calc(100% - 96px));
+    min-height: 112px;
+    margin: -48px auto 20px;
+    padding: 0;
+    border: 1px solid #d8e4f1; border-radius: 14px;
+    background: #fff;
+    box-shadow: 0 11px 30px rgba(7,35,75,.16);
+    overflow: hidden;
+}
+.deprat-home-category-track {
+    display: flex; flex: 1 1 auto; align-items: stretch;
+    min-width: 0; overflow-x: auto; overflow-y: hidden;
+    scroll-behavior: smooth; scroll-snap-type: x mandatory; scrollbar-width: none;
+    overscroll-behavior-x: contain;
+}
+.deprat-home-category-track::-webkit-scrollbar { display: none; }
+.deprat-home-category-track:focus-visible { outline: 2px solid #dca72e; outline-offset: -4px; }
+.deprat-home-category-item {
+    display: flex; flex: 0 0 168px; flex-direction: column; align-items: center; justify-content: center; gap: 9px;
+    min-width: 0; padding: 15px 12px;
+    border-right: 1px solid #e7edf4; scroll-snap-align: start;
+    text-align: center; text-decoration: none !important;
+    color: #0e376b !important; background: #fff;
+    transition: color .2s ease, background-color .2s ease;
+}
+.deprat-home-category-item:last-child { border-right: none; }
+.deprat-home-category-item:hover,
+.deprat-home-category-item:focus-visible {
+    background: #edf5ff; color: #0a54a5 !important; outline-color: #daa735;
+}
+.deprat-home-category-icon { display: flex; align-items: center; justify-content: center; height: 42px; width: 56px; }
+.deprat-home-category-icon .deprat-section-icon {
+    display: block; width: 39px; height: 39px;
+    color: #0f4e94; stroke: currentColor;
+}
+.deprat-home-category-icon img.deprat-section-icon {
+    width: 43px; height: 43px; object-fit: contain;
+}
+.deprat-home-category-name { color: inherit; font-size: 12px; font-weight: 800; line-height: 1.3; }
+.deprat-home-category-arrow {
+    position: relative; display: grid; place-items: center; flex: 0 0 43px;
+    padding: 0; margin: 0; min-width: 43px;
+    border: 0; border-radius: 0; background: #f5f8fc; color: #123f78;
+    cursor: pointer; transition: background-color .2s ease, color .2s ease;
+}
+.deprat-home-category-arrow-prev { border-right: 1px solid #e4ebf4; }
+.deprat-home-category-arrow-next { border-left: 1px solid #e4ebf4; }
+.deprat-home-category-arrow span { font-family: Arial, sans-serif; font-size: 39px; font-weight: 200; line-height: 1; }
+.deprat-home-category-arrow:hover:not(:disabled) { background: #e6f0fe; color: #084b91; }
+.deprat-home-category-arrow:focus-visible { outline: 2px solid #e3a92b; outline-offset: -3px; }
+.deprat-home-category-arrow:disabled { color: #b6c4d4; cursor: default; opacity: .65; }
+@media(max-width: 850px) {
+    .deprat-home-category-nav { width: calc(100% - 38px); margin-top: -37px; min-height: 104px; }
+    .deprat-home-category-item { flex-basis: 144px; }
+    .deprat-home-category-arrow { flex-basis: 36px; min-width: 36px; }
+}
+@media(max-width: 540px) {
+    .deprat-home-category-nav { width: calc(100% - 20px); margin-top: -32px; margin-bottom: 12px; border-radius: 10px; }
+    .deprat-home-category-item { flex-basis: 125px; gap: 5px; padding: 10px 9px; }
+    .deprat-home-category-name { font-size: 11px; }
+    .deprat-home-category-icon .deprat-section-icon { width: 32px; height: 32px; }
+    .deprat-home-category-icon img.deprat-section-icon { width: 36px; height: 36px; }
+    .deprat-home-category-arrow { flex-basis: 31px; min-width: 31px; }
+    .deprat-home-category-arrow span { font-size: 31px; }
+}
+@media(prefers-reduced-motion: reduce) {
+    .deprat-home-category-track { scroll-behavior: auto; }
+    .deprat-home-category-item, .deprat-home-category-arrow { transition: none; }
+}
