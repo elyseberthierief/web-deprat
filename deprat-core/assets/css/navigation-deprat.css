@@ -128,3 +128,179 @@ body #masthead .custom-logo-link img{
 @media(prefers-reduced-motion:reduce){
     body #masthead .main-header-menu>.deprat-quote-nav-item>a.menu-link{transition:none}
 }
+
+/* =====================================================================
+   DEPRAT 0.1.53 — Trois bandes, en préservant la navigation Astra native.
+   1. Contacts / professionnels   2. Identité / recherche / compte
+   3. Menu Astra existant (et son méga-menu / ses événements).
+   ===================================================================== */
+.deprat-header-desktop{display:none}
+@media(min-width:922px){
+    body #masthead{background:#fff;border-bottom:0;box-shadow:0 5px 19px rgba(12,52,105,.09)}
+    body #masthead .deprat-header-desktop{display:block}
+    body #masthead .deprat-header-shell{width:min(100% - 56px,1660px);margin-inline:auto}
+    body #masthead .deprat-header-contact-row{
+        color:#fff;
+        background:linear-gradient(108deg,#092d61 0%,#0c3975 68%,#082b60 100%);
+    }
+    body #masthead .deprat-header-contact-inner{
+        min-height:44px;display:flex;align-items:stretch;justify-content:space-between;gap:18px;
+    }
+    body #masthead .deprat-header-contact-links{
+        display:flex;align-items:center;flex-wrap:wrap;gap:0;
+        font-size:12px;font-weight:500;line-height:1.2;
+    }
+    body #masthead .deprat-header-contact-links>*{
+        display:inline-flex;align-items:center;gap:10px;
+        padding:0 19px;color:#fff;text-decoration:none;
+    }
+    body #masthead .deprat-header-contact-links>*:first-child{padding-left:0}
+    body #masthead .deprat-header-contact-links>*+*:before{
+        content:"";display:block;width:1px;height:17px;background:rgba(255,255,255,.46);margin-right:3px;
+    }
+    body #masthead .deprat-header-contact-links svg{width:17px;height:17px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linejoin:round;stroke-linecap:round}
+    body #masthead .deprat-header-contact-links a:hover{color:#f9d788}
+    body #masthead .deprat-header-pro-banner{
+        display:flex;align-items:center;justify-content:center;
+        min-height:44px;padding:0 34px;
+        margin-right:0;background:#b59440;color:white;
+        font-weight:800;text-align:center;font-size:12px;text-transform:uppercase;letter-spacing:.035em;
+        clip-path:polygon(8% 0,100% 0,92% 100%,0 100%);
+        white-space:nowrap;
+    }
+    body #masthead .deprat-header-identity-inner{
+        display:grid;grid-template-columns:minmax(255px,.95fr) minmax(260px,1.22fr) minmax(265px,.96fr);
+        gap:clamp(18px,3vw,45px);align-items:center;
+        min-height:151px;padding-block:23px;
+    }
+    body #masthead .deprat-header-brand{
+        display:flex;gap:15px;align-items:center;min-width:0;text-decoration:none;
+    }
+    body #masthead .deprat-header-brand img{width:83px;height:83px;flex:none;object-fit:contain}
+    body #masthead .deprat-header-brand-copy{
+        display:flex;min-width:0;flex-direction:column;gap:3px;
+        padding-left:15px;border-left:1px solid #b59440;
+        color:#103b80;line-height:1.1;
+    }
+    body #masthead .deprat-header-brand-copy strong{font-weight:900;letter-spacing:.01em;font-size:clamp(29px,2.8vw,43px)}
+    body #masthead .deprat-header-brand-copy small{font-weight:750;font-size:clamp(10px,.96vw,14px);line-height:1.2}
+    body #masthead .deprat-header-search{
+        display:flex;align-items:stretch;width:100%;height:48px;
+        margin:0;border:1px solid #adbfda;border-radius:999px;overflow:hidden;
+        box-shadow:0 1px 2px rgba(0,40,92,.04);background:#fff;
+    }
+    body #masthead .deprat-header-search input[type="search"]{
+        min-width:0;flex:1;width:100%;height:100%;
+        padding:0 19px;margin:0;border:0;outline:0!important;box-shadow:none!important;
+        border-radius:0;background:transparent;color:#133964;font-size:14px;
+    }
+    body #masthead .deprat-header-search input::placeholder{color:#778496;opacity:1}
+    body #masthead .deprat-header-search button{
+        width:54px;height:100%;flex:none;padding:12px;border:0;border-radius:0;cursor:pointer;
+        color:#fff;background:#103b80;
+    }
+    body #masthead .deprat-header-search button:hover{background:#0a2e68}
+    body #masthead .deprat-header-search button svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round}
+    body #masthead .deprat-header-pro-panel{min-width:0}
+    body #masthead .deprat-header-pro-title{
+        display:flex;align-items:center;gap:13px;margin-bottom:13px;
+        font-size:12px;color:#103b80;font-weight:850;letter-spacing:.04em;text-transform:uppercase;
+        white-space:nowrap;
+    }
+    body #masthead .deprat-header-pro-title:before,body #masthead .deprat-header-pro-title:after{
+        content:"";flex:1;height:1px;background:#b68b24;
+    }
+    body #masthead .deprat-header-pro-actions{display:flex;align-items:center;justify-content:flex-end;gap:14px;min-width:0}
+    body #masthead .deprat-header-pro-actions .deprat-pro-auth,
+    body #masthead .deprat-header-pro-actions .deprat-pro-header{
+        min-width:0;gap:10px;font-size:12px;
+    }
+    body #masthead .deprat-header-pro-actions .deprat-pro-sortie{font-size:11px;padding-left:8px}
+    body #masthead .deprat-header-pro-actions .deprat-pro-name{max-width:132px}
+    body #masthead .deprat-header-pro-actions .deprat-pro-auth .deprat-pro-inscription{display:none}
+    body #masthead .deprat-header-pro-actions .deprat-login-details>summary,
+    body #masthead .deprat-header-pro-actions .deprat-pro-details>summary{
+        color:#103b80;font-size:12px;font-weight:800;
+    }
+    body #masthead .deprat-header-account-button{
+        display:inline-flex;align-items:center;justify-content:center;white-space:nowrap;
+        min-height:43px;border-radius:8px;padding:10px 14px;
+        color:#fff!important;background:#103b80;text-decoration:none!important;
+        font-weight:800;font-size:12px;text-align:center;
+    }
+    body #masthead .deprat-header-account-button:hover{background:#0a2e68}
+    /* La première rangée du constructeur Astra accueillait le compte;
+       remplacée sur desktop par la rangée DEPRAT ci-dessus. */
+    body #masthead .ast-above-header-wrap{display:none!important}
+    /* L'ancienne identité Astra est déjà visible sur la rangée du milieu. */
+    body #masthead .ast-primary-header-bar .site-branding,
+    body #masthead .ast-primary-header-bar .ast-site-identity{display:none!important}
+    body #masthead .ast-primary-header-bar,
+    body #masthead .ast-main-header-wrap .ast-primary-header-bar{
+        border-top:1px solid #e4eaf2;border-bottom:2px solid #eef1f5;
+        background:#fff;padding:0;
+    }
+    body #masthead .ast-primary-header-bar .ast-builder-grid-row{
+        min-height:67px;justify-content:center;
+    }
+    body #masthead .main-header-menu>.menu-item>a.menu-link{
+        font-size:14px;padding:20px clamp(12px,2vw,27px)!important;
+        font-weight:750;min-height:66px;
+    }
+    /* Une seule entrée de devis, liée au panier : cacher l'ancien pictogramme Woo,
+       sans enlever le widget ni sa logique serveur. */
+    body #masthead .ast-header-woo-cart,
+    body #masthead .ast-cart-menu-wrap{display:none!important}
+    body #masthead .main-header-menu>.deprat-header-quote-menu-item{margin-left:clamp(8px,1.8vw,23px)}
+    body #masthead .main-header-menu>.deprat-header-quote-menu-item>a.menu-link{
+        display:flex;gap:12px;align-items:center;justify-content:center;
+        background:transparent!important;border:0!important;box-shadow:none!important;
+        color:#103b80!important;font-size:14px;font-weight:850;
+        white-space:nowrap;padding:12px!important;margin:0;
+        border-left:1px solid #d6deeb!important;border-radius:0!important;
+    }
+    body #masthead .main-header-menu>.deprat-header-quote-menu-item>a.menu-link:hover{color:#0a62b0!important;transform:none}
+    body #masthead .main-header-menu>.deprat-header-quote-menu-item>a.menu-link::before{display:none!important}
+    body #masthead .deprat-header-quote-icon{width:32px;height:34px;display:flex;position:relative;align-items:center}
+    body #masthead .deprat-header-quote-icon svg{width:30px;height:30px;fill:none;stroke:#103b80;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+    body #masthead .deprat-header-quote-count{
+        position:absolute;top:-6px;right:-8px;display:flex;align-items:center;justify-content:center;
+        min-width:21px;height:21px;border-radius:50%;background:#b68b24;color:#fff;
+        font-size:11px;font-weight:800;padding:2px 5px;
+    }
+}
+@media(min-width:922px) and (max-width:1180px){
+    body #masthead .deprat-header-shell{width:min(100% - 35px,1660px)}
+    body #masthead .deprat-header-identity-inner{grid-template-columns:230px minmax(225px,1fr) 265px;gap:13px}
+    body #masthead .deprat-header-brand img{width:64px;height:64px}
+    body #masthead .deprat-header-brand{gap:8px}
+    body #masthead .deprat-header-brand-copy{padding-left:9px}
+    body #masthead .deprat-header-brand-copy strong{font-size:29px}
+    body #masthead .deprat-header-pro-banner{padding:0 20px;font-size:10px}
+    body #masthead .deprat-header-contact-links{font-size:11px}
+    body #masthead .main-header-menu>.menu-item>a.menu-link{font-size:12px;padding-inline:11px!important}
+}
+@media(max-width:921px){
+    /* Mobile : Astra garde son menu hamburger, son logo et ses accès habituels. */
+    body #masthead .deprat-header-desktop,
+    body #masthead .deprat-header-quote-menu-item{display:none!important}
+}
+
+/* Astra Header Builder: libérer la colonne que le logo occupait avant de
+   déplacer son identité dans la bande centrale, afin de centrer le menu. */
+@media(min-width:922px){
+    body #masthead .ast-primary-header-bar .ast-builder-grid-row{
+        display:flex!important;justify-content:center!important;align-items:center!important;
+        gap:0!important;
+    }
+    body #masthead .ast-primary-header-bar .site-header-primary-section-left{
+        display:none!important;
+    }
+    body #masthead .ast-primary-header-bar .site-header-primary-section-right,
+    body #masthead .ast-primary-header-bar .site-header-primary-section-center{
+        width:auto;flex:0 1 auto;min-width:0;justify-content:center;
+    }
+    body #masthead .ast-primary-header-bar .site-header-primary-section-right .ast-builder-layout-element{
+        display:flex;align-items:center;
+    }
+}
