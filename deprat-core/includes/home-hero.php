@@ -403,10 +403,9 @@ function deprat_home_category_carousel_html() {
             <?php foreach ( $categories as $term ) :
                 $link = get_term_link( $term );
                 if ( is_wp_error( $link ) ) { continue; }
-                $icon_key = deprat_catalog_section_for_term( $term );
                 ?>
                 <a class="deprat-home-category-item" href="<?php echo esc_url( $link ); ?>">
-                    <span class="deprat-home-category-icon"><?php echo deprat_catalog_section_icon( $icon_key ); // Icône construite par la palette interne DEPRAT. ?></span>
+                    <span class="deprat-home-category-icon"><?php echo deprat_catalog_category_icon( $term ); // Icône/image de cette catégorie précise, sinon palette DEPRAT. ?></span>
                     <span class="deprat-home-category-name"><?php echo esc_html( $term->name ); ?></span>
                 </a>
             <?php endforeach; ?>
