@@ -236,7 +236,7 @@ function deprat_catalog_render_section_terms( $terms, $prefix, $depth = 0 ) {
         $id = $prefix . '-' . (int) $term->term_id;
         echo '<li class="deprat-section-term' . ( $has_children ? ' has-children' : '' ) . '">';
         echo '<div class="deprat-section-term-row">';
-        echo '<a class="deprat-section-term-link" href="' . esc_url( $url ) . '"><span class="deprat-category-link-icon">' . deprat_catalog_category_icon( $term ) . '</span><span class="deprat-category-link-name">' . esc_html( $term->name ) . '</span></a>';
+        echo '<a class="deprat-section-term-link" href="' . esc_url( $url ) . '"><span class="deprat-category-link-name">' . esc_html( $term->name ) . '</span></a>';
         if ( $has_children ) {
             echo '<button type="button" class="deprat-section-toggle" aria-controls="' . esc_attr( $id ) . '" aria-expanded="false" aria-label="' . esc_attr( 'Déplier les sous-catégories de ' . $term->name ) . '" data-deprat-section-toggle>';
             echo '<svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>';
