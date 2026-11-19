@@ -1,4 +1,4 @@
-DEPRAT Core 0.1.48
+DEPRAT Core 0.1.49
 
 Le plugin reprend les extraits PHP actifs dans la sauvegarde du 14 novembre 2026.
 Extraits globaux : 5 à 11 et 15.
@@ -51,3 +51,11 @@ Slider compact — format 1920 × 405 px :
 - Hauteur proportionnelle à l'écran, visuel recouvrant tout le bandeau et catégories remontées avec léger chevauchement.
 - Les anciens visuels 1920 × 650 peuvent être recadrés verticalement ; préparer les prochaines images au format exact.
 - Sur mobile, hauteur compacte et adaptation responsive.
+
+Version 0.1.49 — Pictogrammes techniques officiels du PDF :
+- Remplacement DIRECT des 8 pictogrammes existants Tubes, Liaison, Treuil, Sangle, Tirage, Coulisses/lames, Bras et Persiennes par les dessins fournis.
+- Ajout de 3 icônes dans la bibliothèque : Embouts, Flasques guidage et bagues, Supports d’arbres.
+- Chaque dessin est intégré au plugin en monochrome bleu DEPRAT, normalisé sur 80 × 80 ; aucun plugin séparé, média ou requête réseau.
+- Tirage direct : illustration recadrée sur la poignée et une courte longueur de tige.
+- Les icônes Porte et Composants restent disponibles sans changement.
+- Les médias personnalisés déjà sélectionnés par l’ADV restent prioritaires ; les affectations par identifiants sont préservées.

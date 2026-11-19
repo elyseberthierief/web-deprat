@@ -179,9 +179,14 @@ function deprat_catalog_category_visual( $term_id ) {
     $icon = isset( $palette[ $icon ] ) ? $icon : '';
 
     $has_custom_media = metadata_exists( 'term', $term_id, '_deprat_category_image_id' );
+    $term = get_term( $term_id, 'product_cat' );
+    $pdf_icon = ! $has_custom_media && '' === $icon && function_exists( 'deprat_pdf_icon_for_term' )
+        ? deprat_pdf_icon_for_term( $term ) : '';
+    // Sans personnalisation explicite, utiliser l'illustration DEPRAT du PDF
+    // plutôt qu'une miniature WooCommerce historique de la categorie.
     $media_id = $has_custom_media
         ? absint( get_term_meta( $term_id, '_deprat_category_image_id', true ) )
-        : absint( get_term_meta( $term_id, 'thumbnail_id', true ) );
+        : ( $pdf_icon ? 0 : absint( get_term_meta( $term_id, 'thumbnail_id', true ) ) );
     if ( $media_id && ! deprat_catalog_section_media_allowed( $media_id ) ) { $media_id = 0; }
     return array(
         'icon' => $icon,
@@ -203,6 +208,14 @@ function deprat_catalog_category_icon( $term ) {
     }
     if ( $visual['icon'] ) {
         return deprat_icon_library_markup( $visual['icon'], 'deprat-category-icon', 30 );
+    }
+    // Les termes sans choix explicite récupèrent le dessin technique du PDF.
+    // Les sélections manuelles (icône ou photo) restent prioritaires.
+    if ( ! $visual['media_id'] && function_exists( 'deprat_pdf_icon_for_term' ) ) {
+        $pdf_icon = deprat_pdf_icon_for_term( $term );
+        if ( $pdf_icon ) {
+            return deprat_icon_library_markup( $pdf_icon, 'deprat-category-icon', 30 );
+        }
     }
     // Avant toute personnalisation, conserver les pictogrammes historiques.
     return deprat_catalog_section_icon( deprat_catalog_section_for_term( $term ) );

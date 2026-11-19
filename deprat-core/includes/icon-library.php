@@ -8,10 +8,14 @@ defined( 'ABSPATH' ) || exit;
 
 function deprat_icon_library_entries() {
     $defaults = array(
-        'tubes' => 'Tube', 'liaison' => 'Liaison', 'treuil' => 'Treuil',
-        'sangle' => 'Sangle', 'tirage' => 'Ressort', 'coulisses' => 'Lames',
-        'bras' => 'Bras', 'jalousie' => 'Persienne', 'garage' => 'Porte',
-        'autres' => 'Composants',
+        'tubes' => 'Tubes', 'embouts' => 'Embouts',
+        'flasque_guidage_bague' => 'Flasques guidage et bagues',
+        'supports_arbres' => 'Supports d’arbres',
+        'liaison' => 'Liaison tube-tablier', 'treuil' => 'Treuil',
+        'sangle' => 'Sangle', 'tirage' => 'Tirage direct',
+        'coulisses' => 'Coulisses, lames et lames finales',
+        'bras' => 'Bras de projection', 'jalousie' => 'Persiennes et jalousies',
+        'garage' => 'Porte', 'autres' => 'Composants',
     );
     $saved = get_option( 'deprat_icon_library_v1', array() );
     if ( ! is_array( $saved ) ) { $saved = array(); }
@@ -53,6 +57,12 @@ function deprat_icon_library_markup( $key, $class = 'deprat-section-icon', $size
             'class' => $class . ' deprat-library-image',
             'alt' => '', 'aria-hidden' => 'true', 'loading' => 'lazy',
         ) );
+    }
+    // Illustrations techniques fournies par DEPRAT : priorite au PDF,
+    // sauf si l'administrateur a choisi une image personnalisee.
+    if ( function_exists( 'deprat_pdf_icon_markup' ) ) {
+        $pdf = deprat_pdf_icon_markup( $key, $class, $size );
+        if ( $pdf ) { return $pdf; }
     }
     $paths = deprat_catalog_section_icon_paths();
     if ( ! isset( $paths[ $key ] ) ) { return ''; }
