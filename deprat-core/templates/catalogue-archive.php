@@ -15,7 +15,35 @@ $roots = deprat_catalog_root_categories();
     <nav class="deprat-catalog-breadcrumb" aria-label="Fil d’Ariane">
         <a href="<?php echo esc_url( home_url( '/' ) ); ?>">Accueil</a>
         <span aria-hidden="true">/</span>
-        <?php if ( $is_hub && ! $is_all ) : ?>
+        <?php
+    // Dans une famille comme « Tubes », afficher les sous-catégories directes
+    // sous forme de cartes illustrées, avant les produits et filtres.
+    // Les sous-niveaux ne sont pas mélangés avec ceux de la famille parente.
+    $direct_children = ! $is_hub && $category && isset( $category->term_id )
+        ? deprat_category_tree_front_children( (int) $category->term_id ) : array();
+    ?>
+    <?php if ( $direct_children ) : ?>
+        <section class="deprat-catalog-children" aria-labelledby="deprat-catalog-children-title">
+            <div class="deprat-catalog-children-heading">
+                <h2 id="deprat-catalog-children-title">Sous-catégories de <?php echo esc_html( $category->name ); ?></h2>
+                <p>Choisissez une famille de composants pour consulter ses références.</p>
+            </div>
+            <div class="deprat-catalog-children-grid">
+                <?php foreach ( $direct_children as $child ) :
+                    $child_url = get_term_link( $child );
+                    if ( is_wp_error( $child_url ) ) { continue; }
+                ?>
+                    <a class="deprat-catalog-child-card" href="<?php echo esc_url( $child_url ); ?>">
+                        <span class="deprat-catalog-child-icon" aria-hidden="true"><?php echo deprat_catalog_category_icon( $child ); // SVG DEPRAT interne ou image validée par WP. ?></span>
+                        <span class="deprat-catalog-child-name"><?php echo esc_html( $child->name ); ?></span>
+                        <span class="deprat-catalog-child-arrow" aria-hidden="true">→</span>
+                    </a>
+                <?php endforeach; ?>
+            </div>
+        </section>
+    <?php endif; ?>
+
+    <?php if ( $is_hub && ! $is_all ) : ?>
             <strong aria-current="page">Nos composants</strong>
         <?php elseif ( $is_all ) : ?>
             <a href="<?php echo esc_url( $shop_url ); ?>">Nos composants</a>
