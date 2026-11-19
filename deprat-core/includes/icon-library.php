@@ -12,7 +12,7 @@ function deprat_icon_library_entries() {
         'flasque_guidage_bague' => 'Flasques guidage et bagues',
         'supports_arbres' => 'Supports d’arbres',
         'liaison' => 'Liaison tube-tablier', 'treuil' => 'Treuil',
-        'sangle' => 'Sangle', 'tirage' => 'Tirage direct',
+        'sangle' => 'Sangle', 'guide_sangle' => 'Guide-sangle', 'tirage' => 'Tirage direct',
         'coulisses' => 'Coulisses, lames et lames finales',
         'bras' => 'Bras de projection', 'jalousie' => 'Persiennes et jalousies',
         'garage' => 'Porte', 'autres' => 'Composants',
@@ -58,12 +58,19 @@ function deprat_icon_library_markup( $key, $class = 'deprat-section-icon', $size
             'alt' => '', 'aria-hidden' => 'true', 'loading' => 'lazy',
         ) );
     }
-    // Essai 3D DEPRAT : remplacer trois icônes par des rendus produits
-    // homogènes. Ne jamais écraser une image choisie dans l'administration.
+    // Rendus 3D livrés avec DEPRAT Core, par identifiant stable.
+    // Une image choisie en médiathèque par l'ADV reste prioritaire.
+    // Le guide-sangle est DISTINCT de l'icône de section « Sangle ».
     $trial_icons = array(
         'liaison' => 'attache-3d.webp',
         'treuil' => 'treuil-3d.webp',
         'sangle' => 'sangle-3d.webp',
+        'supports_arbres' => 'support-arbres-3d.webp',
+        'flasque_guidage_bague' => 'flasque-guidage-3d.webp',
+        'garage' => 'porte-garage-3d.webp',
+        'jalousie' => 'persienne-jalousie-3d.webp',
+        'bras' => 'bras-projection-3d.webp',
+        'guide_sangle' => 'guide-sangle-3d.webp',
     );
     if ( isset( $trial_icons[ $key ] ) ) {
         $url = plugins_url( 'assets/icons/' . $trial_icons[ $key ], dirname( __DIR__ ) . '/deprat-core.php' );

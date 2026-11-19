@@ -88,6 +88,25 @@ function deprat_catalog_relabel_menu( $items ) {
 }
 add_filter( 'wp_nav_menu_objects', 'deprat_catalog_relabel_menu', 20 );
 
+/** Harmoniser le libellé du lien existant sans modifier sa destination. */
+function deprat_catalog_quote_menu_label( $items ) {
+    foreach ( $items as $item ) {
+        if ( ! is_object( $item ) || ! isset( $item->title ) ) { continue; }
+        $label = strtolower( trim( remove_accents( wp_strip_all_tags( (string) $item->title ) ) ) );
+        if ( in_array( $label, array( 'liste de devis', 'liste des devis', 'ma liste de devis', 'ma demande en cours' ), true ) ) {
+            $item->title = 'Ma demande de devis';
+            $item->classes = is_array( $item->classes ) ? $item->classes : array();
+            $item->classes[] = 'deprat-quote-nav-item';
+        } elseif ( 'ma demande de devis' === $label ) {
+            $item->classes = is_array( $item->classes ) ? $item->classes : array();
+            $item->classes[] = 'deprat-quote-nav-item';
+        }
+    }
+    return $items;
+}
+add_filter( 'wp_nav_menu_objects', 'deprat_catalog_quote_menu_label', 35 );
+
+
 /**
  * Empêcher les visiteurs de voir Mes demandes, y compris en consultant son
  * URL directement. Les fonctions de demande AJAX/PDF vérifient déjà le compte.

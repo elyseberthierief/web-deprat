@@ -574,8 +574,12 @@ update_option( 'deprat_catalog_section_settings_v1', $registry, false );
 deprat_integration_assert( isset( deprat_catalog_section_definitions()[ $custom_key ] )
     && 'Motorisations test' === deprat_catalog_section_definitions()[ $custom_key ],
     'Une section créée doit porter son propre titre sans nouvelle catégorie WooCommerce.' );
-deprat_integration_assert( false !== strpos( deprat_catalog_section_icon( $custom_key ), '<svg' ),
-    'Une section personnalisée doit utiliser l’icône choisie dans la palette.' );
+$custom_section_icon = deprat_catalog_section_icon( $custom_key );
+deprat_integration_assert(
+    false !== strpos( $custom_section_icon, 'porte-garage-3d.webp' )
+        && false !== strpos( $custom_section_icon, '<img' ),
+    'Une section personnalisée doit afficher l’image 3D correspondant à l’icône choisie dans la palette.'
+);
 $order = array_keys( $registry );
 array_unshift( $order, array_pop( $order ) );
 $reordered = deprat_catalog_section_validate_order( $order );

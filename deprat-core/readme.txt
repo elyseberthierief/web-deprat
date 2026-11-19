@@ -1,4 +1,4 @@
-DEPRAT Core 0.1.50
+DEPRAT Core 0.1.52
 
 Le plugin reprend les extraits PHP actifs dans la sauvegarde du 14 novembre 2026.
 Extraits globaux : 5 à 11 et 15.
@@ -66,3 +66,12 @@ Version 0.1.50 — catégories lisibles :
 - Prévisualisation admin du méga-menu : aucun pictogramme sur les lignes de catégories, mais les icônes restent dans la bibliothèque et dans la modification des catégories.
 - Page d’une catégorie WooCommerce (ex. « Tubes ») : cartes cliquables pour ses seules sous-catégories directes, avec icônes conservées.
 - Les filtres, références produits, catégories WooCommerce et leurs associations sont inchangés.
+
+Version 0.1.52 — Icônes réalistes et en-tête :
+- 6 images techniques 3D sur fond transparent, optimisées et centrées : supports d'arbres, flasque/guidage, porte de garage, persienne/jalousie, bras de projection, guide-sangle.
+- Remplacement de 5 pictogrammes existants par identifiants stables. Guide-sangle est une NOUVELLE entrée de bibliothèque, distincte de la section Manœuvre par sangle.
+- Les catégories/sous-catégories de type Guide-sangle adoptent automatiquement cette icône lorsqu'aucun choix explicite n'existe ; images personnalisées prioritaires.
+- Le méga-menu conserve des listes de catégories textuelles ; leurs icônes restent présentes sur les cartes des pages catégories.
+- En-tête Astra harmonisé en bleu DEPRAT / or, sans recréer de logo ; l'image officielle de la médiathèque (cropped-Logo-Deprat.png) est utilisée si disponible.
+- Le menu existant « Liste de devis » est renommé « Ma demande de devis », sans changer son URL ou ses restrictions d'accès.
+- Contrôler sur mobile que le logo et la navigation restent adaptés.

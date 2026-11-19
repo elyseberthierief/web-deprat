@@ -64,6 +64,7 @@ function deprat_pdf_icon_for_term( $term ) {
     if ( ! is_object( $term ) || ! isset( $term->name ) ) { return ''; }
     $slug = sanitize_title( $term->name . ' ' . ( isset( $term->slug ) ? $term->slug : '' ) );
     $patterns = array(
+        'guide_sangle' => '/guide[- ]?sangle|passage[- ]?sangle|sortie[- ]?sangle/',
         'flasque_guidage_bague' => '/flasque|guidage|bague/',
         'supports_arbres' => '/support.*arbre|support.*tube/',
         'embouts' => '/embout/',
