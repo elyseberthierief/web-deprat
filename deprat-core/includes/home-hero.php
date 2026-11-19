@@ -34,8 +34,9 @@ function deprat_home_register_slides() {
 add_action( 'init', 'deprat_home_register_slides' );
 
 function deprat_home_slide_fields() {
-    add_meta_box( 'deprat-home-slide-content', 'Texte et bouton du slide', 'deprat_home_slide_fields_html', 'deprat_slide', 'normal', 'high' );
-    add_meta_box( 'deprat-home-slide-image', 'Image du slide', 'deprat_home_slide_image_html', 'deprat_slide', 'side', 'high' );
+    add_meta_box( 'deprat-home-slide-image', '1. Visuel principal', 'deprat_home_slide_image_html', 'deprat_slide', 'normal', 'high' );
+    add_meta_box( 'deprat-home-slide-content', '2. Texte et bouton (facultatifs)', 'deprat_home_slide_fields_html', 'deprat_slide', 'normal', 'high' );
+    add_meta_box( 'deprat-home-slide-order', 'Ordre dans le diaporama', 'deprat_home_slide_order_html', 'deprat_slide', 'side', 'high' );
     add_meta_box( 'deprat-home-slide-photo-guide', 'Format conseillé pour l’image', 'deprat_home_slide_photo_guide', 'deprat_slide', 'side', 'default' );
     add_meta_box( 'deprat-home-slide-visibility', 'Affichage sur l’accueil', 'deprat_home_slide_visibility_html', 'deprat_slide', 'side', 'high' );
 }
@@ -92,20 +93,39 @@ function deprat_home_slide_image_assets( $hook ) {
 }
 add_action( 'admin_enqueue_scripts', 'deprat_home_slide_image_assets' );
 
+function deprat_home_slide_order_html( $post ) {
+    echo '<p><label for="deprat-slide-position"><strong>Position du slide</strong></label></p>';
+    echo '<input type="number" min="0" max="9999" class="widefat" id="deprat-slide-position" name="deprat_home_slide_order" value="' . esc_attr( (int) $post->menu_order ) . '">';
+    echo '<p class="description">Les slides sont affichés du plus petit numéro au plus grand (0 = premier). Vous pouvez également les déplacer par glisser-déposer dans la liste des slides.</p>';
+}
+
+function deprat_home_slide_headline( $post_id ) {
+    if ( metadata_exists( 'post', $post_id, '_deprat_home_slide_headline' ) ) {
+        return (string) get_post_meta( $post_id, '_deprat_home_slide_headline', true );
+    }
+    // Anciennes campagnes : le titre WordPress était affiché sur la bannière.
+    return get_the_title( $post_id );
+}
+
 function deprat_home_slide_photo_guide() {
     echo '<p><strong>Format recommandé : 1920 × 650 pixels</strong> (horizontal, environ 3:1).</p>';
     echo '<p>JPG ou WebP, idéalement <strong>moins de 500 Ko</strong> après optimisation.</p>';
     echo '<p>Privilégiez une photo avec le produit ou la porte à <strong>droite</strong> et une zone dégagée à gauche : le texte sera ajouté par le site.</p>';
     echo '<p>Ajoutez votre photo dans le bloc <strong>Image du slide</strong>, puis cliquez sur <strong>Mettre à jour</strong> ou <strong>Publier</strong>.</p>';
-    echo '<p>Pour définir l’ordre des slides, utilisez le champ <strong>Ordre</strong> (0 pour le premier) dans les attributs de l’élément.</p>';
+    echo '<p>Pour définir la position : rubrique <strong>Ordre dans le diaporama</strong> ou glisser-déposer dans la liste des slides.</p>';
 }
 
 function deprat_home_slide_fields_html( $post ) {
     wp_nonce_field( 'deprat_home_slide_save', 'deprat_home_slide_nonce' );
+    $headline = metadata_exists( 'post', $post->ID, '_deprat_home_slide_headline' )
+        ? (string) get_post_meta( $post->ID, '_deprat_home_slide_headline', true )
+        : ( 'auto-draft' === $post->post_status ? '' : get_the_title( $post->ID ) );
     $description = (string) get_post_meta( $post->ID, '_deprat_home_slide_description', true );
     $button_text = (string) get_post_meta( $post->ID, '_deprat_home_slide_button_text', true );
     $button_url = (string) get_post_meta( $post->ID, '_deprat_home_slide_button_url', true );
-    echo '<p>Le <strong>titre du slide</strong> se renseigne dans le titre principal en haut de cette page. Les slides publiés et non masqués s’affichent automatiquement sur l’accueil.</p>';
+    echo '<p class="deprat-slide-editor-intro">Le titre en haut de la page sert à <strong>identifier le slide en administration</strong>. Il n’est pas forcément affiché au client. Tous les éléments ci-dessous sont facultatifs : <strong>si vous les laissez vides, seule l’image sera visible</strong>.</p>';
+    echo '<p><label for="deprat-home-slide-headline"><strong>Titre visible sur l’image (facultatif)</strong></label></p>';
+    echo '<p><input type="text" id="deprat-home-slide-headline" name="deprat_home_slide_headline" class="widefat" value="' . esc_attr( $headline ) . '" placeholder="Laisser vide pour afficher uniquement l’image"></p>';
     echo '<p><label for="deprat-home-slide-description"><strong>Texte de présentation</strong></label></p>';
     echo '<p><textarea id="deprat-home-slide-description" name="deprat_home_slide_description" rows="3" class="widefat" placeholder="Une gamme complète de pièces et accessoires réservée aux professionnels.">' . esc_textarea( $description ) . '</textarea></p>';
     echo '<p><label for="deprat-home-slide-button-text"><strong>Texte du bouton</strong></label></p>';
@@ -124,6 +144,7 @@ function deprat_home_save_slide( $post_id ) {
         return;
     }
     $fields = array(
+        'deprat_home_slide_headline' => '_deprat_home_slide_headline',
         'deprat_home_slide_description' => '_deprat_home_slide_description',
         'deprat_home_slide_button_text' => '_deprat_home_slide_button_text',
         'deprat_home_slide_button_url' => '_deprat_home_slide_button_url',
@@ -139,6 +160,15 @@ function deprat_home_save_slide( $post_id ) {
         // Éviter qu'une ancienne image mise en avant réapparaisse après « Retirer ».
         if ( ! $image_id && get_post_thumbnail_id( $post_id ) ) {
             delete_post_thumbnail( $post_id );
+        }
+    }
+
+    if ( isset( $_POST['deprat_home_slide_order'] ) && is_scalar( $_POST['deprat_home_slide_order'] ) ) {
+        $order = max( 0, min( 9999, absint( wp_unslash( $_POST['deprat_home_slide_order'] ) ) ) );
+        if ( (int) get_post_field( 'menu_order', $post_id ) !== $order ) {
+            remove_action( 'save_post_deprat_slide', 'deprat_home_save_slide' );
+            wp_update_post( array( 'ID' => $post_id, 'menu_order' => $order ) );
+            add_action( 'save_post_deprat_slide', 'deprat_home_save_slide' );
         }
     }
 
@@ -158,10 +188,16 @@ add_action( 'save_post_deprat_slide', 'deprat_home_save_slide' );
 
 /** Statut et actions rapides dans la liste des slides WordPress. */
 function deprat_home_slide_admin_columns( $columns ) {
-    $columns['deprat_slide_image'] = 'Image';
-    $columns['deprat_slide_visibility'] = 'Affichage';
-    $columns['deprat_slide_order'] = 'Ordre';
-    return $columns;
+    $ordered = array();
+    foreach ( $columns as $key => $label ) {
+        if ( 'title' === $key ) {
+            $ordered['deprat_slide_order'] = 'Ordre';
+        }
+        $ordered[ $key ] = $label;
+    }
+    $ordered['deprat_slide_image'] = 'Aperçu';
+    $ordered['deprat_slide_visibility'] = 'Affichage';
+    return $ordered;
 }
 add_filter( 'manage_deprat_slide_posts_columns', 'deprat_home_slide_admin_columns' );
 
@@ -176,10 +212,59 @@ function deprat_home_slide_admin_column( $column, $post_id ) {
             echo deprat_home_slide_is_hidden( $post_id ) ? '<strong>Masqué</strong>' : '<strong style="color:#176e41">Visible</strong>';
         }
     } elseif ( 'deprat_slide_order' === $column ) {
-        echo (int) get_post_field( 'menu_order', $post_id );
+        echo '<span class="deprat-slide-sort-handle" title="Glisser pour changer l’ordre" aria-hidden="true">☰</span> ';
+        echo '<strong class="deprat-slide-order-number">' . (int) get_post_field( 'menu_order', $post_id ) . '</strong>';
     }
 }
 add_action( 'manage_deprat_slide_posts_custom_column', 'deprat_home_slide_admin_column', 10, 2 );
+
+/** La liste suit le même ordre que la page d’accueil. */
+function deprat_home_slide_list_order( $query ) {
+    if ( ! is_admin() || ! $query->is_main_query() || 'deprat_slide' !== $query->get( 'post_type' ) ) { return; }
+    if ( ! $query->get( 'orderby' ) ) {
+        $query->set( 'orderby', array( 'menu_order' => 'ASC', 'date' => 'DESC' ) );
+        $query->set( 'order', 'ASC' );
+    }
+    $query->set( 'posts_per_page', 100 );
+}
+add_action( 'pre_get_posts', 'deprat_home_slide_list_order' );
+
+/** Sécuriser le glisser-déposer, possible uniquement sur une liste complète et non filtrée. */
+function deprat_home_slide_reorder() {
+    check_ajax_referer( 'deprat_home_slide_reorder', 'nonce' );
+    if ( ! current_user_can( 'edit_posts' ) ) {
+        wp_send_json_error( array( 'message' => 'Accès refusé.' ), 403 );
+    }
+    $raw = isset( $_POST['ids'] ) ? wp_unslash( $_POST['ids'] ) : array();
+    if ( ! is_array( $raw ) || count( $raw ) < 1 || count( $raw ) > 100 ) {
+        wp_send_json_error( array( 'message' => 'Liste de slides incorrecte.' ), 400 );
+    }
+    $ids = array_map( 'absint', $raw );
+    if ( in_array( 0, $ids, true ) || count( array_unique( $ids ) ) !== count( $ids ) ) {
+        wp_send_json_error( array( 'message' => 'Identifiants invalides.' ), 400 );
+    }
+    $all = get_posts( array(
+        'post_type' => 'deprat_slide', 'post_status' => array( 'publish', 'draft', 'future', 'pending', 'private' ),
+        'posts_per_page' => 101, 'fields' => 'ids', 'suppress_filters' => true,
+    ) );
+    $all = array_map( 'intval', $all );
+    sort( $all );
+    $supplied = $ids;
+    sort( $supplied );
+    if ( count( $all ) !== count( $ids ) || $all !== $supplied ) {
+        wp_send_json_error( array( 'message' => 'Pour réorganiser, affichez la liste complète des slides sans filtre ni recherche.' ), 400 );
+    }
+    foreach ( $ids as $id ) {
+        if ( 'deprat_slide' !== get_post_type( $id ) || ! current_user_can( 'edit_post', $id ) ) {
+            wp_send_json_error( array( 'message' => 'Action non autorisée.' ), 403 );
+        }
+    }
+    foreach ( $ids as $index => $id ) {
+        wp_update_post( array( 'ID' => $id, 'menu_order' => $index + 1 ) );
+    }
+    wp_send_json_success( array( 'message' => 'Nouvel ordre enregistré.' ) );
+}
+add_action( 'wp_ajax_deprat_home_slide_reorder', 'deprat_home_slide_reorder' );
 
 function deprat_home_slide_row_actions( $actions, $post ) {
     if ( 'deprat_slide' !== $post->post_type || 'publish' !== $post->post_status || ! current_user_can( 'edit_post', $post->ID ) ) {
@@ -218,7 +303,8 @@ function deprat_home_get_slides() {
     $query = new WP_Query( array(
         'post_type'              => 'deprat_slide',
         'post_status'            => 'publish',
-        'posts_per_page'         => 16,
+        'posts_per_page'         => 40,
+        'meta_query'             => array( 'relation' => 'OR', array( 'key' => '_deprat_home_slide_hidden', 'compare' => 'NOT EXISTS' ), array( 'key' => '_deprat_home_slide_hidden', 'value' => '1', 'compare' => '!=' ) ),
         'orderby'                => array( 'menu_order' => 'ASC', 'date' => 'DESC' ),
         'no_found_rows'          => true,
         'ignore_sticky_posts'    => true,
@@ -229,7 +315,7 @@ function deprat_home_get_slides() {
         if ( deprat_home_slide_is_hidden( $item->ID ) || '' === trim( get_the_title( $item->ID ) ) ) { continue; }
         $slides[] = array(
             'id'          => $item->ID,
-            'title'       => get_the_title( $item->ID ),
+            'title'       => deprat_home_slide_headline( $item->ID ),
             'description' => (string) get_post_meta( $item->ID, '_deprat_home_slide_description', true ),
             'button_text' => (string) get_post_meta( $item->ID, '_deprat_home_slide_button_text', true ),
             'button_url'  => (string) get_post_meta( $item->ID, '_deprat_home_slide_button_url', true ),
@@ -273,32 +359,40 @@ function deprat_home_hero_html() {
         <?php if ( $count ) : ?><section class="deprat-home-slider" aria-label="Actualités et gammes DEPRAT" aria-roledescription="carrousel" data-deprat-home-slider>
             <div class="deprat-home-slides">
                 <?php foreach ( $slides as $index => $slide ) : ?>
-                    <article class="deprat-home-slide" data-deprat-home-slide aria-roledescription="diapositive" aria-label="<?php echo esc_attr( ( $index + 1 ) . ' sur ' . $count ); ?>" <?php echo 0 !== $index ? 'hidden' : ''; ?>>
+                    <?php
+                    $has_heading = '' !== trim( (string) $slide['title'] );
+                    $has_description = '' !== trim( (string) $slide['description'] );
+                    $has_button = '' !== trim( (string) $slide['button_text'] ) && '' !== trim( (string) $slide['button_url'] );
+                    $has_content = $has_heading || $has_description || $has_button;
+                    ?>
+                    <article class="deprat-home-slide<?php echo $has_content ? '' : ' is-image-only'; ?>" data-deprat-home-slide aria-roledescription="diapositive" aria-label="<?php echo esc_attr( ( $index + 1 ) . ' sur ' . $count ); ?>" <?php echo 0 !== $index ? 'hidden' : ''; ?>>
                         <?php if ( $slide['image_id'] ) : ?>
                             <?php echo wp_get_attachment_image( $slide['image_id'], 'full', false, array(
                                 'class'         => 'deprat-home-slide-image',
-                                'alt'           => '',
+                                'alt'           => $has_content ? '' : get_the_title( $slide['id'] ),
                                 'loading'       => 0 === $index ? 'eager' : 'lazy',
                                 'fetchpriority' => 0 === $index ? 'high' : 'auto',
                                 'decoding'      => 'async',
                             ) ); ?>
                         <?php endif; ?>
-                        <div class="deprat-home-overlay" aria-hidden="true"></div>
-                        <div class="deprat-home-slide-inner">
-                            <div class="deprat-home-slide-copy">
-                                <h1><?php echo esc_html( $slide['title'] ); ?></h1>
-                                <span class="deprat-home-gold-rule" aria-hidden="true"></span>
-                                <?php if ( $slide['description'] ) : ?>
-                                    <p><?php echo nl2br( esc_html( $slide['description'] ) ); ?></p>
-                                <?php endif; ?>
-                                <?php if ( $slide['button_text'] && $slide['button_url'] ) : ?>
-                                    <a class="deprat-home-cta" href="<?php echo esc_url( $slide['button_url'] ); ?>">
-                                        <?php echo esc_html( $slide['button_text'] ); ?>
-                                        <span aria-hidden="true">→</span>
-                                    </a>
-                                <?php endif; ?>
+                        <?php if ( $has_content ) : ?>
+                            <div class="deprat-home-overlay" aria-hidden="true"></div>
+                            <div class="deprat-home-slide-inner">
+                                <div class="deprat-home-slide-copy">
+                                    <?php if ( $has_heading ) : ?><h1><?php echo esc_html( $slide['title'] ); ?></h1><?php endif; ?>
+                                    <?php if ( $has_heading || $has_description ) : ?><span class="deprat-home-gold-rule" aria-hidden="true"></span><?php endif; ?>
+                                    <?php if ( $has_description ) : ?>
+                                        <p><?php echo nl2br( esc_html( $slide['description'] ) ); ?></p>
+                                    <?php endif; ?>
+                                    <?php if ( $has_button ) : ?>
+                                        <a class="deprat-home-cta" href="<?php echo esc_url( $slide['button_url'] ); ?>">
+                                            <?php echo esc_html( $slide['button_text'] ); ?>
+                                            <span aria-hidden="true">→</span>
+                                        </a>
+                                    <?php endif; ?>
+                                </div>
                             </div>
-                        </div>
+                        <?php endif; ?>
                     </article>
                 <?php endforeach; ?>
             </div>
