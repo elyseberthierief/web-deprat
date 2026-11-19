@@ -41,6 +41,11 @@
     body #masthead .main-header-menu > .current_page_parent > a:not(.ast-menu-toggle)::before,
     body #masthead .main-header-menu > .current_page_ancestor > a.menu-link::before,
     body #masthead .main-header-menu > .current_page_ancestor > a:not(.ast-menu-toggle)::before,
+    /* Un produit ou une sous-catégorie appartient toujours à « Nos composants ». */
+    body.woocommerce-shop #masthead .main-header-menu > .deprat-mega-parent > a::before,
+    body.post-type-archive-product #masthead .main-header-menu > .deprat-mega-parent > a::before,
+    body.tax-product_cat #masthead .main-header-menu > .deprat-mega-parent > a::before,
+    body.single-product #masthead .main-header-menu > .deprat-mega-parent > a::before,
     body #masthead .main-header-menu > .menu-item > a[aria-current="page"]::before {
         transform: translateX(-50%) scaleX(1);
         opacity: 1;
