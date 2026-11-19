@@ -86,6 +86,8 @@ jobs:
         run: npm install --prefix "$RUNNER_TEMP/deprat-browser" --no-save --no-audit --no-fund playwright-core@1.62.1
       - name: Vérifier la fiche produit avec WooCommerce
         run: php /tmp/wp-cli.phar eval-file "$GITHUB_WORKSPACE/tests/product-wordpress-integration.php" --path=/tmp/deprat-wp
+      - name: Tester les slides d’accueil et le masquage
+        run: php /tmp/wp-cli.phar eval-file "$GITHUB_WORKSPACE/tests/home-hero-integration.php" --path=/tmp/deprat-wp
       - name: Vérifier les pages Astra et le téléchargement du PDF
         env:
           NODE_PATH: ${{ runner.temp }}/deprat-browser/node_modules
