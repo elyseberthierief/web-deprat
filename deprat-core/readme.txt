@@ -45,3 +45,9 @@ Version 0.1.48 — Bibliothèque d'icônes :
 - Retirer une icône uniquement si elle n'est utilisée par aucune section ou catégorie.
 - Les sections, catégories et sous-catégories partagent les mêmes icônes. Un remplacement se répercute partout sans modifier chaque catégorie.
 - Enregistrement AJAX protégé par nonce et autorisations WordPress ; aucun SVG utilisateur exécuté.
+
+Slider compact — format 1920 × 440 px :
+- Format unique des prochaines bannières : 1920 × 440 px (JPG/WebP, moins de 500 Ko conseillé).
+- Hauteur proportionnelle à l'écran, visuel recouvrant tout le bandeau et catégories remontées avec léger chevauchement.
+- Les anciens visuels 1920 × 650 peuvent être recadrés verticalement ; préparer les prochaines images au format exact.
+- Sur mobile, hauteur compacte et adaptation responsive.
