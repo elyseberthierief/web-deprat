@@ -509,7 +509,7 @@ add_shortcode( 'deprat_accueil_hero', static function () {
 
 function deprat_home_hero_assets() {
     if ( ! is_front_page() ) { return; }
-    wp_enqueue_style( 'deprat-home-hero', plugins_url( 'assets/css/home-hero.css', dirname( __DIR__ ) . '/deprat-core.php' ), array(), '0.1.45' );
-    wp_enqueue_script( 'deprat-home-hero', plugins_url( 'assets/js/home-hero.js', dirname( __DIR__ ) . '/deprat-core.php' ), array(), '0.1.45', true );
+    wp_enqueue_style( 'deprat-home-hero', plugins_url( 'assets/css/home-hero.css', dirname( __DIR__ ) . '/deprat-core.php' ), array(), '0.1.46' );
+    wp_enqueue_script( 'deprat-home-hero', plugins_url( 'assets/js/home-hero.js', dirname( __DIR__ ) . '/deprat-core.php' ), array(), '0.1.46', true );
 }
 add_action( 'wp_enqueue_scripts', 'deprat_home_hero_assets', 25 );
