@@ -65,8 +65,33 @@
         show(0);
         start();
     }
+    /** Faire défiler horizontalement les catégories, sans modifier la rotation des slides. */
+    function initCategories(nav) {
+        var track = nav.querySelector('[data-deprat-category-track]');
+        var previous = nav.querySelector('[data-deprat-category-prev]');
+        var next = nav.querySelector('[data-deprat-category-next]');
+        if (!track || !previous || !next) { return; }
+
+        var reducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        function update() {
+            var max = track.scrollWidth - track.clientWidth;
+            previous.disabled = track.scrollLeft <= 2 || max <= 2;
+            next.disabled = track.scrollLeft >= max - 2 || max <= 2;
+        }
+        function move(direction) {
+            var distance = Math.max(145, Math.floor(track.clientWidth * .78));
+            track.scrollBy({left: distance * direction, behavior: reducedMotion ? 'auto' : 'smooth'});
+            window.setTimeout(update, reducedMotion ? 0 : 500);
+        }
+        previous.addEventListener('click', function () { move(-1); });
+        next.addEventListener('click', function () { move(1); });
+        track.addEventListener('scroll', update, {passive: true});
+        window.addEventListener('resize', update, {passive: true});
+        update();
+    }
     function ready() {
         document.querySelectorAll('[data-deprat-home-slider]').forEach(init);
+        document.querySelectorAll('[data-deprat-home-categories]').forEach(initCategories);
     }
     if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', ready); }
     else { ready(); }
