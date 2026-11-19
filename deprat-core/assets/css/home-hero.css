@@ -9,10 +9,10 @@
 }
 .deprat-home-block, .deprat-home-block * { box-sizing: border-box; }
 .deprat-home-slider {
-    /* Le format recommandé 1920 × 650 doit être respecté : pas de recadrage vertical. */
+    /* Nouveau format panoramique 1920 × 405 : les catégories remontent dans la page. */
     width: 100%;
     height: auto;
-    aspect-ratio: 1920 / 650;
+    aspect-ratio: 1920 / 405;
     position: relative;
     background: linear-gradient(110deg, #103B80 0%, #285f91 58%, #7394b0 100%);
     overflow: hidden;
@@ -24,7 +24,7 @@
 .deprat-home-slide-image {
     position: absolute; inset: 0;
     width: 100%; height: 100% !important;
-    max-width: none; object-fit: contain; object-position: center;
+    max-width: none; object-fit: cover; object-position: center;
     display: block; z-index: -2;
 }
 .deprat-home-overlay {
@@ -114,7 +114,7 @@
 }
 @media (max-width: 650px) {
     /* Sur petit écran, préserver la photo complète même lorsque son texte est intégré à l'image. */
-    .deprat-home-slider { height: clamp(225px, 63vw, 455px); aspect-ratio: auto; }
+    .deprat-home-slider { height: clamp(185px, 50vw, 280px); aspect-ratio: auto; }
     .deprat-home-slide:not(.is-image-only) .deprat-home-slide-image { object-fit: cover; }
     .deprat-home-slide-image { object-position: center; }
     .deprat-home-overlay { clip-path: none; background: linear-gradient(90deg,rgba(4,32,65,.94),rgba(5,38,73,.75) 74%,rgba(5,38,73,.5)); }
@@ -150,7 +150,7 @@
     display: flex; align-items: stretch;
     width: min(1380px, calc(100% - 96px));
     min-height: 112px;
-    margin: -24px auto 20px;
+    margin: -30px auto 16px;
     padding: 0;
     border: 1px solid #d8e4f1; border-radius: 14px;
     background: #fff;

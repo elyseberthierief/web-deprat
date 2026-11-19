@@ -1,4 +1,4 @@
-DEPRAT Core 0.1.47
+DEPRAT Core 0.1.48
 
 Le plugin reprend les extraits PHP actifs dans la sauvegarde du 14 novembre 2026.
 Extraits globaux : 5 à 11 et 15.
@@ -36,3 +36,18 @@ Version 0.1.47 :
 - Chaque catégorie et sous-catégorie WooCommerce peut avoir son propre pictogramme ou une image JPG/PNG/WebP, modifiables dans la fenêtre de création et d'édition de l'arborescence.
 - Ces visuels sont utilisés dans le carrousel des catégories sur l'accueil, le méga-menu et sa prévisualisation d’administration.
 - Le libellé « CATALOGUE DEPRAT » est retiré de la page d'organisation des catégories et de ses boîtes de dialogue.
+
+Version 0.1.48 — Bibliothèque d'icônes :
+- Produits > Organiser les catégories > Bibliothèque d'icônes, affichage en carrés.
+- Les dix pictogrammes DEPRAT historiques sont préinstallés et restent utilisables.
+- Ajouter une icône avec son nom et son image PNG/JPG/WebP (pas de SVG importé).
+- Modifier le nom ou remplacer l'image via la médiathèque WordPress.
+- Retirer une icône uniquement si elle n'est utilisée par aucune section ou catégorie.
+- Les sections, catégories et sous-catégories partagent les mêmes icônes. Un remplacement se répercute partout sans modifier chaque catégorie.
+- Enregistrement AJAX protégé par nonce et autorisations WordPress ; aucun SVG utilisateur exécuté.
+
+Slider compact — format 1920 × 405 px :
+- Format unique des prochaines bannières : 1920 × 405 px (JPG/WebP, moins de 500 Ko conseillé).
+- Hauteur proportionnelle à l'écran, visuel recouvrant tout le bandeau et catégories remontées avec léger chevauchement.
+- Les anciens visuels 1920 × 650 peuvent être recadrés verticalement ; préparer les prochaines images au format exact.
+- Sur mobile, hauteur compacte et adaptation responsive.

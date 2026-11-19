@@ -22,6 +22,9 @@ function deprat_catalog_section_defaults() {
 }
 /** Palette fermée de pictogrammes internes (SVG statiques, aucun SVG utilisateur). */
 function deprat_catalog_section_palette() {
+    if ( function_exists( 'deprat_icon_library_palette' ) ) {
+        return deprat_icon_library_palette();
+    }
     return array(
         'tubes' => 'Tube',
         'liaison' => 'Liaison',
@@ -159,9 +162,9 @@ function deprat_catalog_section_icon( $key ) {
         ) );
         if ( $image ) { return $image; }
     }
-    $paths = deprat_catalog_section_icon_paths();
-    $icon = isset( $paths[ $row['icon'] ] ) ? $row['icon'] : 'autres';
-    return '<svg class="deprat-section-icon" aria-hidden="true" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round">' . $paths[ $icon ] . '</svg>';
+    // La bibliothèque fournit aussi bien le SVG intégré que l'image remplacée.
+    $icon = isset( deprat_catalog_section_palette()[ $row['icon'] ] ) ? $row['icon'] : 'autres';
+    return deprat_icon_library_markup( $icon, 'deprat-section-icon', 30 );
 }
 
 
@@ -199,10 +202,9 @@ function deprat_catalog_category_icon( $term ) {
         if ( $image ) { return $image; }
     }
     if ( $visual['icon'] ) {
-        $paths = deprat_catalog_section_icon_paths();
-        return '<svg class="deprat-category-icon" aria-hidden="true" viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round">' . $paths[ $visual['icon'] ] . '</svg>';
+        return deprat_icon_library_markup( $visual['icon'], 'deprat-category-icon', 30 );
     }
-    // Avant toute personnalisation, on conserve les pictogrammes historiques.
+    // Avant toute personnalisation, conserver les pictogrammes historiques.
     return deprat_catalog_section_icon( deprat_catalog_section_for_term( $term ) );
 }
 
