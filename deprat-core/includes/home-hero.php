@@ -80,7 +80,7 @@ function deprat_home_slide_image_html( $post ) {
     echo '</div>';
     echo '<p><button type="button" class="button button-primary" data-deprat-image-select>' . ( $id ? 'Remplacer l’image' : 'Ajouter une image' ) . '</button> ';
     echo '<button type="button" class="button" data-deprat-image-remove' . ( $id ? '' : ' hidden' ) . '>Retirer</button></p>';
-    echo '<p class="description">Format recommandé : <strong>1920 × 650 px</strong>. L’image sera recadrée automatiquement selon l’écran.</p>';
+    echo '<p class="description">Format recommandé : <strong>1920 × 440 px</strong>. Utilisez le format 1920 × 440 pour éviter tout recadrage. Les anciennes images plus hautes peuvent être coupées verticalement.</p>';
     echo '</div>';
 }
 
@@ -137,9 +137,9 @@ function deprat_home_slide_headline( $post_id ) {
 }
 
 function deprat_home_slide_photo_guide() {
-    echo '<p><strong>Format recommandé : 1920 × 650 pixels</strong> (horizontal, environ 3:1).</p>';
+    echo '<p><strong>Format recommandé : 1920 × 440 pixels</strong> (horizontal, environ 4,36:1).</p>';
     echo '<p>JPG ou WebP, idéalement <strong>moins de 500 Ko</strong> après optimisation.</p>';
-    echo '<p>Privilégiez une photo avec le produit ou la porte à <strong>droite</strong> et une zone dégagée à gauche : le texte sera ajouté par le site.</p>';
+    echo '<p>Privilégiez une photo avec le produit ou la porte à <strong>droite</strong> et une zone dégagée à gauche : le texte sera ajouté par le site. Les anciens slides en 1920 × 650 seront recadrés en haut et en bas.</p>';
     echo '<p>Ajoutez votre photo dans le bloc <strong>Image du slide</strong>, puis cliquez sur <strong>Mettre à jour</strong> ou <strong>Publier</strong>.</p>';
     echo '<p>Pour définir la position : rubrique <strong>Ordre dans le diaporama</strong> ou glisser-déposer dans la liste des slides.</p>';
 }
@@ -508,7 +508,7 @@ add_shortcode( 'deprat_accueil_hero', static function () {
 
 function deprat_home_hero_assets() {
     if ( ! is_front_page() ) { return; }
-    wp_enqueue_style( 'deprat-home-hero', plugins_url( 'assets/css/home-hero.css', dirname( __DIR__ ) . '/deprat-core.php' ), array(), '0.1.47' );
+    wp_enqueue_style( 'deprat-home-hero', plugins_url( 'assets/css/home-hero.css', dirname( __DIR__ ) . '/deprat-core.php' ), array(), '0.1.48' );
     wp_enqueue_script( 'deprat-home-hero', plugins_url( 'assets/js/home-hero.js', dirname( __DIR__ ) . '/deprat-core.php' ), array(), '0.1.47', true );
 }
 add_action( 'wp_enqueue_scripts', 'deprat_home_hero_assets', 25 );
