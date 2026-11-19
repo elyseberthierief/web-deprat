@@ -1,0 +1,134 @@
+/* DEPRAT — bandeau pleine largeur, sous l'en-tête Astra existant. */
+.deprat-home-block {
+    position: relative;
+    width: 100vw;
+    max-width: none;
+    margin: 0 calc(50% - 50vw) 32px;
+    font-family: inherit;
+    color: #09274b;
+}
+.deprat-home-block, .deprat-home-block * { box-sizing: border-box; }
+.deprat-home-slider {
+    height: clamp(310px, 24vw, 440px);
+    position: relative;
+    background: linear-gradient(110deg, #0a3155 0%, #254d6b 58%, #7394b0 100%);
+    overflow: hidden;
+    isolation: isolate;
+}
+.deprat-home-slides, .deprat-home-slide { width: 100%; height: 100%; }
+.deprat-home-slide { position: absolute; inset: 0; isolation: isolate; }
+.deprat-home-slide[hidden] { display: none !important; }
+.deprat-home-slide-image {
+    position: absolute; inset: 0;
+    width: 100%; height: 100% !important;
+    max-width: none; object-fit: cover; object-position: center 48%;
+    display: block; z-index: -2;
+}
+.deprat-home-overlay {
+    position: absolute; z-index: -1; inset: 0;
+    background: linear-gradient(105deg, rgba(5,37,73,.94), rgba(9,55,95,.83) 62%, rgba(28,87,127,.30));
+    clip-path: polygon(0 0, 52% 0, 38% 100%, 0 100%);
+}
+.deprat-home-slide::before {
+    content: ''; position: absolute; z-index: -1; inset: 0;
+    background: linear-gradient(90deg, rgba(5,33,67,.47) 0%, rgba(2,21,45,.10) 55%, rgba(0,0,0,.04) 100%);
+}
+.deprat-home-slide-inner {
+    position: relative; height: 100%; width: 100%; max-width: 1500px;
+    margin: 0 auto; padding: 24px clamp(62px, 6vw, 110px);
+    display: flex; align-items: center;
+}
+.deprat-home-slide-copy { max-width: 610px; color: #fff; }
+.deprat-home-slide-copy h1 {
+    color: #fff !important; font-size: clamp(29px, 3vw, 49px) !important;
+    font-weight: 800; line-height: 1.11 !important; letter-spacing: -.025em;
+    margin: 0 0 14px !important; text-transform: none;
+}
+.deprat-home-gold-rule {
+    display: block; width: 76px; height: 6px; margin: 0 0 15px;
+    background: #ffc321; border-radius: 5px;
+}
+.deprat-home-slide-copy p {
+    color: #fff; font-size: clamp(15px, 1.13vw, 19px);
+    line-height: 1.4; margin: 0 0 18px; max-width: 490px;
+}
+.deprat-home-cta {
+    display: inline-flex; gap: 36px; align-items: center; justify-content: space-between;
+    min-height: 44px; padding: 11px 22px; border-radius: 9px;
+    background: #ffbd1d; color: #08264a !important; font-size: 15px;
+    font-weight: 800; line-height: 1.3; text-decoration: none !important;
+    box-shadow: 0 5px 12px rgba(2,24,45,.16);
+    transition: background-color .2s ease, transform .2s ease;
+}
+.deprat-home-cta:hover, .deprat-home-cta:focus-visible {
+    color: #08264a !important; background: #ffd45a; transform: translateY(-1px);
+}
+.deprat-home-cta span { font-size: 23px; font-weight: 500; line-height: 1; }
+.deprat-home-arrow {
+    position: absolute; z-index: 3; top: 50%; transform: translateY(-50%);
+    width: 42px; height: 58px; border: 0; border-radius: 3px;
+    padding: 0; background: transparent; color: #fff;
+    cursor: pointer; display: grid; place-items: center;
+}
+.deprat-home-arrow span { font-family: Arial,sans-serif; font-size: 60px; font-weight: 200; line-height: .8; }
+.deprat-home-arrow:hover, .deprat-home-arrow:focus-visible { background: rgba(0,25,50,.3); color: #fff; }
+.deprat-home-arrow-prev { left: 17px; }
+.deprat-home-arrow-next { right: 17px; }
+.deprat-home-dots {
+    position: absolute; z-index: 3; bottom: 16px; left: 50%;
+    transform: translateX(-50%); display: flex; align-items: center; gap: 9px;
+}
+.deprat-home-dot {
+    width: 11px; height: 11px; min-width: 11px; min-height: 11px; padding: 0;
+    border: 0; border-radius: 50%; background: rgba(255,255,255,.96);
+    cursor: pointer; box-shadow: 0 0 0 1px rgba(3,28,58,.13);
+}
+.deprat-home-dot[aria-pressed="true"] { background: #ffc321; }
+.deprat-home-dot:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+.deprat-home-benefits { background: linear-gradient(90deg,#f5f8fb,#eaf0f5); }
+.deprat-home-benefits-inner {
+    max-width: 1600px; margin: 0 auto; display: grid; grid-template-columns: repeat(4,minmax(0,1fr));
+    padding: 20px 35px; gap: 0;
+}
+.deprat-home-benefit {
+    min-width: 0; display: flex; align-items: center; gap: 18px;
+    padding: 0 26px; border-right: 1px solid #b7c5d3;
+}
+.deprat-home-benefit:last-child { border-right: 0; }
+.deprat-home-benefit svg { flex: 0 0 43px; width: 43px; height: 43px; color: #0b325f; }
+.deprat-home-benefit div { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.deprat-home-benefit strong {
+    color: #081f3d; font-size: clamp(13px,1vw,16px); font-weight: 800; line-height: 1.25;
+}
+.deprat-home-benefit span {
+    color: #364455; font-size: clamp(11px,.8vw,13px); line-height: 1.35;
+}
+@media (max-width: 1050px) {
+    .deprat-home-slide-inner { padding-inline: 65px; }
+    .deprat-home-benefits-inner { grid-template-columns: repeat(2,minmax(0,1fr)); row-gap: 20px; padding: 18px 20px; }
+    .deprat-home-benefit:nth-child(2) { border-right: 0; }
+    .deprat-home-benefit:nth-child(3), .deprat-home-benefit:nth-child(4) { padding-top: 14px; border-top: 1px solid #d3dce5; }
+}
+@media (max-width: 650px) {
+    .deprat-home-slider { height: 455px; }
+    .deprat-home-slide-image { object-position: 62% center; }
+    .deprat-home-overlay { clip-path: none; background: linear-gradient(90deg,rgba(4,32,65,.94),rgba(5,38,73,.75) 74%,rgba(5,38,73,.5)); }
+    .deprat-home-slide-inner { align-items: center; padding: 28px 46px; }
+    .deprat-home-slide-copy { max-width: 100%; }
+    .deprat-home-slide-copy h1 { font-size: clamp(27px,7vw,38px) !important; }
+    .deprat-home-slide-copy p { font-size: 15px; }
+    .deprat-home-cta { gap: 12px; font-size: 13px; padding: 10px 14px; }
+    .deprat-home-arrow { width: 29px; height: 45px; }
+    .deprat-home-arrow span { font-size: 42px; }
+    .deprat-home-arrow-prev { left: 3px; }
+    .deprat-home-arrow-next { right: 3px; }
+    .deprat-home-benefits-inner { padding: 14px 10px; gap: 0; }
+    .deprat-home-benefit { gap: 8px; padding: 10px 8px; }
+    .deprat-home-benefit svg { flex-basis: 27px; width: 27px; height: 27px; }
+    .deprat-home-benefit strong { font-size: 12px; }
+    .deprat-home-benefit span { font-size: 10px; }
+    .deprat-home-benefit:nth-child(3), .deprat-home-benefit:nth-child(4) { padding-top: 12px; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .deprat-home-cta { transition: none; }
+}
