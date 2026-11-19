@@ -1,4 +1,4 @@
-DEPRAT Core 0.1.45
+DEPRAT Core 0.1.46
 
 Le plugin reprend les extraits PHP actifs dans la sauvegarde du 14 novembre 2026.
 Extraits globaux : 5 à 11 et 15.
@@ -20,3 +20,12 @@ Page d’accueil — version 0.1.45 :
 - Pour conserver une campagne sans l’afficher : cocher « Masquer temporairement ce slide » ou cliquer sur « Masquer de l’accueil » depuis la liste. Le lien « Afficher sur l’accueil » la réactive immédiatement.
 - Le shortcode [deprat_accueil_hero] sert uniquement aux configurations de page Elementor particulières et évite d’ajouter le module en double.
 - Les liens relatifs des boutons (ex. /boutique/) restent valables après la migration deprat.eu → deprat.fr.
+
+Slides d’accueil — version 0.1.46 :
+- Image du slide toujours accessible via le bouton « Ajouter une image » (médiathèque WordPress), même si le thème ne propose pas d’image mise en avant.
+- Une entrée de slide dispose d’un nom interne, d’un titre visible sur le site (facultatif), d’un texte (facultatif), d’un bouton (facultatif) et d’une image.
+- Sans aucun texte ni bouton, seule l’image est affichée, sans bandeau de couleur par-dessus.
+- Ordre configurable dans l’éditeur et modifiable par glisser-déposer dans la liste complète des slides.
+- Administration harmonisée en bleu #103B80 et doré #B68B24.
+- Catégories réelles WooCommerce en chevauchement sous le diaporama, icônes existantes et défilement horizontal.
+- Navigation principale : court trait doré centré au survol et sur la page active, sans toucher à la flèche du méga-menu.
