@@ -1,4 +1,4 @@
-DEPRAT Core 0.1.52
+DEPRAT Core 0.1.53
 
 Le plugin reprend les extraits PHP actifs dans la sauvegarde du 14 novembre 2026.
 Extraits globaux : 5 à 11 et 15.
@@ -75,3 +75,13 @@ Version 0.1.52 — Icônes réalistes et en-tête :
 - En-tête Astra harmonisé en bleu DEPRAT / or, sans recréer de logo ; l'image officielle de la médiathèque (cropped-Logo-Deprat.png) est utilisée si disponible.
 - Le menu existant « Liste de devis » est renommé « Ma demande de devis », sans changer son URL ou ses restrictions d'accès.
 - Contrôler sur mobile que le logo et la navigation restent adaptés.
+
+Version 0.1.53 — Refonte réelle de l'en-tête Astra :
+- Trois lignes sur ordinateur : coordonnées / mention professionnels, logo DEPRAT et recherche WooCommerce / accès pro, puis menu Astra existant.
+- Le logo réellement chargé par le site est utilisé, avec son nom complet et sa signature à droite.
+- La recherche est opérationnelle et filtre les produits WooCommerce.
+- Connexion, déconnexion et notifications s'appuient sur les shortcodes DEPRAT existants.
+- Menu Astra et méga-menu conservés, sans remplacer les liens WooCommerce.
+- Entrée « Ma demande de devis » dans le menu principal, vers le panier WooCommerce, avec compteur d'articles.
+- En mobile, l'en-tête Astra natif et le menu hamburger sont conservés.
+- Contrôles après déploiement : trois lignes desktop, bon logo, recherche, connexion/notifications, ouverture du méga-menu, lien devis, et affichage téléphone.
