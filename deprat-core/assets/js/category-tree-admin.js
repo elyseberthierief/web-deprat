@@ -23,6 +23,105 @@
         var dirty = false;
         var saving = false;
 
+        /**
+         * Sélecteur mutualisé : image de médiathèque OU pictogramme, pour création et édition.
+         * Les deux formulaires sont identiques pour les catégories et sous-catégories.
+         */
+        function setupCategoryVisualPicker( formElement ) {
+            var picker = formElement.querySelector( '[data-category-icon-picker]' );
+            if ( !picker ) { return { reset: function () {}, value: function () { return {icon:'auto',media_id:0}; } }; }
+            var preview = picker.querySelector( '[data-category-media-preview]' );
+            var remove = picker.querySelector( '[data-category-media-clear]' );
+            var select = picker.querySelector( '[data-category-media-pick]' );
+            var mediaId = 0;
+            var imageURL = '';
+
+            function render() {
+                if ( preview ) {
+                    preview.replaceChildren();
+                    if ( mediaId && imageURL ) {
+                        var photo = document.createElement( 'img' );
+                        photo.src = imageURL;
+                        photo.alt = 'Aperçu de l’image de catégorie';
+                        photo.loading = 'lazy';
+                        preview.appendChild( photo );
+                    } else if ( mediaId ) {
+                        preview.textContent = 'Image sélectionnée (n° ' + mediaId + ')';
+                    } else {
+                        preview.textContent = 'Pictogramme DEPRAT sélectionné';
+                    }
+                }
+                if ( remove ) { remove.hidden = !mediaId; }
+                picker.classList.toggle( 'has-category-image', !!mediaId );
+            }
+
+            function reset( values ) {
+                values = values || {};
+                mediaId = Number( values.media_id ) || 0;
+                imageURL = String( values.image_url || '' );
+                var icon = values.icon === 'auto' || config.sectionPalette && config.sectionPalette[ values.icon ] ? values.icon : 'auto';
+                var radio = picker.querySelector( 'input[type="radio"][value="' + icon + '"]' );
+                if ( radio ) { radio.checked = true; }
+                render();
+            }
+            picker.querySelectorAll( 'input[type="radio"]' ).forEach( function ( radio ) {
+                radio.addEventListener( 'change', function () {
+                    if ( radio.checked ) { mediaId = 0; imageURL = ''; render(); }
+                } );
+            } );
+            if ( remove ) {
+                remove.addEventListener( 'click', function () {
+                    mediaId = 0; imageURL = ''; render();
+                } );
+            }
+            if ( select ) {
+                select.addEventListener( 'click', function () {
+                    if ( !config.canUploadIcons || !window.wp || !window.wp.media ) { return; }
+                    var frame = window.wp.media( {
+                        title: 'Image de catégorie DEPRAT',
+                        button: { text: 'Utiliser cette image' },
+                        library: { type: 'image' },
+                        multiple: false
+                    } );
+                    frame.on( 'select', function () {
+                        var item = frame.state().get( 'selection' ).first();
+                        if ( !item ) { return; }
+                        var attachment = item.toJSON();
+                        if ( ![ 'image/png', 'image/jpeg', 'image/webp' ].includes( attachment.mime ) ) {
+                            window.alert( 'Choisissez une image JPG, PNG ou WebP (pas de SVG).' );
+                            return;
+                        }
+                        mediaId = Number( attachment.id ) || 0;
+                        var size = attachment.sizes
+                            && ( attachment.sizes.thumbnail || attachment.sizes.medium || attachment.sizes.full );
+                        imageURL = ( size && size.url ) || attachment.url || '';
+                        render();
+                    } );
+                    frame.open();
+                } );
+            }
+            reset();
+            return {
+                reset: reset,
+                value: function () {
+                    var chosen = picker.querySelector( 'input[type="radio"]:checked' );
+                    return { icon: chosen ? chosen.value : 'auto', media_id: mediaId };
+                }
+            };
+        }
+        var createVisual = setupCategoryVisualPicker( form );
+
+        function updateCategoryVisual( node, response ) {
+            if ( !node ) { return; }
+            node.setAttribute( 'data-category-icon', response.icon || 'auto' );
+            node.setAttribute( 'data-category-media-id', String( Number( response.media_id ) || 0 ) );
+            node.setAttribute( 'data-category-image-url', response.image_url || '' );
+            var icon = node.querySelector( ':scope > .deprat-tree-row [data-tree-icon]' );
+            if ( icon && typeof response.icon_html === 'string' ) {
+                // icon_html est créé uniquement par la palette SVG interne ou la médiathèque WP validée.
+                icon.innerHTML = response.icon_html;
+            }
+        }
         function message( value, error ) {
             status.textContent = value || '';
             status.classList.toggle( 'is-error', !!error );
@@ -109,6 +208,9 @@
             li.setAttribute( 'data-tree-item', '' );
             li.setAttribute( 'data-term-id', String( id ) );
             li.setAttribute( 'data-section-guess', 'autres' );
+            li.setAttribute( 'data-category-icon', 'auto' );
+            li.setAttribute( 'data-category-media-id', '0' );
+            li.setAttribute( 'data-category-image-url', '' );
             var row = document.createElement( 'div' );
             row.className = 'deprat-tree-row';
             var handle = makeButton( '⠿', 'data-drag-handle', 'Faire glisser pour réorganiser' );
@@ -116,13 +218,16 @@
             handle.setAttribute( 'aria-label', 'Déplacer ' + name );
             var label = document.createElement( 'div' );
             label.className = 'deprat-tree-label';
+            var categoryIcon = document.createElement( 'span' );
+            categoryIcon.className = 'deprat-tree-category-icon';
+            categoryIcon.setAttribute( 'data-tree-icon', '' );
             var strong = document.createElement( 'strong' );
             strong.textContent = name;
             strong.setAttribute( 'data-tree-name', '' );
             var hint = document.createElement( 'span' );
             hint.className = 'deprat-tree-meta';
             hint.textContent = '0 produit(s)';
-            label.append( strong, hint );
+            label.append( categoryIcon, strong, hint );
             var actions = document.createElement( 'div' );
             actions.className = 'deprat-tree-actions';
             var moveUp = makeButton( '↑', 'data-tree-up', 'Monter dans cette liste' );
@@ -220,6 +325,7 @@
                 formParent.value = names[ 0 ].id;
             }
             formName.value = '';
+            createVisual.reset( { icon:'auto', media_id:0, image_url:'' } );
             formError.hidden = true;
             formError.textContent = '';
             overlay.hidden = false;
@@ -348,13 +454,17 @@
             creating = true;
             submit.disabled = true;
             formError.hidden = true;
+            var newVisual = createVisual.value();
             post( 'deprat_category_tree_create', {
                 name: name,
                 parent: String( parentId ),
-                section: parentId ? '' : section
+                section: parentId ? '' : section,
+                icon: newVisual.icon,
+                media_id: String( newVisual.media_id )
             } )
                 .then( function ( response ) {
                     var created = makeItem( response.id, response.name );
+                    updateCategoryVisual( created, response );
                     created.setAttribute( 'data-section-guess', response.sectionGuess || 'autres' );
                     if ( !parentId && section ) {
                         var sectionSelect = created.querySelector( '[data-tree-section]' );
@@ -381,6 +491,7 @@
         // dans le méga-menu : modifier le nom via une fenêtre modale.
         var categoryEditOverlay = app.querySelector( '[data-tree-edit-overlay]' );
         var categoryEditForm = app.querySelector( '[data-tree-edit-form]' );
+        var editVisual = setupCategoryVisualPicker( categoryEditForm );
         var categoryEditId = app.querySelector( '[data-tree-edit-id]' );
         var categoryEditName = app.querySelector( '[data-tree-edit-name]' );
         var categoryEditError = app.querySelector( '[data-tree-edit-error]' );
@@ -408,6 +519,11 @@
             categoryEditFocus = button;
             categoryEditId.value = String( id );
             categoryEditName.value = itemName( source );
+            editVisual.reset( {
+                icon: source.getAttribute( 'data-category-icon' ) || 'auto',
+                media_id: Number( source.getAttribute( 'data-category-media-id' ) ) || 0,
+                image_url: source.getAttribute( 'data-category-image-url' ) || ''
+            } );
             var parent = source.parentElement.closest( '[data-tree-item]' );
             categoryEditContext.textContent = parent
                 ? 'Sous-catégorie de « ' + itemName( parent ) + ' »'
@@ -459,13 +575,16 @@
             categoryEditBusy = true;
             button.disabled = true;
             categoryEditError.hidden = true;
+            var visual = editVisual.value();
             post( 'deprat_category_tree_edit_category', {
-                term_id: String( id ), name: name
+                term_id: String( id ), name: name,
+                icon: visual.icon, media_id: String( visual.media_id )
             } ).then( function ( response ) {
                 var real = root.querySelector( '[data-tree-item][data-term-id="' + id + '"]' );
                 var label = real && real.querySelector( ':scope > .deprat-tree-row [data-tree-name]' );
                 if ( label ) { label.textContent = response.name; }
                 if ( real ) {
+                    updateCategoryVisual( real, response );
                     var advancedButton = real.querySelector( ':scope > .deprat-tree-row [data-tree-edit-category]' );
                     if ( advancedButton ) { advancedButton.setAttribute( 'aria-label', 'Modifier la catégorie ' + response.name ); }
                 }
@@ -475,8 +594,8 @@
                 categoryEditBusy = false;
                 closeCategoryEdit();
                 message( dirty
-                    ? 'Nom enregistré. Pensez aussi à enregistrer l’organisation du méga-menu.'
-                    : 'Nom de catégorie enregistré.', false );
+                    ? 'Catégorie enregistrée. Pensez aussi à enregistrer l’organisation du méga-menu.'
+                    : 'Catégorie et visuel enregistrés.', false );
             } ).catch( function ( error ) {
                 categoryEditError.textContent = error.message || 'Impossible de modifier cette catégorie.';
                 categoryEditError.hidden = false;

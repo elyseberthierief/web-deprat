@@ -70,3 +70,15 @@
     display:block;width:30px;height:30px;max-width:30px;max-height:30px;
     object-fit:contain;border-radius:5px;
 }
+
+
+/* Icône/image personnalisée des catégories et sous-catégories du méga-menu. */
+.deprat-catalog-sections .deprat-category-link-icon {
+    flex: 0 0 20px; display: inline-flex; align-items: center; justify-content: center;
+    width: 20px; height: 20px; margin-right: 8px; color: #103B80;
+}
+.deprat-catalog-sections .deprat-category-link-icon .deprat-category-icon,
+.deprat-catalog-sections .deprat-category-link-icon .deprat-section-icon {
+    display: block; width: 20px; height: 20px; object-fit: contain;
+}
+.deprat-catalog-sections .deprat-category-link-name { min-width: 0; }

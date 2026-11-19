@@ -1,4 +1,4 @@
-DEPRAT Core 0.1.46
+DEPRAT Core 0.1.47
 
 Le plugin reprend les extraits PHP actifs dans la sauvegarde du 14 novembre 2026.
 Extraits globaux : 5 à 11 et 15.
@@ -29,3 +29,10 @@ Slides d’accueil — version 0.1.46 :
 - Administration harmonisée en bleu #103B80 et doré #B68B24.
 - Catégories réelles WooCommerce en chevauchement sous le diaporama, icônes existantes et défilement horizontal.
 - Navigation principale : court trait doré centré au survol et sur la page active, sans toucher à la flèche du méga-menu.
+
+Version 0.1.47 :
+- Le format recommandé 1920 × 650 px est enfin respecté sur grand écran : ratio natif au lieu d'une hauteur plafonnée à 440 px.
+- Le bloc de catégories conserve son effet de chevauchement en masquant moins le bas de la bannière.
+- Chaque catégorie et sous-catégorie WooCommerce peut avoir son propre pictogramme ou une image JPG/PNG/WebP, modifiables dans la fenêtre de création et d'édition de l'arborescence.
+- Ces visuels sont utilisés dans le carrousel des catégories sur l'accueil, le méga-menu et sa prévisualisation d’administration.
+- Le libellé « CATALOGUE DEPRAT » est retiré de la page d'organisation des catégories et de ses boîtes de dialogue.

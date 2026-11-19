@@ -89,7 +89,7 @@ function deprat_home_slide_image_assets( $hook ) {
     $screen = get_current_screen();
     if ( ! $screen || 'deprat_slide' !== $screen->post_type ) { return; }
     wp_enqueue_media();
-    wp_enqueue_script( 'deprat-slide-image-admin', plugins_url( 'assets/js/home-slide-admin.js', dirname( __DIR__ ) . '/deprat-core.php' ), array( 'jquery', 'media-views' ), '0.1.46', true );
+    wp_enqueue_script( 'deprat-slide-image-admin', plugins_url( 'assets/js/home-slide-admin.js', dirname( __DIR__ ) . '/deprat-core.php' ), array( 'jquery', 'media-views' ), '0.1.47', true );
 }
 add_action( 'admin_enqueue_scripts', 'deprat_home_slide_image_assets' );
 
@@ -103,14 +103,14 @@ function deprat_home_slide_admin_assets( $hook ) {
         'deprat-slide-admin',
         plugins_url( 'assets/css/home-slide-admin.css', dirname( __DIR__ ) . '/deprat-core.php' ),
         array(),
-        '0.1.46'
+        '0.1.47'
     );
     if ( 'edit.php' === $hook ) {
         wp_enqueue_script(
             'deprat-slide-order-admin',
             plugins_url( 'assets/js/home-slide-order-admin.js', dirname( __DIR__ ) . '/deprat-core.php' ),
             array( 'jquery', 'jquery-ui-sortable' ),
-            '0.1.46',
+            '0.1.47',
             true
         );
         wp_localize_script( 'deprat-slide-order-admin', 'depratSlideOrderConfig', array(
@@ -403,10 +403,9 @@ function deprat_home_category_carousel_html() {
             <?php foreach ( $categories as $term ) :
                 $link = get_term_link( $term );
                 if ( is_wp_error( $link ) ) { continue; }
-                $icon_key = deprat_catalog_section_for_term( $term );
                 ?>
                 <a class="deprat-home-category-item" href="<?php echo esc_url( $link ); ?>">
-                    <span class="deprat-home-category-icon"><?php echo deprat_catalog_section_icon( $icon_key ); // Icône construite par la palette interne DEPRAT. ?></span>
+                    <span class="deprat-home-category-icon"><?php echo deprat_catalog_category_icon( $term ); // Icône/image de cette catégorie précise, sinon palette DEPRAT. ?></span>
                     <span class="deprat-home-category-name"><?php echo esc_html( $term->name ); ?></span>
                 </a>
             <?php endforeach; ?>
@@ -509,7 +508,7 @@ add_shortcode( 'deprat_accueil_hero', static function () {
 
 function deprat_home_hero_assets() {
     if ( ! is_front_page() ) { return; }
-    wp_enqueue_style( 'deprat-home-hero', plugins_url( 'assets/css/home-hero.css', dirname( __DIR__ ) . '/deprat-core.php' ), array(), '0.1.46' );
-    wp_enqueue_script( 'deprat-home-hero', plugins_url( 'assets/js/home-hero.js', dirname( __DIR__ ) . '/deprat-core.php' ), array(), '0.1.46', true );
+    wp_enqueue_style( 'deprat-home-hero', plugins_url( 'assets/css/home-hero.css', dirname( __DIR__ ) . '/deprat-core.php' ), array(), '0.1.47' );
+    wp_enqueue_script( 'deprat-home-hero', plugins_url( 'assets/js/home-hero.js', dirname( __DIR__ ) . '/deprat-core.php' ), array(), '0.1.47', true );
 }
 add_action( 'wp_enqueue_scripts', 'deprat_home_hero_assets', 25 );

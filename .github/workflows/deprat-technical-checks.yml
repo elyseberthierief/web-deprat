@@ -90,6 +90,8 @@ jobs:
         run: php /tmp/wp-cli.phar eval-file "$GITHUB_WORKSPACE/tests/product-wordpress-integration.php" --path=/tmp/deprat-wp
       - name: Tester les slides d’accueil et le masquage
         run: php /tmp/wp-cli.phar eval-file "$GITHUB_WORKSPACE/tests/home-hero-integration.php" --path=/tmp/deprat-wp
+      - name: Tester les icônes et images des catégories WooCommerce
+        run: php /tmp/wp-cli.phar eval-file "$GITHUB_WORKSPACE/tests/category-visual-integration.php" --path=/tmp/deprat-wp
       - name: Vérifier les pages Astra et le téléchargement du PDF
         env:
           NODE_PATH: ${{ runner.temp }}/deprat-browser/node_modules

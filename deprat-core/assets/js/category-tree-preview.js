@@ -57,6 +57,12 @@
             var label = document.createElement( 'span' );
             label.className = 'deprat-section-term-link';
             label.textContent = name;
+            var sourceIcon = real.querySelector( ':scope > .deprat-tree-row [data-tree-icon]' );
+            var previewIcon = sourceIcon ? sourceIcon.cloneNode( true ) : null;
+            if ( previewIcon ) {
+                previewIcon.className = 'deprat-preview-category-icon';
+                previewIcon.removeAttribute( 'data-tree-icon' );
+            }
             var actions = document.createElement( 'div' );
             actions.className = 'deprat-preview-actions';
             actions.append(
@@ -99,7 +105,9 @@
                 sublist.appendChild( buildItem( item, depth + 1 ) );
             } );
             nested.appendChild( sublist );
-            row.append( drag, label, actions, edit, toggle );
+            row.appendChild( drag );
+            if ( previewIcon ) { row.appendChild( previewIcon ); }
+            row.append( label, actions, edit, toggle );
             li.append( row, nested );
             li.classList.toggle( 'has-children', children.length > 0 );
             return li;
