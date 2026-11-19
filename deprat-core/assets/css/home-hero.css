@@ -9,10 +9,10 @@
 }
 .deprat-home-block, .deprat-home-block * { box-sizing: border-box; }
 .deprat-home-slider {
-    /* Nouveau format panoramique 1920 × 440 : les catégories remontent dans la page. */
+    /* Nouveau format panoramique 1920 × 405 : les catégories remontent dans la page. */
     width: 100%;
     height: auto;
-    aspect-ratio: 1920 / 440;
+    aspect-ratio: 1920 / 405;
     position: relative;
     background: linear-gradient(110deg, #103B80 0%, #285f91 58%, #7394b0 100%);
     overflow: hidden;
