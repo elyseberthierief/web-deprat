@@ -13,8 +13,6 @@ $roots = deprat_catalog_root_categories();
 ?>
 <main id="primary" class="deprat-catalog" aria-label="Catalogue professionnel DEPRAT">
     <nav class="deprat-catalog-breadcrumb" aria-label="Fil d’Ariane">
-        <a href="<?php echo esc_url( home_url( '/' ) ); ?>">Accueil</a>
-        <span aria-hidden="true">/</span>
         <?php if ( $is_hub && ! $is_all ) : ?>
             <strong aria-current="page">Nos composants</strong>
         <?php elseif ( $is_all ) : ?>
