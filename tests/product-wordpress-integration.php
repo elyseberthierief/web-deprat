@@ -622,4 +622,25 @@ deprat_integration_assert( false !== strpos( $url, 'deprat_section=tubes' )
     'Cliquer une rubrique réinitialise la catégorie sans perdre la rubrique.' );
 $_GET = $old_get_products;
 
+// En-tête Astra DEPRAT : les trois bandes ne sont pas de simples règles CSS.
+// Le shortcode client existe et la recherche cible les produits WooCommerce.
+deprat_integration_assert( false !== has_action( 'astra_masthead_top', 'deprat_site_header_tiers' ),
+    'Le vrai header Astra doit contenir les bandes DEPRAT.' );
+ob_start();
+deprat_site_header_tiers();
+$deprat_header_test = ob_get_clean();
+deprat_integration_assert(
+    false !== strpos( $deprat_header_test, 'deprat-header-contact-row' )
+    && false !== strpos( $deprat_header_test, 'deprat-header-identity-row' )
+    && false !== strpos( $deprat_header_test, 'contact@deprat.com' )
+    && false !== strpos( $deprat_header_test, 'Espace professionnel' )
+    && false !== strpos( $deprat_header_test, 'name="post_type" value="product"' )
+    && false !== strpos( $deprat_header_test, 'deprat-header-pro-actions' ),
+    'Le header complet doit fournir coordonnées, recherche et compte professionnel.' );
+$menu_args = (object) array( 'theme_location' => 'primary' );
+$quote_menu_html = deprat_site_header_quote_item( '', $menu_args );
+deprat_integration_assert( false !== strpos( $quote_menu_html, 'Ma demande de devis' )
+    && false !== strpos( $quote_menu_html, 'deprat-header-quote-menu-item' ),
+    'Le menu Astra doit ajouter le véritable lien panier de devis.' );
+
 WP_CLI::success( 'WordPress et WooCommerce : sauvegarde, médias et affichages vérifiés.' );
