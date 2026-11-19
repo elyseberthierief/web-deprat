@@ -93,6 +93,35 @@ function deprat_home_slide_image_assets( $hook ) {
 }
 add_action( 'admin_enqueue_scripts', 'deprat_home_slide_image_assets' );
 
+/** Personnalisation visuelle DEPRAT et tri direct sur la liste des slides. */
+function deprat_home_slide_admin_assets( $hook ) {
+    if ( ! in_array( $hook, array( 'post.php', 'post-new.php', 'edit.php' ), true ) ) { return; }
+    $screen = get_current_screen();
+    if ( ! $screen || 'deprat_slide' !== $screen->post_type ) { return; }
+
+    wp_enqueue_style(
+        'deprat-slide-admin',
+        plugins_url( 'assets/css/home-slide-admin.css', dirname( __DIR__ ) . '/deprat-core.php' ),
+        array(),
+        '0.1.46'
+    );
+    if ( 'edit.php' === $hook ) {
+        wp_enqueue_script(
+            'deprat-slide-order-admin',
+            plugins_url( 'assets/js/home-slide-order-admin.js', dirname( __DIR__ ) . '/deprat-core.php' ),
+            array( 'jquery', 'jquery-ui-sortable' ),
+            '0.1.46',
+            true
+        );
+        wp_localize_script( 'deprat-slide-order-admin', 'depratSlideOrderConfig', array(
+            'ajaxUrl' => admin_url( 'admin-ajax.php' ),
+            'nonce'   => wp_create_nonce( 'deprat_home_slide_reorder' ),
+        ) );
+    }
+}
+add_action( 'admin_enqueue_scripts', 'deprat_home_slide_admin_assets' );
+
+
 function deprat_home_slide_order_html( $post ) {
     echo '<p><label for="deprat-slide-position"><strong>Position du slide</strong></label></p>';
     echo '<input type="number" min="0" max="9999" class="widefat" id="deprat-slide-position" name="deprat_home_slide_order" value="' . esc_attr( (int) $post->menu_order ) . '">';
@@ -395,7 +424,7 @@ function deprat_home_hero_html() {
     $count = count( $slides );
     ob_start();
     ?>
-    <div class="deprat-home-block">
+    <div class="deprat-home-block<?php echo $count ? '' : ' no-active-slides'; ?>">
         <?php if ( $count ) : ?><section class="deprat-home-slider" aria-label="Actualités et gammes DEPRAT" aria-roledescription="carrousel" data-deprat-home-slider>
             <div class="deprat-home-slides">
                 <?php foreach ( $slides as $index => $slide ) : ?>
