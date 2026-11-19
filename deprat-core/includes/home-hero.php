@@ -350,6 +350,46 @@ function deprat_home_svg( $key ) {
     return '<svg aria-hidden="true" width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round">' . $path . '</svg>';
 }
 
+/**
+ * Navigation visuelle en chevauchement du bandeau.
+ * Ne recopie aucune catégorie : les noms, liens et icônes proviennent de l'arborescence WooCommerce.
+ */
+function deprat_home_category_carousel_html() {
+    if ( ! function_exists( 'deprat_catalog_root_categories' )
+        || ! function_exists( 'deprat_catalog_section_for_term' )
+        || ! function_exists( 'deprat_catalog_section_icon' ) ) {
+        return '';
+    }
+
+    $categories = deprat_catalog_root_categories();
+    if ( ! $categories ) { return ''; }
+
+    ob_start();
+    ?>
+    <nav class="deprat-home-category-nav" aria-label="Accès direct aux catégories de produits" data-deprat-home-categories>
+        <button type="button" class="deprat-home-category-arrow deprat-home-category-arrow-prev" data-deprat-category-prev aria-label="Faire défiler les catégories vers la gauche">
+            <span aria-hidden="true">‹</span>
+        </button>
+        <div class="deprat-home-category-track" data-deprat-category-track tabindex="0" role="group" aria-label="Catégories de composants DEPRAT">
+            <?php foreach ( $categories as $term ) :
+                $link = get_term_link( $term );
+                if ( is_wp_error( $link ) ) { continue; }
+                $icon_key = deprat_catalog_section_for_term( $term );
+                ?>
+                <a class="deprat-home-category-item" href="<?php echo esc_url( $link ); ?>">
+                    <span class="deprat-home-category-icon"><?php echo deprat_catalog_section_icon( $icon_key ); // Icône construite par la palette interne DEPRAT. ?></span>
+                    <span class="deprat-home-category-name"><?php echo esc_html( $term->name ); ?></span>
+                </a>
+            <?php endforeach; ?>
+        </div>
+        <button type="button" class="deprat-home-category-arrow deprat-home-category-arrow-next" data-deprat-category-next aria-label="Faire défiler les catégories vers la droite">
+            <span aria-hidden="true">›</span>
+        </button>
+    </nav>
+    <?php
+    return (string) ob_get_clean();
+}
+
 function deprat_home_hero_html() {
     $slides = deprat_home_get_slides();
     $count = count( $slides );
@@ -406,6 +446,7 @@ function deprat_home_hero_html() {
                 </div>
             <?php endif; ?>
         </section><?php endif; ?>
+        <?php echo deprat_home_category_carousel_html(); // Navigation par catégories. ?>
         <div class="deprat-home-benefits" aria-label="Les avantages DEPRAT">
             <div class="deprat-home-benefits-inner">
                 <div class="deprat-home-benefit"><?php echo deprat_home_svg( 'gear' ); ?><div><strong>Spécialiste des composants</strong><span>Volets roulants, portes de garage et automatismes</span></div></div>
