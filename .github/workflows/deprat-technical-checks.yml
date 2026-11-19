@@ -18,6 +18,7 @@ jobs:
           php -l deprat-core/deprat-core.php
           php -l deprat-core/includes/product-technical-data.php
           php -l deprat-core/includes/product-shape.php
+          php -l deprat-core/includes/icon-library.php
           php -l deprat-core/includes/category-tree-admin.php
           php -l deprat-core/includes/product-list-admin.php
           php -l deprat-core/includes/product-single-layout.php
@@ -41,6 +42,7 @@ jobs:
           node --check deprat-core/assets/js/product-client-layout.js
           node --check deprat-core/assets/js/catalogue-archive.js
           node --check deprat-core/assets/js/catalogue-mega-menu.js
+          node --check deprat-core/assets/js/icon-library.js
           node --check deprat-core/assets/js/category-tree-admin.js
           node --check deprat-core/assets/js/category-tree-preview.js
           node --check deprat-core/assets/js/product-list-admin.js
