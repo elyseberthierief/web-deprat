@@ -62,3 +62,69 @@
         transition: none !important;
     }
 }
+
+/* 0.1.52 — En-tête DEPRAT : conserver le logo réel configuré dans Astra,
+   moderniser uniquement la présentation et identifier le panier de devis. */
+body #masthead{
+    background:#fff;
+    border-bottom:3px solid #B68B24;
+    box-shadow:0 4px 18px rgba(16,59,128,.08);
+}
+body #masthead .ast-primary-header-bar{
+    background:#fff;
+    border-bottom:0;
+}
+body #masthead .site-branding img,
+body #masthead .custom-logo-link img{
+    display:block;
+    max-width:100%;
+    width:auto;
+    max-height:74px;
+    object-fit:contain;
+}
+@media(min-width:922px){
+    body #masthead .ast-builder-grid-row{min-height:94px}
+    body #masthead .main-header-menu{align-items:center;gap:3px}
+    body #masthead .main-header-menu>.menu-item>a.menu-link{
+        font-size:13px;
+        font-weight:750;
+        letter-spacing:.01em;
+        padding-left:15px;
+        padding-right:15px;
+    }
+    body #masthead .main-header-menu>.deprat-quote-nav-item>a.menu-link{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-height:43px;
+        padding:10px 19px!important;
+        margin-left:12px;
+        border:1px solid #103B80;
+        border-radius:9px;
+        background:#103B80;
+        color:#fff!important;
+        line-height:1.25;
+        box-shadow:0 3px 10px rgba(16,59,128,.12);
+        transition:background .18s,border-color .18s,transform .18s;
+    }
+    body #masthead .main-header-menu>.deprat-quote-nav-item>a.menu-link:hover,
+    body #masthead .main-header-menu>.deprat-quote-nav-item>a.menu-link:focus-visible{
+        background:#0c2f65;
+        border-color:#0c2f65;
+        transform:translateY(-1px);
+    }
+    body #masthead .main-header-menu>.deprat-quote-nav-item>a.menu-link::before{
+        display:none!important;
+    }
+}
+@media(max-width:921px){
+    body #masthead .site-branding img,
+    body #masthead .custom-logo-link img{max-height:54px}
+    body #masthead .main-header-menu>.deprat-quote-nav-item>a.menu-link{
+        color:#103B80!important;
+        font-weight:800;
+    }
+}
+@media(prefers-reduced-motion:reduce){
+    body #masthead .main-header-menu>.deprat-quote-nav-item>a.menu-link{transition:none}
+}
