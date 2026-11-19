@@ -55,3 +55,29 @@ function deprat_pdf_icon_markup($key, $class = 'deprat-section-icon', $size = 30
         . '" height="' . absint($size) . '" viewBox="0 0 80 80" preserveAspectRatio="xMidYMid meet"'
         . ' fill="#20518F"><path d="' . $cache[$key] . '"/></svg>';
 }
+
+/**
+ * Correspondance automatique des familles du catalogue avec les dessins du PDF.
+ * Ne remplace jamais un choix explicitement sauvegarde par l'administrateur.
+ */
+function deprat_pdf_icon_for_term( $term ) {
+    if ( ! is_object( $term ) || ! isset( $term->name ) ) { return ''; }
+    $slug = sanitize_title( $term->name . ' ' . ( isset( $term->slug ) ? $term->slug : '' ) );
+    $patterns = array(
+        'flasque_guidage_bague' => '/flasque|guidage|bague/',
+        'supports_arbres' => '/support.*arbre|support.*tube/',
+        'embouts' => '/embout/',
+        'tubes' => '/(^|-)tubes?(-|$)/',
+        'bras' => '/bras-de-projection|projection/',
+        'jalousie' => '/persienne|jalousie/',
+        'tirage' => '/tirage-direct/',
+        'coulisses' => '/coulisse|(^|-)lames?(-|$)/',
+        'sangle' => '/sangle/',
+        'treuil' => '/treuil/',
+        'liaison' => '/liaison|attache|verrou|tablier/',
+    );
+    foreach ( $patterns as $key => $pattern ) {
+        if ( preg_match( $pattern, $slug ) ) { return $key; }
+    }
+    return '';
+}
