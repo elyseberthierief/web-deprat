@@ -211,8 +211,7 @@ function deprat_catalog_category_icon( $term ) {
     }
     // Les termes sans choix explicite récupèrent le dessin technique du PDF.
     // Les sélections manuelles (icône ou photo) restent prioritaires.
-    if ( ! metadata_exists( 'term', (int) $term->term_id, '_deprat_category_image_id' )
-        && function_exists( 'deprat_pdf_icon_for_term' ) ) {
+    if ( ! $visual['media_id'] && function_exists( 'deprat_pdf_icon_for_term' ) ) {
         $pdf_icon = deprat_pdf_icon_for_term( $term );
         if ( $pdf_icon ) {
             return deprat_icon_library_markup( $pdf_icon, 'deprat-category-icon', 30 );
