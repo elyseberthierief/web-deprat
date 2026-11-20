@@ -765,3 +765,82 @@ function deprat_category_tree_ajax_save() {
     wp_send_json_success( array( 'message' => 'Le méga-menu DEPRAT est enregistré.' ) );
 }
 add_action( 'wp_ajax_deprat_category_tree_save', 'deprat_category_tree_ajax_save' );
+
+/**
+ * Liste native WooCommerce « Produits > Catégories ».
+ * Même ordre que l'organisateur DEPRAT : sections, racines, sous-catégories.
+ * Le tri natif ne doit pas diverger de celui de la fiche produit.
+ */
+function deprat_category_tree_is_native_category_list() {
+    if ( ! is_admin() ) { return false; }
+    $screen = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
+    return $screen && 'product_cat' === $screen->taxonomy
+        && 'edit-tags.php' === $GLOBALS['pagenow'];
+}
+add_filter( 'terms_clauses', static function ( $clauses, $taxonomies, $args ) {
+    static $calculating = false;
+    if ( $calculating || ! deprat_category_tree_is_native_category_list()
+        || ! in_array( 'product_cat', (array) $taxonomies, true ) ) { return $clauses; }
+    // Un tri manuel volontaire dans la liste WP peut rester utilisé.
+    if ( isset( $_GET['orderby'] ) && is_scalar( $_GET['orderby'] ) && '' !== $_GET['orderby'] ) {
+        return $clauses;
+    }
+    $calculating = true;
+    try { $rows = deprat_category_tree_sectioned_options(); }
+    finally { $calculating = false; }
+    if ( ! $rows || count( $rows ) > 2000 ) { return $clauses; }
+    $ids = array();
+    foreach ( $rows as $row ) { $ids[] = (int) $row['id']; }
+    // Tous les identifiants sont des entiers provenant des vrais termes WP.
+    // FIELD() suit exactement l'ordre sauvegardé par l'organisateur.
+    $clauses['orderby'] = 'ORDER BY FIELD(t.term_id, ' . implode( ',', $ids ) . ') ASC';
+    return $clauses;
+}, 999, 3 );
+
+add_filter( 'manage_edit-product_cat_columns', static function ( $columns ) {
+    $result = array();
+    foreach ( $columns as $key => $title ) {
+        $result[ $key ] = $title;
+        if ( 'name' === $key ) { $result['deprat_section'] = 'Section DEPRAT'; }
+    }
+    return $result;
+} );
+add_filter( 'manage_product_cat_custom_column', static function ( $content, $column, $term_id ) {
+    if ( 'deprat_section' !== $column ) { return $content; }
+    $term = get_term( (int) $term_id, 'product_cat' );
+    if ( ! $term instanceof WP_Term ) { return ''; }
+    $root = $term;
+    $seen = array();
+    while ( $root->parent && ! isset( $seen[ $root->term_id ] ) ) {
+        $seen[ $root->term_id ] = true;
+        $parent = get_term( (int) $root->parent, 'product_cat' );
+        if ( ! $parent instanceof WP_Term ) { break; }
+        $root = $parent;
+    }
+    $section = deprat_catalog_section_for_term( $root );
+    $names = deprat_catalog_section_definitions();
+    return '<span class="deprat-taxonomy-section-pill">' .
+        esc_html( isset( $names[ $section ] ) ? $names[ $section ] : 'Autres composants' ) .
+        '</span>';
+}, 10, 3 );
+
+add_action( 'admin_enqueue_scripts', static function () {
+    if ( ! deprat_category_tree_is_native_category_list() || ! current_user_can( 'manage_product_terms' ) ) {
+        return;
+    }
+    wp_enqueue_style(
+        'deprat-taxonomy-order',
+        plugins_url( 'assets/css/category-native-order.css', dirname( __DIR__ ) . '/deprat-core.php' ),
+        array(),
+        '0.1.73'
+    );
+    wp_enqueue_script(
+        'deprat-taxonomy-order',
+        plugins_url( 'assets/js/category-native-order.js', dirname( __DIR__ ) . '/deprat-core.php' ),
+        array(),
+        '0.1.73',
+        true
+    );
+    wp_add_inline_script( 'deprat-taxonomy-order', 'window.depratNativeCategoryOrder=' .
+        wp_json_encode( array( 'rows' => deprat_category_tree_sectioned_options() ) ) . ';', 'before' );
+} );
