@@ -880,6 +880,7 @@
         if ( ! editor ) {
             return;
         }
+        setupCategoryPrefill();
         setupProductEditor( editor );
         setupFloatingSave( editor );
         setupPackageSummary( editor );
