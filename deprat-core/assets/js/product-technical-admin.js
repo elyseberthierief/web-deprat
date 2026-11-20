@@ -97,16 +97,31 @@
         var dialog = editor.querySelector( '[data-category-modal]' );
         var name = editor.querySelector( '[data-category-name]' );
         var parent = editor.querySelector( '[data-category-parent]' );
+        var section = editor.querySelector( '[data-category-section]' );
         var error = editor.querySelector( '[data-category-error]' );
         var submit = editor.querySelector( '[data-category-submit]' );
         if ( ! dialog || ! name || ! parent || ! submit ) { return; }
 
+        function updateSectionSelection() {
+            if(!section){return;}
+            var parentId=Number(parent.value)||0;
+            var tree=window.depratProductEditor && window.depratProductEditor.categoryTree || [];
+            var chosen=tree.find(function(item){return Number(item.id)===parentId;});
+            if(parentId && chosen){
+                section.value=chosen.section||'autres';
+                section.disabled=true;
+            } else {
+                section.disabled=false;
+            }
+        }
+        parent.addEventListener('change',updateSectionSelection);
         function close() { dialog.hidden = true; document.body.classList.remove( 'deprat-modal-open' ); }
         function open() {
             dialog.hidden = false;
             document.body.classList.add( 'deprat-modal-open' );
             error.hidden = true;
             name.value = '';
+            updateSectionSelection();
             name.focus();
         }
         function fail( message ) { error.textContent = message; error.hidden = false; }
@@ -158,6 +173,7 @@
             body.set( 'nonce', window.depratProductEditor.categoryNonce );
             body.set( 'name', value );
             body.set( 'parent', parent.value );
+            body.set( 'section', section ? section.value : '' );
             window.fetch( window.depratProductEditor.ajaxUrl, {
                 method: 'POST',
                 credentials: 'same-origin',
@@ -169,7 +185,29 @@
                 var option = document.createElement( 'option' );
                 option.value = String( json.data.id );
                 option.textContent = json.data.name;
-                parent.appendChild( option );
+                var destGroup=Array.from(parent.querySelectorAll('optgroup')).find(function(group){
+                    return group.label===json.data.sectionTitle;
+                });
+                (destGroup||parent).appendChild(option);
+                // Mettre à jour immédiatement l'ordre du sélecteur de la fiche,
+                // sans rechargement de l'éditeur ni perte du brouillon en cours.
+                var tree=window.depratProductEditor && window.depratProductEditor.categoryTree;
+                if(Array.isArray(tree)){
+                    var parentRecord=tree.find(function(t){return Number(t.id)===Number(json.data.parent);});
+                    var record={
+                        id:Number(json.data.id),
+                        parent:Number(json.data.parent)||0,
+                        depth:parentRecord?Number(parentRecord.depth)+1:0,
+                        name:json.data.name,
+                        section:json.data.section,
+                        sectionTitle:json.data.sectionTitle
+                    };
+                    var last=-1;
+                    tree.forEach(function(t,index){
+                        if(t.section===record.section){last=index;}
+                    });
+                    tree.splice(last+1,0,record);
+                }
                 close();
             } ).catch( function () { fail( 'Erreur réseau. Réessayez.' ); } ).finally( function () { submit.disabled = false; } );
         } );
