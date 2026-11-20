@@ -285,7 +285,16 @@
             details.className='deprat-menu-details level-'+level;
             var summary=document.createElement('summary');
             summary.appendChild(n.nativeIcon ? nativeIcon(n.nativeIcon) : icon(n.icon));
-            var label=document.createElement('span');label.textContent=n.title;summary.appendChild(label);
+            var label=document.createElement('span');label.textContent=n.title;
+            if (n.title==='Clients') {
+                // Le libellé Clients ouvre directement l'onglet Tous.
+                var clientLink=document.createElement('a');
+                clientLink.href=config.clientUrl;
+                clientLink.className='deprat-client-heading-link';
+                clientLink.appendChild(label);
+                clientLink.addEventListener('click',function(event){ event.stopPropagation(); });
+                summary.appendChild(clientLink);
+            } else { summary.appendChild(label); }
             if (n.badgeCount>0) { summary.appendChild(badge(n.badgeCount)); }
             var arrow=document.createElement('span');
             arrow.className='deprat-menu-chevron';
@@ -304,17 +313,7 @@
                 (level===0 && rootTone==='boutique' && /deprat-shop-settings/.test(location.search))) {
                 details.open=true;
             }
-            if (n.title==='Clients') {
-                // Même sans « Ouvrir Clients », le titre est cliquable via
-                // un lien explicite dans l'entête du sous-menu.
-                var openAll=document.createElement('a');
-                openAll.href=config.clientUrl;
-                openAll.className='deprat-clients-all-link';
-                openAll.textContent='Tous les comptes';
-                openAll.setAttribute('aria-label','Afficher tous les comptes clients');
-                summary.appendChild(openAll);
-                openAll.addEventListener('click',function(e){e.stopPropagation();});
-            }
+
             return details;
         }
         groups.forEach(function(group){
