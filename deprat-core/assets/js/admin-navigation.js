@@ -104,11 +104,17 @@
         // Caractéristiques techniques : lorsque leur écran dédié sera ajouté,
         // il sera classé ici ; pas de lien factice vers un outil inexistant.
         shopChildren.push(shopSettings);
+        // Le menu Clients ouvre la liste complète ; seul l'onglet de
+        // validation est une sous-rubrique.
         var clientChildren=[
-            item('Liste des comptes ouverts',users?users.url:config.clientUrl,'users'),
-            item('Nouvelle ouverture / autorisation',config.pendingUrl,'user-check')
+            item('Comptes pro en attente',config.pendingUrl,'user-check')
         ];
-        shopChildren.push({title:'Clients',url:users?users.url:config.clientUrl,icon:'users',children:clientChildren});
+        clientChildren[0].badgeCount=Number(config.pendingCount)||0;
+        shopChildren.push({
+            title:'Clients',url:config.clientUrl,icon:'users',
+            hideOpenLink:true,badgeCount:Number(config.pendingCount)||0,
+            children:clientChildren
+        });
         var marketingChildren = [];
         marketingChildren.push(item('Promotions / Codes',marketingUrl || config.marketingUrl,'ticket-percent'));
         // Toujours pointer vers le vrai type de contenu de slides DEPRAT,
@@ -168,7 +174,7 @@
             {title:'Espace Page d’accueil',tone:'accueil',icon:'house',children:homeChildren},
             {title:'Espace Articles',tone:'articles',icon:'newspaper',children:postChildren},
             {title:'Médias',tone:'medias',icon:'images',url:media?media.url:config.mediaUrl},
-            {title:'Réglages ADMINISTRATEUR',tone:'admin',icon:'settings',children:adminChildren}
+            {title:'Réglages ADMINISTRATEUR',tone:'admin',icon:'lock',children:adminChildren}
         ];
 
         var svgPaths={
@@ -185,6 +191,7 @@
             newspaper:'<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 7h5v5H7zm8 0h3m-3 4h3M7 16h11"/>',
             puzzle:'<path d="M9 3h6v4a2 2 0 1 1 4 0h2v6h-4a2 2 0 1 0 0 4v4h-6v-4a2 2 0 1 0-4 0H3v-6h4a2 2 0 1 0 0-4H3V3z"/>',
             shield:'<path d="M12 2 3 6v6c0 6 4 9 9 10 5-1 9-4 9-10V6z"/>',
+            lock:'<rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/><circle cx="12" cy="15.5" r="1"/>',
             'ticket-percent':'<path d="M3 7h18v4a2 2 0 0 0 0 4v3H3v-3a2 2 0 0 0 0-4z"/><path d="m9 15 6-6m-6 0h.1m6 6h.1"/>',
             plus:'<path d="M12 5v14m-7-7h14"/>',
             'chevron-right':'<path d="m9 5 7 7-7 7"/>',
@@ -252,6 +259,13 @@
                 });
             }catch(e){return false;}
         }
+        function badge(count) {
+            var el=document.createElement('span');
+            el.className='deprat-admin-pending-badge';
+            el.textContent=String(count>99?'99+':count);
+            el.setAttribute('aria-label',String(count)+' comptes professionnels en attente');
+            return el;
+        }
         function renderLink(n,level) {
             var link=document.createElement('a');
             link.className='deprat-admin-link level-'+level;
@@ -260,6 +274,7 @@
             var label=document.createElement('span');
             label.textContent=n.title;
             link.appendChild(label);
+            if (n.badgeCount>0) { link.appendChild(badge(n.badgeCount)); }
             if (isActiveUrl(n.url)) {link.classList.add('is-active');link.setAttribute('aria-current','page');}
             return link;
         }
@@ -271,6 +286,7 @@
             var summary=document.createElement('summary');
             summary.appendChild(n.nativeIcon ? nativeIcon(n.nativeIcon) : icon(n.icon));
             var label=document.createElement('span');label.textContent=n.title;summary.appendChild(label);
+            if (n.badgeCount>0) { summary.appendChild(badge(n.badgeCount)); }
             var arrow=document.createElement('span');
             arrow.className='deprat-menu-chevron';
             arrow.setAttribute('aria-hidden','true');
@@ -283,7 +299,22 @@
             }
             n.children.forEach(function(child){ body.appendChild(renderSection(child,level+1,rootTone)); });
             details.appendChild(body);
-            if (body.querySelector('.is-active') || (level===0 && rootTone==='boutique' && /deprat-shop-settings/.test(location.search))) { details.open=true; }
+            if (body.querySelector('.is-active') ||
+                (n.title==='Clients' && /\/users\.php$/.test(location.pathname)) ||
+                (level===0 && rootTone==='boutique' && /deprat-shop-settings/.test(location.search))) {
+                details.open=true;
+            }
+            if (n.title==='Clients') {
+                // Même sans « Ouvrir Clients », le titre est cliquable via
+                // un lien explicite dans l'entête du sous-menu.
+                var openAll=document.createElement('a');
+                openAll.href=config.clientUrl;
+                openAll.className='deprat-clients-all-link';
+                openAll.textContent='Tous les comptes';
+                openAll.setAttribute('aria-label','Afficher tous les comptes clients');
+                summary.appendChild(openAll);
+                openAll.addEventListener('click',function(e){e.stopPropagation();});
+            }
             return details;
         }
         groups.forEach(function(group){
