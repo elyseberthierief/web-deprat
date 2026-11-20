@@ -105,6 +105,16 @@ add_action( 'wp_dashboard_setup', function () {
                 'Accueil DEPRAT',
                 'deprat_accueil_afficher_portail'
             );
+            // L'accueil doit être le premier widget, même si WordPress
+            // a conservé un ancien ordre de colonnes dans les préférences.
+            add_meta_box(
+                'deprat_accueil_portail',
+                'Accueil DEPRAT',
+                'deprat_accueil_afficher_portail',
+                'dashboard',
+                'normal',
+                'high'
+            );
         }
         return;
     }
