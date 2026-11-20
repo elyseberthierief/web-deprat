@@ -19,7 +19,7 @@ function deprat_category_slide_register() {
         'publicly_queryable' => false,
         'exclude_from_search' => true,
         'show_ui' => true,
-        'show_in_menu' => 'deprat-shop-settings',
+        'show_in_menu' => false, // Pas de sous-menu automatique qui détourne le clic sur « Paramètres boutique ».
         'supports' => array( 'title', 'page-attributes' ),
         'map_meta_cap' => true,
     ) );

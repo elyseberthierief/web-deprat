@@ -682,4 +682,13 @@ deprat_integration_assert( false !== strpos( deprat_site_header_quote_button(), 
 deprat_integration_assert( false === has_filter( 'wp_nav_menu_items', 'deprat_site_header_quote_item' ),
     'La demande de devis ne doit pas être dupliquée en bas dans le menu.' );
 
+// Le premier clic sur le menu « Paramètres boutique » doit ouvrir les trois onglets.
+// Un CPT déclaré show_in_menu=deprat-shop-settings injectait automatiquement un sous-menu
+// « Tous les slides de catégories » qui devenait la cible du menu parent.
+$category_slide_type = get_post_type_object( 'deprat_cat_slide' );
+deprat_integration_assert( $category_slide_type && false === $category_slide_type->show_in_menu,
+    'La liste des slides ne doit plus détourner le clic sur Paramètres boutique.' );
+deprat_integration_assert( false !== has_action( 'admin_menu' ),
+    'Le menu Paramètres de la boutique doit rester enregistré.' );
+
 WP_CLI::success( 'WordPress et WooCommerce : sauvegarde, médias et affichages vérifiés.' );
