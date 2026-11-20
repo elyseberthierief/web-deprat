@@ -45,6 +45,68 @@
                 stop();
             }
         });
+        // Supprimer une ligne depuis le mini-panier, sans quitter la page.
+        // Délégation : les fragments WooCommerce remplacent ce widget en AJAX.
+        document.addEventListener('click', function (event) {
+            var button = event.target.closest('[data-deprat-cart-remove]');
+            if (!button || !button.closest('[data-deprat-quote-widget]')) { return; }
+            event.preventDefault();
+            event.stopPropagation();
+            if (button.disabled || !window.depratQuoteActions) { return; }
+            var key = button.getAttribute('data-deprat-cart-remove');
+            if (!key) { return; }
+            var el = widget();
+            if (!el) { return; }
+            stop();
+            el.classList.add('is-open', 'is-removing');
+            button.disabled = true;
+            button.setAttribute('aria-busy', 'true');
+            var payload = new URLSearchParams();
+            payload.set('security', depratQuoteActions.nonce);
+            payload.set('cart_item_key', key);
+            fetch(depratQuoteActions.removeUrl, {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'},
+                body: payload.toString()
+            }).then(function (response) { return response.json(); })
+              .then(function (data) {
+                  if (!data || !data.success || !data.data || !data.data.fragments) {
+                      throw new Error(data && data.data && data.data.message ? data.data.message : 'Suppression impossible');
+                  }
+                  var fragments = data.data.fragments;
+                  Object.keys(fragments).forEach(function (selector) {
+                      var target = document.querySelector(selector);
+                      if (target && typeof fragments[selector] === 'string') {
+                          var holder = document.createElement('div');
+                          holder.innerHTML = fragments[selector];
+                          var next = holder.firstElementChild;
+                          if (next) { target.replaceWith(next); }
+                      }
+                  });
+                  var current = widget();
+                  if (current) { current.classList.add('is-open'); }
+                  if (window.jQuery) {
+                      window.jQuery(document.body).trigger('wc_fragments_refreshed');
+                  }
+              }).catch(function (err) {
+                  var current = widget();
+                  if (current) {
+                      var alert = current.querySelector('[data-deprat-cart-error]');
+                      if (!alert) {
+                          alert = document.createElement('p');
+                          alert.className = 'deprat-mini-cart-error';
+                          alert.setAttribute('role', 'alert');
+                          alert.setAttribute('data-deprat-cart-error', '');
+                          current.querySelector('[data-deprat-mini-cart]').appendChild(alert);
+                      }
+                      alert.textContent = err.message || 'La référence n’a pas pu être retirée.';
+                      current.classList.remove('is-removing');
+                  }
+                  button.disabled = false;
+                  button.removeAttribute('aria-busy');
+              });
+        });
         // WooCommerce et le catalogue DEPRAT émettent added_to_cart.
         // Le plugin actualise le composant entier via les fragments WC,
         // donc la fenêtre montre immédiatement les bons produits.

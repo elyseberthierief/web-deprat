@@ -127,8 +127,14 @@ add_action( 'woocommerce_after_cart', function () {
     echo '<section class="deprat-envoi" style="margin:28px 0;padding:24px;border:1px solid #d8e0ea;border-radius:8px">';
     echo '<h3>Envoyer ma demande de devis</h3>';
     if ( ! is_user_logged_in() ) {
-        echo '<p>Connectez-vous à votre compte professionnel pour envoyer votre demande.</p>';
-        echo '<p><a class="button" href="' . esc_url( wp_login_url( wc_get_cart_url() ) ) . '">Me connecter</a></p>';
+        // La sélection dans le panier reste accessible aux visiteurs :
+        // seul l'envoi d'une demande exige l'authentification du professionnel.
+        $cart_url = wc_get_cart_url();
+        $account_url = function_exists( 'wc_get_page_permalink' ) ? wc_get_page_permalink( 'myaccount' ) : wp_registration_url();
+        $register_url = add_query_arg( 'redirect_to', $cart_url, $account_url );
+        echo '<p>Votre sélection est prête. Pour <strong>envoyer la demande de devis</strong>, connectez-vous ou créez votre compte professionnel. Les références de votre panier sont conservées lors de votre navigation et de la connexion dans ce navigateur.</p>';
+        echo '<p class="deprat-quote-guest-actions"><a class="button alt" href="' . esc_url( wp_login_url( $cart_url ) ) . '">Se connecter pour envoyer</a> ';
+        echo '<a class="button" href="' . esc_url( $register_url ) . '">Créer un compte pro</a></p>';
     } else {
         echo '<form method="post" action="' . esc_url( wc_get_cart_url() ) . '">';
         echo '<p><label for="deprat_commentaire">Commentaire (facultatif)</label></p>';

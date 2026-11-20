@@ -1,4 +1,4 @@
-DEPRAT Core 0.1.61
+DEPRAT Core 0.1.62
 
 Le plugin reprend les extraits PHP actifs dans la sauvegarde du 14 novembre 2026.
 Extraits globaux : 5 à 11 et 15.
@@ -131,3 +131,10 @@ Version 0.1.61 — En-tête fixe sur tout le site :
 - Ajustement à la barre d'administration WordPress, aux changements de largeur et au menu mobile.
 - Le méga-menu et le mini-panier de devis restent au-dessus du contenu.
 - Contrôler sur ordinateur/mobile, avec et sans barre admin, sur boutique, page catégories et fiches produits.
+
+Version 0.1.62 — Mini-panier et devis invités :
+- Bouton bleu « Ma demande de devis » visible connecté ou visiteur, et compteur/mini-panier AJAX actif dans les deux cas.
+- Corbeille à droite de chaque référence : supprime uniquement cette ligne de panier WooCommerce, sans rechargement, avec validation nonce, mise à jour du compteur et fenêtre qui reste ouverte.
+- Le visiteur peut constituer et modifier la liste sans compte. La création d'une demande côté ADV reste conditionnée à une connexion (vérification existante côté serveur).
+- Sur le panier, visiteurs voient les actions « Se connecter pour envoyer » et « Créer un compte pro » ; leur liste reste dans la session WooCommerce du navigateur.
+- Contrôler notamment les références identiques dans plusieurs conditionnements, le retour après connexion et l'affichage mobile.
