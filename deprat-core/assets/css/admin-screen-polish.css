@@ -126,3 +126,18 @@ body.deprat-admin-mode.woocommerce_page_wc-orders #wpbody-content>.wrap>.wp-head
  body.deprat-admin-mode.deprat-editorial-list .subsubsub{gap:5px;}
  body.deprat-admin-mode.deprat-editorial-list .subsubsub a{padding:8px 10px;}
 }
+
+/* 0.1.74 — Même taille et même casse pour tous les onglets de liste DEPRAT. */
+body.deprat-admin-mode.deprat-editorial-list .subsubsub a,
+body.deprat-admin-mode.deprat-editorial-list .deprat-editorial-shortcuts a {
+    min-height:45px;
+    padding:11px 17px;
+    font-size:14px!important;
+    font-weight:560!important;
+    line-height:1.4;
+    border-radius:14px;
+}
+body.deprat-admin-mode.deprat-editorial-list .subsubsub a.current,
+body.deprat-admin-mode.deprat-editorial-list .deprat-editorial-shortcuts a.is-current {
+    font-weight:650!important;
+}
