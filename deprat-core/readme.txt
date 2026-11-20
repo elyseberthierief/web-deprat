@@ -1,4 +1,4 @@
-DEPRAT Core 0.1.67
+DEPRAT Core 0.1.68
 
 Le plugin reprend les extraits PHP actifs dans la sauvegarde du 14 novembre 2026.
 Extraits globaux : 5 à 11 et 15.
@@ -173,3 +173,8 @@ Version 0.1.67 — Administration DEPRAT, comptes et tableau de bord :
 - Page Utilisateurs stylisée : onglets Tous, Administrateurs, Clients, Comptes pro en attente avec nombres d'origine WordPress, tableau et contrôles DEPRAT plus lisibles ; les validations de compte continuent d'utiliser le système WordPress existant.
 - Tableau de bord WordPress harmonisé dans la même identité graphique ; masquer uniquement les widgets Commentaires, Brouillon rapide (« Créer un extrait ») et WPForms, sans supprimer données/extensions.
 - Rubrique Réglages ADMINISTRATEUR : pictogramme cadenas à la place de l'engrenage, sans changer les permissions.
+
+Version 0.1.68 — Séparer le menu Clients des réglages techniques :
+- La liste des comptes clients et administrateurs reste gérée par la page native WordPress users.php dans « Espace Boutique > Clients » avec les filtres Tous, Administrateurs, Clients et Comptes pro en attente.
+- Retrait du doublon « Comptes et permissions WP » sous « Réglages ADMINISTRATEUR » car il pointait lui aussi vers users.php : la rubrique technique ne s'ouvre plus lors de la consultation des clients.
+- Aucune modification aux comptes, rôles ou capacités WordPress ; l'administration classique reste disponible pour toute gestion avancée.
