@@ -553,3 +553,13 @@ body.deprat-tree-modal-open{overflow:hidden}
     display: grid; place-items: center; width: 27px; height: 27px;
     color: #103B80; font-size: 26px; line-height: 1;
 }
+
+/* 0.1.54 — Portail « Paramètres de la boutique » en trois onglets. */
+.deprat-shop-settings>h1{color:#103b80;font-size:28px;font-weight:850;margin:21px 0}
+.deprat-shop-tabs{margin:0 0 20px;border-color:#b4c9e2;display:flex;flex-wrap:wrap;gap:8px}
+.deprat-shop-tabs .nav-tab{padding:12px 18px;border:1px solid #cbd9eb;border-bottom-color:#b7c9e0;border-radius:10px 10px 0 0;background:#f6f9fd;color:#17467c;font-size:14px;font-weight:750;margin:0}
+.deprat-shop-tabs .nav-tab-active{color:#fff;background:#103b80;border-color:#103b80}
+.deprat-shop-slide-list{margin:18px 0;padding:22px;background:white;border:1px solid #d9e4ef;border-radius:12px;max-width:1300px}
+.deprat-shop-slide-list>h2{font-size:22px;color:#103b80;margin:0 0 11px}
+.deprat-shop-slide-list>p{font-size:14px;color:#526c89;line-height:1.6}
+.deprat-shop-slide-list table{margin-top:20px}
