@@ -590,6 +590,25 @@ deprat_integration_assert( is_wp_error( deprat_catalog_section_validate_order( a
 update_option( 'deprat_catalog_section_settings_v1', $reordered, false );
 deprat_integration_assert( array_key_first( deprat_catalog_section_definitions() ) === $custom_key,
     'L’ordre des sections est relu dans le bon ordre après sauvegarde.' );
+
+// Les listes et la fiche produit doivent reprendre la même organisation,
+// y compris pour une catégorie créée depuis le formulaire WordPress natif.
+$old_native_section_post = isset( $_POST['deprat_section'] ) ? $_POST['deprat_section'] : null;
+$_POST['deprat_section'] = $custom_key;
+$new_native_term = wp_insert_term( 'DEPRAT catégorie section test', 'product_cat' );
+deprat_integration_assert( ! is_wp_error( $new_native_term ),
+    'Création native de la catégorie de test impossible.' );
+$native_term_id = (int) $new_native_term['term_id'];
+deprat_integration_assert( get_term_meta( $native_term_id, '_deprat_catalog_section', true ) === $custom_key,
+    'Une catégorie racine créée dans WordPress doit conserver sa section choisie.' );
+$native_sorted_rows = deprat_category_tree_sectioned_options();
+deprat_integration_assert( ! empty( $native_sorted_rows )
+    && (int) $native_sorted_rows[0]['id'] === $native_term_id
+    && $native_sorted_rows[0]['section'] === $custom_key,
+    'La liste et la fiche produit doivent suivre l’ordre réel des sections DEPRAT.' );
+wp_delete_term( $native_term_id, 'product_cat' );
+if ( null === $old_native_section_post ) { unset( $_POST['deprat_section'] ); }
+else { $_POST['deprat_section'] = $old_native_section_post; }
 deprat_integration_assert( $section_count_terms === wp_count_terms( array( 'taxonomy' => 'product_cat', 'hide_empty' => false ) ),
     'Créer, renommer et déplacer des titres ne doit jamais créer de catégories.' );
 if ( null === $old_section_settings ) { delete_option( 'deprat_catalog_section_settings_v1' ); }
