@@ -716,83 +716,113 @@ add_action( 'admin_head', function() {
         }
 
 
-        /* 0.1.76 — Onglets Commandes : mêmes cartes que la navigation Produits.
-         * Les liens et compteurs natifs WooCommerce restent fonctionnels. */
+        /* 0.1.77 — Commandes : reproduction des onglets Paramètres boutique.
+         * Identiques : ligne horizontale, angles hauts, fond, typo, dimensions.
+         * Conservons les vrais liens et compteurs de filtres WooCommerce. */
         body.woocommerce_page_wc-orders .subsubsub,
         body.post-type-shop_order .subsubsub {
             display:flex!important;
-            flex-wrap:wrap!important;
-            gap:9px!important;
-            margin:16px 0 22px!important;
+            flex-wrap:nowrap!important;
+            align-items:stretch!important;
+            gap:14px!important;
+            width:100%!important;
+            max-width:100%!important;
+            float:none!important;
+            padding:0!important;
+            margin:22px 0 25px!important;
+            border:0!important;
+            border-bottom:1px solid #bfd3ed!important;
+            background:transparent!important;
+            box-shadow:none!important;
+            overflow-x:auto;
+            overflow-y:hidden;
+            scrollbar-width:thin;
+            box-sizing:border-box;
+        }
+        body.woocommerce_page_wc-orders .subsubsub li,
+        body.post-type-shop_order .subsubsub li {
+            display:flex!important;
+            flex:0 0 auto!important;
+            align-items:stretch!important;
+            margin:0!important;
+            padding:0!important;
+            font-size:0!important;
+            line-height:1.3!important;
+            color:transparent!important;
         }
         body.woocommerce_page_wc-orders .subsubsub li a,
         body.post-type-shop_order .subsubsub li a {
             position:relative;
+            float:none!important;
+            flex:0 0 auto;
             display:inline-flex!important;
             align-items:center!important;
-            gap:8px!important;
-            min-height:48px!important;
-            padding:11px 15px!important;
-            background:#fff!important;
-            color:#153d74!important;
-            border:1px solid #d6e2f1!important;
-            border-radius:10px!important;
-            box-shadow:0 2px 6px rgba(18,59,119,.03)!important;
-            font-size:12.5px!important;
-            font-weight:650!important;
-            line-height:1.35!important;
+            justify-content:center!important;
+            gap:5px!important;
+            min-height:67px!important;
+            padding:17px 24px!important;
+            margin:0 0 -1px!important;
+            color:#103b80!important;
+            background:#f5f8fd!important;
+            border:1px solid #cbd9eb!important;
+            border-radius:15px 15px 0 0!important;
+            box-shadow:none!important;
+            white-space:nowrap;
+            font-size:16px!important;
+            font-weight:560!important;
+            line-height:1.3!important;
+            letter-spacing:0!important;
             text-decoration:none!important;
             transition:background-color .15s,border-color .15s;
         }
         body.woocommerce_page_wc-orders .subsubsub li a:hover:not(.current),
         body.post-type-shop_order .subsubsub li a:hover:not(.current) {
-            background:#eef6ff!important;
-            border-color:#b5cce7!important;
+            background:#eaf2fc!important;
+            border-color:#afc8e7!important;
         }
         body.woocommerce_page_wc-orders .subsubsub li a.current,
         body.post-type-shop_order .subsubsub li a.current {
-            background:linear-gradient(145deg,#1159b0,#123e7c)!important;
+            z-index:1;
             color:#fff!important;
-            border-color:#1455a3!important;
-            font-weight:700!important;
+            background:#173f80!important;
+            border-color:#173f80!important;
+            border-radius:15px 15px 0 0!important;
+            font-weight:650!important;
         }
         body.woocommerce_page_wc-orders .subsubsub li a.current::after,
         body.post-type-shop_order .subsubsub li a.current::after {
-            content:"";
-            position:absolute;bottom:0;left:0;right:0;height:3px;
-            border-radius:3px;background:#e5ac3a;
+            content:none!important;
+            display:none!important;
         }
         body.woocommerce_page_wc-orders .subsubsub li a .count,
         body.post-type-shop_order .subsubsub li a .count {
-            display:inline-flex!important;
-            align-items:center;justify-content:center;
-            min-width:22px;min-height:22px;
-            margin-left:0!important;
-            padding:0 6px!important;
-            box-sizing:border-box;
-            border-radius:16px!important;
-            background:#ebf1f9!important;
-            color:#234b84!important;
-            font-size:10.5px!important;
-            font-weight:700!important;
+            display:inline!important;
+            min-width:0!important;
+            min-height:0!important;
+            margin:0!important;
+            padding:0!important;
+            background:transparent!important;
+            border:0!important;
+            border-radius:0!important;
+            box-shadow:none!important;
+            color:inherit!important;
+            font-size:inherit!important;
+            font-weight:inherit!important;
+            line-height:inherit!important;
         }
-        body.woocommerce_page_wc-orders .subsubsub li a.current .count,
-        body.post-type-shop_order .subsubsub li a.current .count {
-            background:#447cbd!important;color:#fff!important;
+        body.woocommerce_page_wc-orders .subsubsub li a:focus-visible,
+        body.post-type-shop_order .subsubsub li a:focus-visible {
+            outline:3px solid #7aa6e2!important;
+            outline-offset:-3px;
         }
-        body.woocommerce_page_wc-orders #wpbody-content .wrap h1.wp-heading-inline,
-        body.post-type-shop_order #wpbody-content .wrap h1.wp-heading-inline {
-            color:#153c7b!important;
-            font-size:30px!important;
-            font-weight:750!important;
-            letter-spacing:-.03em!important;
-        }
-        @media(max-width:782px){
+        @media(max-width:782px) {
+            body.woocommerce_page_wc-orders .subsubsub,
+            body.post-type-shop_order .subsubsub {gap:9px!important;}
             body.woocommerce_page_wc-orders .subsubsub li a,
             body.post-type-shop_order .subsubsub li a {
-                min-height:42px!important;
-                padding:9px 12px!important;
-                font-size:12px!important;
+                min-height:52px!important;
+                padding:12px 15px!important;
+                font-size:13px!important;
             }
         }
 
