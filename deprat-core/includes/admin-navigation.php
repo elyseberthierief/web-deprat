@@ -67,6 +67,7 @@ add_action( 'admin_enqueue_scripts', static function () {
             'classicUrl' => deprat_admin_menu_mode_url( 'classic' ),
             'logoUrl' => (int) get_theme_mod( 'custom_logo' ) ? wp_get_attachment_image_url( (int) get_theme_mod( 'custom_logo' ), 'medium' ) : '',
             'dashboardUrl' => admin_url( 'index.php' ),
+            'updatesUrl' => admin_url( 'update-core.php' ),
             'productUrl' => admin_url( 'edit.php?post_type=product' ),
             'ordersUrl' => admin_url( 'admin.php?page=wc-orders' ),
             'settingsUrl' => admin_url( 'admin.php?page=deprat-shop-settings' ),
