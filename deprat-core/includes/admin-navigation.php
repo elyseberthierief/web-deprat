@@ -52,13 +52,13 @@ add_action( 'admin_enqueue_scripts', static function () {
         'deprat-admin-navigation',
         plugins_url( 'assets/css/admin-navigation.css', dirname( __DIR__ ) . '/deprat-core.php' ),
         array(),
-        '0.1.70'
+        '0.1.71'
     );
     wp_enqueue_script(
         'deprat-admin-navigation',
         plugins_url( 'assets/js/admin-navigation.js', dirname( __DIR__ ) . '/deprat-core.php' ),
         array(),
-        '0.1.70',
+        '0.1.71',
         true
     );
     wp_add_inline_script(
@@ -68,6 +68,9 @@ add_action( 'admin_enqueue_scripts', static function () {
             'logoUrl' => (int) get_theme_mod( 'custom_logo' ) ? wp_get_attachment_image_url( (int) get_theme_mod( 'custom_logo' ), 'medium' ) : '',
             'dashboardUrl' => admin_url( 'index.php' ),
             'productUrl' => admin_url( 'edit.php?post_type=product' ),
+            // Sur post.php?action=edit, l'URL ne contient pas post_type :
+            // communiquer le type réel du produit au menu métier.
+            'currentPostType' => (string) ( get_current_screen() && get_current_screen()->post_type ? get_current_screen()->post_type : '' ),
             'ordersUrl' => admin_url( 'admin.php?page=wc-orders' ),
             'settingsUrl' => admin_url( 'admin.php?page=deprat-shop-settings' ),
             'clientUrl' => admin_url( 'users.php' ),
