@@ -1,4 +1,4 @@
-DEPRAT Core 0.1.71
+DEPRAT Core 0.1.73
 
 Le plugin reprend les extraits PHP actifs dans la sauvegarde du 14 novembre 2026.
 Extraits globaux : 5 à 11 et 15.
@@ -198,3 +198,21 @@ Version 0.1.71 — Menus de réglages et confort de navigation :
 - Toutes les sections et sous-sections sont indépendamment dépliables, et restent ouvertes entre les pages durant la session de l'administrateur.
 - Sur la fiche de modification ou de création d'un produit WooCommerce, Espace Boutique s'ouvre automatiquement et Produits reste sélectionné même si l'URL WordPress ne contient plus le type de contenu.
 - Le bouton Admin classique demeure disponible et les droits ADV restent inchangés.
+
+Version 0.1.72 — Administration cohérente et ajout contextuel de produits :
+- Harmonisation de l'administration DEPRAT : titres bleus et adoucis, onglets WordPress de statuts disposés en boutons, tables et filtres pour Pages, Articles, Slides d'accueil et Médias. Les vrais statuts WordPress et la liste de Commandes DEPRAT restent intacts.
+- Médiathèque : raccourcis « Tous les médias » et « Ajouter un média » si l'écran ne fournit pas déjà d'onglets.
+- Menu latéral indépendant, avec défilement vertical conservé entre deux rechargements de pages ; états des rubriques déjà conservés par 0.1.71. La navigation principale WordPress continue de fonctionner normalement.
+- Liste Produits : une carte « ＋ Nouveau produit » en premier élément de la grille, plus un lien visible en vue Liste. Le lien reprend la catégorie ou sous-catégorie sélectionnée.
+- Fiche Nouveau produit : préselection de la catégorie et de ses parents réels via la taxonomie WooCommerce product_cat ; aucun brouillon créé tant que l'utilisateur ne l'enregistre pas.
+- Boutons « ＋ Ajouter une catégorie » avant les catégories et « ＋ Ajouter une sous-catégorie » avant les sous-catégories ; formulaire modal avec nom ; utilisation de l'endpoint sécurisé déjà existant, nonce et droits WordPress, sans créer de catégories fictives.
+- Après création d'une catégorie, retour à la liste Produits filtrée sur cette nouvelle catégorie. Navigation des filtres Produits existante toujours conservée.
+- Aucune permission ADV, fiche produit existante ou données de catalogue modifiée.
+
+Version 0.1.73 — Catégories dans la liste et dans la fiche produit :
+- La source unique de classement reste « Paramètres de la boutique > Organiser les catégories » : ordre des sections, affectation des racines aux sections, ordre des enfants enregistré dans la métadonnée WooCommerce « order ».
+- Liste native Produits > Catégories : tri dans l'ordre des sections et des catégories, séparateurs de section visibles, colonne Section DEPRAT, tout en conservant les véritables lignes WordPress et leurs actions.
+- Formulaires de création et d'édition de catégorie principale dans l'administration native : sélection explicite de la section, héritage automatique pour les sous-catégories.
+- Fiche Produit DEPRAT : sélection des catégories regroupée par sections, dans le même ordre et avec la même hiérarchie. La fenêtre Nouvelle catégorie/sous-catégorie permet de choisir la section pour une racine ; une sous-catégorie reprend celle de son parent.
+- Les catégories créées depuis la fiche produit apparaissent immédiatement dans le sélecteur. Aucun produit ni catégorie préexistante n'est modifié par ce changement de présentation.
+- Tests d'intégration : vérification de l'affectation de section et du classement des nouveaux termes.

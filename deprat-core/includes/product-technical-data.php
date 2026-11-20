@@ -325,11 +325,32 @@ function deprat_product_tech_create_category() {
     if ( term_exists( $name, 'product_cat', $parent ) ) {
         wp_send_json_error( array( 'message' => 'Cette catégorie existe déjà à cet emplacement.' ), 409 );
     }
+    $section = isset( $_POST['section'] ) && is_scalar( $_POST['section'] )
+        ? sanitize_key( wp_unslash( $_POST['section'] ) ) : '';
+    $sections = deprat_catalog_section_definitions();
+    if ( ! $parent && ! isset( $sections[ $section ] ) ) {
+        wp_send_json_error( array( 'message' => 'Sélectionnez une section DEPRAT valide.' ), 400 );
+    }
     $created = wp_insert_term( $name, 'product_cat', array( 'parent' => $parent ) );
     if ( is_wp_error( $created ) ) {
         wp_send_json_error( array( 'message' => $created->get_error_message() ), 400 );
     }
-    wp_send_json_success( array( 'id' => (int) $created['term_id'], 'name' => $name, 'parent' => $parent ) );
+    $term_id = (int) $created['term_id'];
+    if ( ! $parent ) {
+        update_term_meta( $term_id, '_deprat_catalog_section', $section );
+    } else {
+        $parent_term = get_term( $parent, 'product_cat' );
+        if ( $parent_term instanceof WP_Term ) {
+            $ancestors = deprat_product_list_ancestors( $parent_term );
+            $root = $ancestors ? $ancestors[0] : $parent_term;
+            $section = deprat_catalog_section_for_term( $root );
+        }
+    }
+    wp_send_json_success( array(
+        'id' => $term_id, 'name' => $name, 'parent' => $parent,
+        'section' => $section,
+        'sectionTitle' => isset( $sections[ $section ] ) ? $sections[ $section ] : 'Autres composants',
+    ) );
 }
 add_action( 'wp_ajax_deprat_product_category_create', 'deprat_product_tech_create_category' );
 
@@ -445,13 +466,35 @@ function deprat_product_tech_admin_assets( $hook ) {
     global $post;
     $current_product_id = isset( $_GET['post'] ) ? absint( $_GET['post'] )
         : ( isset( $post->ID ) ? (int) $post->ID : 0 );
+    $prefill_category_ids = array();
+    $prefill_category_label = '';
+    if ( 'post-new.php' === $hook && isset( $_GET['deprat_prefill_cat'] ) ) {
+        $prefill_id = absint( $_GET['deprat_prefill_cat'] );
+        $prefill_term = $prefill_id ? get_term( $prefill_id, 'product_cat' ) : false;
+        if ( $prefill_term instanceof WP_Term ) {
+            $prefill_path = array_reverse( array_merge(
+                array( $prefill_term ),
+                array_map( static function ( $id ) {
+                    return get_term( (int) $id, 'product_cat' );
+                }, get_ancestors( $prefill_term->term_id, 'product_cat', 'taxonomy' ) )
+            ) );
+            foreach ( $prefill_path as $item ) {
+                if ( $item instanceof WP_Term ) {
+                    $prefill_category_ids[] = (int) $item->term_id;
+                    $prefill_category_label .= ( '' !== $prefill_category_label ? ' › ' : '' ) . $item->name;
+                }
+            }
+        }
+    }
     wp_enqueue_media();
-    wp_enqueue_style( 'deprat-product-tech-admin', plugins_url( 'assets/css/product-technical-admin.css', dirname( __DIR__ ) . '/deprat-core.php' ), array(), '0.1.29' );
-    wp_enqueue_script( 'deprat-product-tech-admin', plugins_url( 'assets/js/product-technical-admin.js', dirname( __DIR__ ) . '/deprat-core.php' ), array( 'jquery', 'media-views' ), '0.1.31', true );
+    wp_enqueue_style( 'deprat-product-tech-admin', plugins_url( 'assets/css/product-technical-admin.css', dirname( __DIR__ ) . '/deprat-core.php' ), array(), '0.1.73' );
+    wp_enqueue_script( 'deprat-product-tech-admin', plugins_url( 'assets/js/product-technical-admin.js', dirname( __DIR__ ) . '/deprat-core.php' ), array( 'jquery', 'media-views' ), '0.1.73', true );
     wp_localize_script( 'deprat-product-tech-admin', 'depratProductEditor', array(
         'ajaxUrl' => admin_url( 'admin-ajax.php' ),
         'categoryNonce' => wp_create_nonce( 'deprat_create_product_category' ),
         'categoryTree' => deprat_category_tree_flat_options(),
+        'prefillCategoryIds' => $prefill_category_ids,
+        'prefillCategoryLabel' => $prefill_category_label,
         'uploadNonce' => wp_create_nonce( 'deprat_product_media_upload_' . $current_product_id ),
         'postId' => $current_product_id,
     ) );

@@ -54,6 +54,8 @@ jobs:
           node --check deprat-core/assets/js/sticky-header.js
           node --check deprat-core/assets/js/quote-login-modal.js
           node --check deprat-core/assets/js/admin-navigation.js
+          node --check deprat-core/assets/js/admin-screen-polish.js
+          node --check deprat-core/assets/js/category-native-order.js
           php -l deprat-core/includes/admin-navigation.php
           node --check deprat-core/assets/js/category-tree-admin.js
           node --check deprat-core/assets/js/category-tree-preview.js

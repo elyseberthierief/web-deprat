@@ -1,0 +1,128 @@
+/* DEPRAT 0.1.72 — finition cohérente pour les écrans natifs WordPress.
+ * Aucun champ ni table n'est déplacé ; seule la présentation change. */
+body.deprat-admin-mode.deprat-editorial-list{
+    --deprat-list-navy:#143e7a;
+    --deprat-list-border:#d8e5f2;
+}
+body.deprat-admin-mode.deprat-editorial-list #wpbody-content>.wrap{
+    max-width:none;
+    margin:15px 19px 26px 12px;
+}
+body.deprat-admin-mode.deprat-editorial-list #wpbody-content>.wrap>h1,
+body.deprat-admin-mode.deprat-editorial-list #wpbody-content>.wrap>.wp-heading-inline,
+body.deprat-admin-mode.deprat-editorial-list #wpbody-content>.wrap>.wrap h1{
+    font-size:27px!important;
+    color:#143e7a!important;font-weight:660!important;
+    letter-spacing:-.024em;line-height:1.28;
+    margin:14px 0 17px;
+}
+body.deprat-admin-mode.deprat-editorial-list .page-title-action{
+    display:inline-flex;align-items:center;justify-content:center;
+    padding:9px 13px!important;min-height:36px;
+    border-radius:8px!important;font-size:12px!important;
+    font-weight:570!important;border-color:#c7d9ed!important;
+    background:#f7faff!important;color:#1a4b84!important;
+    text-decoration:none!important;
+}
+body.deprat-admin-mode.deprat-editorial-list .page-title-action:hover{
+    background:#edf5ff!important;border-color:#a0bde0!important;
+}
+body.deprat-admin-mode.deprat-editorial-list .subsubsub{
+    float:none!important;display:flex!important;flex-wrap:wrap;
+    align-items:center;gap:8px;
+    margin:22px 0 18px!important;padding:0!important;
+    clear:both;
+}
+body.deprat-admin-mode.deprat-editorial-list .subsubsub li{
+    float:none!important;display:inline-flex;align-items:center;
+    margin:0!important;padding:0!important;line-height:1.3;
+    font-size:0;color:transparent;
+}
+body.deprat-admin-mode.deprat-editorial-list .subsubsub a{
+    display:inline-flex;gap:7px;align-items:center;justify-content:center;
+    min-height:37px;padding:9px 13px;
+    background:#f7faff;border:1px solid #d9e5f2;
+    border-radius:9px;color:#19477e!important;
+    text-decoration:none!important;font-size:12.5px!important;
+    font-weight:550!important;line-height:1.35;box-shadow:none;
+}
+body.deprat-admin-mode.deprat-editorial-list .subsubsub a:hover{
+    background:#edf5ff;border-color:#aebfda;
+}
+body.deprat-admin-mode.deprat-editorial-list .subsubsub a.current{
+    color:#fff!important;background:#153f7c;border-color:#153f7c;
+    font-weight:660!important;
+}
+body.deprat-admin-mode.deprat-editorial-list .subsubsub .count{
+    display:inline-grid;place-items:center;min-width:21px;
+    padding:2px 5px;border-radius:20px;
+    background:#e8f0f9;color:#48698a;font-weight:650;font-size:11px;
+}
+body.deprat-admin-mode.deprat-editorial-list .subsubsub a.current .count{
+    background:rgba(255,255,255,.19);color:#fff;
+}
+body.deprat-admin-mode.deprat-editorial-list .wp-list-table{
+    border:1px solid #dce7f2!important;
+    border-radius:11px;box-shadow:0 3px 14px rgba(15,49,90,.035);
+    overflow:hidden;border-collapse:separate;border-spacing:0;
+}
+body.deprat-admin-mode.deprat-editorial-list .wp-list-table thead th,
+body.deprat-admin-mode.deprat-editorial-list .wp-list-table tfoot th{
+    background:#eef4fb;color:#17447f!important;
+    font-weight:630!important;font-size:12px!important;
+    padding-top:12px;padding-bottom:12px;
+}
+body.deprat-admin-mode.deprat-editorial-list .wp-list-table tbody tr:nth-child(even){
+    background:#f9fbfe;
+}
+body.deprat-admin-mode.deprat-editorial-list .wp-list-table tbody tr:hover{
+    background:#f0f6fd;
+}
+body.deprat-admin-mode.deprat-editorial-list .wp-list-table tbody td{
+    padding-top:12px;padding-bottom:12px;color:#365572;
+}
+body.deprat-admin-mode.deprat-editorial-list .wp-list-table .row-title{
+    font-weight:580!important;color:#164980!important;
+}
+body.deprat-admin-mode.deprat-editorial-list .tablenav{
+    margin:12px 0!important;min-height:35px;
+}
+body.deprat-admin-mode.deprat-editorial-list .tablenav select,
+body.deprat-admin-mode.deprat-editorial-list .tablenav input,
+body.deprat-admin-mode.deprat-editorial-list .search-box input{
+    min-height:35px;border:1px solid #d1e0ef;border-radius:7px;
+}
+body.deprat-admin-mode.deprat-editorial-list .tablenav .button{
+    border-radius:7px;background:#f7faff;color:#194b82;
+    border-color:#c5d9ed;font-weight:550;
+}
+body.deprat-admin-mode.deprat-editorial-list .deprat-editorial-shortcuts{
+    display:flex;flex-wrap:wrap;gap:9px;align-items:center;
+    margin:15px 0 21px;
+}
+body.deprat-admin-mode.deprat-editorial-list .deprat-editorial-shortcuts a{
+    display:inline-flex;align-items:center;gap:7px;
+    padding:10px 13px;border-radius:9px;
+    border:1px solid #d8e5f3;
+    background:#f6f9fd;color:#16457c;
+    font-weight:570;font-size:12.5px;text-decoration:none;
+}
+body.deprat-admin-mode.deprat-editorial-list .deprat-editorial-shortcuts a.is-current{
+    background:#163e7a;color:#fff;border-color:#163e7a;
+}
+body.deprat-admin-mode.deprat-editorial-list .deprat-editorial-shortcuts a:hover{
+    border-color:#9ab9db;
+}
+body.deprat-admin-mode.deprat-editorial-list .media-frame{
+    border:1px solid #dae6f2;border-radius:9px;
+}
+/* Les demandes DEPRAT et leur tableau personnalisé gardent leurs contrôles. */
+body.deprat-admin-mode.woocommerce_page_wc-orders #wpbody-content>.wrap>h1,
+body.deprat-admin-mode.woocommerce_page_wc-orders #wpbody-content>.wrap>.wp-heading-inline{
+    color:#143e7a;font-size:27px;font-weight:660;letter-spacing:-.02em;
+}
+@media(max-width:782px){
+ body.deprat-admin-mode.deprat-editorial-list #wpbody-content>.wrap{margin:12px 10px 22px;}
+ body.deprat-admin-mode.deprat-editorial-list .subsubsub{gap:5px;}
+ body.deprat-admin-mode.deprat-editorial-list .subsubsub a{padding:8px 10px;}
+}

@@ -271,3 +271,18 @@ body.deprat-product-editor-ready .deprat-tech-save.deprat-tech-save-floating:foc
 .deprat-tech-category-options .deprat-category-branch-mark{
  display:inline-flex;color:#7b9cc6;font-size:13px;font-weight:800;margin-right:3px;
 }
+
+/* 0.1.73 — catégories regroupées par sections DEPRAT, sans changer les cases WP. */
+.deprat-tech-category-options .deprat-product-category-section-heading{
+  margin:12px 3px 7px;padding:9px 10px;
+  background:#ecf3fc;border-left:3px solid #cf9b34;
+  border-radius:6px;color:#173f77;font-size:12px;
+  font-weight:650;line-height:1.35;
+}
+.deprat-tech-category-options .deprat-product-category-section-heading:first-child{margin-top:0}
+.deprat-category-dialog .deprat-category-section-hint{
+  font-size:12px;color:#62809b;line-height:1.45;margin:0;
+}
+.deprat-category-dialog [data-category-section]:disabled{
+  opacity:.7;background:#eef3f9;
+}

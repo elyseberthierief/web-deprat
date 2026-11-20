@@ -97,16 +97,31 @@
         var dialog = editor.querySelector( '[data-category-modal]' );
         var name = editor.querySelector( '[data-category-name]' );
         var parent = editor.querySelector( '[data-category-parent]' );
+        var section = editor.querySelector( '[data-category-section]' );
         var error = editor.querySelector( '[data-category-error]' );
         var submit = editor.querySelector( '[data-category-submit]' );
         if ( ! dialog || ! name || ! parent || ! submit ) { return; }
 
+        function updateSectionSelection() {
+            if(!section){return;}
+            var parentId=Number(parent.value)||0;
+            var tree=window.depratProductEditor && window.depratProductEditor.categoryTree || [];
+            var chosen=tree.find(function(item){return Number(item.id)===parentId;});
+            if(parentId && chosen){
+                section.value=chosen.section||'autres';
+                section.disabled=true;
+            } else {
+                section.disabled=false;
+            }
+        }
+        parent.addEventListener('change',updateSectionSelection);
         function close() { dialog.hidden = true; document.body.classList.remove( 'deprat-modal-open' ); }
         function open() {
             dialog.hidden = false;
             document.body.classList.add( 'deprat-modal-open' );
             error.hidden = true;
             name.value = '';
+            updateSectionSelection();
             name.focus();
         }
         function fail( message ) { error.textContent = message; error.hidden = false; }
@@ -158,6 +173,7 @@
             body.set( 'nonce', window.depratProductEditor.categoryNonce );
             body.set( 'name', value );
             body.set( 'parent', parent.value );
+            body.set( 'section', section ? section.value : '' );
             window.fetch( window.depratProductEditor.ajaxUrl, {
                 method: 'POST',
                 credentials: 'same-origin',
@@ -169,7 +185,29 @@
                 var option = document.createElement( 'option' );
                 option.value = String( json.data.id );
                 option.textContent = json.data.name;
-                parent.appendChild( option );
+                var destGroup=Array.from(parent.querySelectorAll('optgroup')).find(function(group){
+                    return group.label===json.data.sectionTitle;
+                });
+                (destGroup||parent).appendChild(option);
+                // Mettre à jour immédiatement l'ordre du sélecteur de la fiche,
+                // sans rechargement de l'éditeur ni perte du brouillon en cours.
+                var tree=window.depratProductEditor && window.depratProductEditor.categoryTree;
+                if(Array.isArray(tree)){
+                    var parentRecord=tree.find(function(t){return Number(t.id)===Number(json.data.parent);});
+                    var record={
+                        id:Number(json.data.id),
+                        parent:Number(json.data.parent)||0,
+                        depth:parentRecord?Number(parentRecord.depth)+1:0,
+                        name:json.data.name,
+                        section:json.data.section,
+                        sectionTitle:json.data.sectionTitle
+                    };
+                    var last=-1;
+                    tree.forEach(function(t,index){
+                        if(t.section===record.section){last=index;}
+                    });
+                    tree.splice(last+1,0,record);
+                }
                 close();
             } ).catch( function () { fail( 'Erreur réseau. Réessayez.' ); } ).finally( function () { submit.disabled = false; } );
         } );
@@ -645,10 +683,15 @@
                 ? window.depratProductEditor.categoryTree : [];
             var ranks = {};
             var depths = {};
+            var sectionNames = {};
+            var sectionKeys = {};
             treeOrder.forEach( function ( term, index ) {
                 ranks[String( term.id )] = index;
                 depths[String( term.id )] = Math.min( 12, Math.max( 0, Number( term.depth ) || 0 ) );
+                sectionNames[String(term.id)] = term.sectionTitle || 'Autres composants';
+                sectionKeys[String(term.id)] = term.section || 'autres';
             } );
+            var previousSection = null;
             if ( categoryList ) {
                 var nativeInputs = Array.from( categoryList.querySelectorAll( 'input[type="checkbox"]' ) );
                 nativeInputs.sort( function ( left, right ) {
@@ -661,6 +704,14 @@
                         return;
                     }
                     seen[ original.value ] = true;
+                    var sectionKey = sectionKeys[original.value] || 'autres';
+                    if (sectionKey!==previousSection) {
+                        previousSection=sectionKey;
+                        var sectionTitle=document.createElement('div');
+                        sectionTitle.className='deprat-product-category-section-heading';
+                        sectionTitle.textContent=sectionNames[original.value] || 'Autres composants';
+                        categoryOptions.appendChild(sectionTitle);
+                    }
                     var nativeLabel = original.closest( 'label' );
                     var name = nativeLabel ? nativeLabel.textContent.trim() : original.value;
                     var label = document.createElement( 'label' );
@@ -782,11 +833,54 @@
         schedule();
     }
 
+    function setupCategoryPrefill() {
+        var config=window.depratProductEditor;
+        if(!config || !Array.isArray(config.prefillCategoryIds) || !config.prefillCategoryIds.length){return;}
+        var selected=new Set(config.prefillCategoryIds.map(String));
+        var tries=0;
+        function apply(){
+            var inputs=document.querySelectorAll(
+                '#product_catchecklist input[type="checkbox"], '+
+                '#product_catchecklist-pop input[type="checkbox"], '+
+                'input[name="tax_input[product_cat][]"]'
+            );
+            var count=0;
+            inputs.forEach(function(input){
+                if(selected.has(input.value)){
+                    if(!input.checked){
+                        input.checked=true;
+                        input.dispatchEvent(new Event('change',{bubbles:true}));
+                    }
+                    count++;
+                }
+            });
+            return count>0;
+        }
+        if(!apply()){
+            var observer=new MutationObserver(function(){
+                tries++;
+                if(apply() || tries>200){observer.disconnect();}
+            });
+            observer.observe(document.body,{childList:true,subtree:true});
+            window.addEventListener('load',apply,{once:true});
+        }
+        var header=document.querySelector('.wrap h1.wp-heading-inline, .wrap h1');
+        if(header && !document.querySelector('.deprat-prefill-category-notice')){
+            var info=document.createElement('div');
+            info.className='notice notice-info deprat-prefill-category-notice';
+            var paragraph=document.createElement('p');
+            paragraph.textContent='Classement DEPRAT présélectionné : '+config.prefillCategoryLabel;
+            info.appendChild(paragraph);
+            header.insertAdjacentElement('afterend',info);
+        }
+    }
+
     function start() {
         var editor = document.querySelector( '.deprat-tech-editor' );
         if ( ! editor ) {
             return;
         }
+        setupCategoryPrefill();
         setupProductEditor( editor );
         setupFloatingSave( editor );
         setupPackageSummary( editor );

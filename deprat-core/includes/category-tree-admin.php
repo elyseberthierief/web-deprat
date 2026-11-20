@@ -49,8 +49,72 @@ function deprat_category_tree_front_children( $parent ) {
     if ( is_wp_error( $terms ) || ! is_array( $terms ) ) { return array(); }
     return deprat_category_tree_sort_terms( $terms );
 }
-/** Arborescence compacte destinée au sélecteur de la fiche produit. */
+/**
+ * Arborescence commune aux écrans WordPress et à la fiche produit.
+ * L'ordre des sections provient de « Organiser les catégories » ;
+ * chaque groupe contient ses racines et tous ses descendants dans
+ * l'ordre « order » WooCommerce sauvegardé par l'organisateur.
+ */
+function deprat_category_tree_sectioned_options() {
+    $terms = deprat_category_tree_terms();
+    $by_parent = array();
+    $default = (int) get_option( 'default_product_cat', 0 );
+    foreach ( $terms as $term ) {
+        $parent = (int) $term->parent;
+        if ( $parent === $default ) { $parent = 0; }
+        $by_parent[ $parent ][] = $term;
+    }
+    foreach ( $by_parent as &$siblings ) {
+        $siblings = deprat_category_tree_sort_terms( $siblings );
+    }
+    unset( $siblings );
+
+    $groups = array_fill_keys( array_keys( deprat_catalog_section_definitions() ), array() );
+    foreach ( isset( $by_parent[0] ) ? $by_parent[0] : array() as $root ) {
+        $section = deprat_catalog_section_for_term( $root );
+        if ( ! isset( $groups[ $section ] ) ) { $section = 'autres'; }
+        $groups[ $section ][] = $root;
+    }
+
+    $rows = array();
+    $seen = array();
+    $titles = deprat_catalog_section_definitions();
+    $walk = static function ( $term, $depth, $section ) use ( &$walk, &$rows, &$seen, $by_parent, $titles ) {
+        $id = (int) $term->term_id;
+        if ( isset( $seen[ $id ] ) || $depth > 30 ) { return; }
+        $seen[ $id ] = true;
+        $rows[] = array(
+            'id' => $id,
+            'parent' => (int) $term->parent,
+            'depth' => $depth,
+            'name' => $term->name,
+            'section' => $section,
+            'sectionTitle' => isset( $titles[ $section ] ) ? $titles[ $section ] : 'Autres composants',
+        );
+        foreach ( isset( $by_parent[ $id ] ) ? $by_parent[ $id ] : array() as $child ) {
+            $walk( $child, $depth + 1, $section );
+        }
+    };
+    foreach ( $groups as $section => $roots ) {
+        foreach ( $roots as $root ) { $walk( $root, 0, $section ); }
+    }
+    // Ne jamais perdre les catégories orphelines ou anciennes.
+    foreach ( $terms as $term ) {
+        if ( ! isset( $seen[ (int) $term->term_id ] ) ) {
+            $section = deprat_catalog_section_for_term( $term );
+            $walk( $term, 0, isset( $titles[ $section ] ) ? $section : 'autres' );
+        }
+    }
+    return $rows;
+}
+
+/** Sélecteur de la fiche produit : mêmes sections et mêmes positions. */
 function deprat_category_tree_flat_options() {
+    return deprat_category_tree_sectioned_options();
+}
+
+/** Ancien sélecteur conservé ci-dessous pour référence de migration. */
+function deprat_category_tree_flat_options_legacy() {
     $terms = deprat_category_tree_terms();
     $result = array();
     $visited = array();
@@ -701,3 +765,129 @@ function deprat_category_tree_ajax_save() {
     wp_send_json_success( array( 'message' => 'Le méga-menu DEPRAT est enregistré.' ) );
 }
 add_action( 'wp_ajax_deprat_category_tree_save', 'deprat_category_tree_ajax_save' );
+
+/**
+ * Liste native WooCommerce « Produits > Catégories ».
+ * Même ordre que l'organisateur DEPRAT : sections, racines, sous-catégories.
+ * Le tri natif ne doit pas diverger de celui de la fiche produit.
+ */
+function deprat_category_tree_is_native_category_list() {
+    if ( ! is_admin() ) { return false; }
+    $screen = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
+    return $screen && 'product_cat' === $screen->taxonomy
+        && 'edit-tags.php' === $GLOBALS['pagenow'];
+}
+add_filter( 'terms_clauses', static function ( $clauses, $taxonomies, $args ) {
+    static $calculating = false;
+    if ( $calculating || ! deprat_category_tree_is_native_category_list()
+        || ! in_array( 'product_cat', (array) $taxonomies, true ) ) { return $clauses; }
+    // Un tri manuel volontaire dans la liste WP peut rester utilisé.
+    if ( isset( $_GET['orderby'] ) && is_scalar( $_GET['orderby'] ) && '' !== $_GET['orderby'] ) {
+        return $clauses;
+    }
+    $calculating = true;
+    try { $rows = deprat_category_tree_sectioned_options(); }
+    finally { $calculating = false; }
+    if ( ! $rows || count( $rows ) > 2000 ) { return $clauses; }
+    $ids = array();
+    foreach ( $rows as $row ) { $ids[] = (int) $row['id']; }
+    // Tous les identifiants sont des entiers provenant des vrais termes WP.
+    // FIELD() suit exactement l'ordre sauvegardé par l'organisateur.
+    $ordered = 'FIELD(t.term_id, ' . implode( ',', $ids ) . ')';
+    // Une éventuelle catégorie système WooCommerce « Non classé » n'est
+    // pas gérée dans l'organisateur : la placer après les sections DEPRAT.
+    $clauses['orderby'] = 'ORDER BY (' . $ordered . ' = 0) ASC, ' . $ordered . ' ASC';
+    return $clauses;
+}, 999, 3 );
+
+add_filter( 'manage_edit-product_cat_columns', static function ( $columns ) {
+    $result = array();
+    foreach ( $columns as $key => $title ) {
+        $result[ $key ] = $title;
+        if ( 'name' === $key ) { $result['deprat_section'] = 'Section DEPRAT'; }
+    }
+    return $result;
+} );
+add_filter( 'manage_product_cat_custom_column', static function ( $content, $column, $term_id ) {
+    if ( 'deprat_section' !== $column ) { return $content; }
+    $term = get_term( (int) $term_id, 'product_cat' );
+    if ( ! $term instanceof WP_Term ) { return ''; }
+    $root = $term;
+    $seen = array();
+    while ( $root->parent && ! isset( $seen[ $root->term_id ] ) ) {
+        $seen[ $root->term_id ] = true;
+        $parent = get_term( (int) $root->parent, 'product_cat' );
+        if ( ! $parent instanceof WP_Term ) { break; }
+        $root = $parent;
+    }
+    $section = deprat_catalog_section_for_term( $root );
+    $names = deprat_catalog_section_definitions();
+    return '<span class="deprat-taxonomy-section-pill">' .
+        esc_html( isset( $names[ $section ] ) ? $names[ $section ] : 'Autres composants' ) .
+        '</span>';
+}, 10, 3 );
+
+add_action( 'admin_enqueue_scripts', static function () {
+    if ( ! deprat_category_tree_is_native_category_list() || ! current_user_can( 'manage_product_terms' ) ) {
+        return;
+    }
+    wp_enqueue_style(
+        'deprat-taxonomy-order',
+        plugins_url( 'assets/css/category-native-order.css', dirname( __DIR__ ) . '/deprat-core.php' ),
+        array(),
+        '0.1.73'
+    );
+    wp_enqueue_script(
+        'deprat-taxonomy-order',
+        plugins_url( 'assets/js/category-native-order.js', dirname( __DIR__ ) . '/deprat-core.php' ),
+        array(),
+        '0.1.73',
+        true
+    );
+    wp_add_inline_script( 'deprat-taxonomy-order', 'window.depratNativeCategoryOrder=' .
+        wp_json_encode( array( 'rows' => deprat_category_tree_sectioned_options() ) ) . ';', 'before' );
+} );
+
+/**
+ * Création native WooCommerce : une catégorie RACINE choisit sa section.
+ * Le parent d'une sous-catégorie fait autorité si elle est enfant.
+ */
+function deprat_native_category_section_selector( $current = '' ) {
+    $sections = deprat_catalog_section_definitions();
+    echo '<select id="deprat-native-section" name="deprat_section">';
+    foreach ( $sections as $key => $title ) {
+        echo '<option value="' . esc_attr( $key ) . '"' .
+            selected( $current ?: 'autres', $key, false ) . '>' .
+            esc_html( $title ) . '</option>';
+    }
+    echo '</select>';
+}
+add_action( 'product_cat_add_form_fields', static function () {
+    if ( ! current_user_can( 'manage_product_terms' ) ) { return; }
+    echo '<div class="form-field deprat-native-section-field">';
+    echo '<label for="deprat-native-section">Section DEPRAT</label>';
+    deprat_native_category_section_selector();
+    echo '<p>Sélectionnez une section pour une catégorie principale. Les sous-catégories reprennent automatiquement la section de leur parent.</p>';
+    echo '</div>';
+} );
+add_action( 'product_cat_edit_form_fields', static function ( $term ) {
+    if ( ! current_user_can( 'manage_product_terms' ) || ! $term instanceof WP_Term ) { return; }
+    if ( $term->parent ) { return; }
+    $section = deprat_catalog_section_for_term( $term );
+    echo '<tr class="form-field deprat-native-section-field"><th scope="row"><label for="deprat-native-section">Section DEPRAT</label></th><td>';
+    deprat_native_category_section_selector( $section );
+    echo '<p class="description">L’ordre de présentation suit « Organiser les catégories ».</p></td></tr>';
+} );
+$deprat_native_save_section = static function ( $term_id ) {
+    if ( ! current_user_can( 'manage_product_terms' ) ) { return; }
+    if ( ! isset( $_POST['deprat_section'] ) || ! is_scalar( $_POST['deprat_section'] ) ) { return; }
+    $term = get_term( (int) $term_id, 'product_cat' );
+    if ( ! $term instanceof WP_Term || $term->parent ) { return; }
+    $key = sanitize_key( wp_unslash( $_POST['deprat_section'] ) );
+    $valid = deprat_catalog_section_definitions();
+    if ( isset( $valid[ $key ] ) ) {
+        update_term_meta( (int) $term_id, '_deprat_catalog_section', $key );
+    }
+};
+add_action( 'created_product_cat', $deprat_native_save_section, 120 );
+add_action( 'edited_product_cat', $deprat_native_save_section, 120 );

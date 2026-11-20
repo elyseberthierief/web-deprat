@@ -70,6 +70,10 @@ const assert = require( 'assert' );
         await viewGrid.click();
         assert.strictEqual( await viewGrid.getAttribute( 'aria-pressed' ), 'true',
             'La vue Grille est activée.' );
+        assert( await page.locator( '#the-list > tr.deprat-products-create-card .deprat-products-create-card-link' ).isVisible(),
+            'La grille comporte une fausse fiche « Nouveau produit » au début.' );
+        assert( ( await page.locator( '#the-list > tr.deprat-products-create-card .deprat-products-create-card-link' ).getAttribute( 'href' ) ).includes( 'post_type=product' ),
+            'La fiche d’ajout ouvre le vrai formulaire WooCommerce.' );
         assert( await page.locator( 'body.deprat-product-grid-mode' ).count() === 1,
             'Le mode Grille utilise un style dédié.' );
         const gridStyles = await page.evaluate( () => ( {
@@ -125,6 +129,8 @@ const assert = require( 'assert' );
 
         assert( await ui.locator( '.deprat-products-sections a' ).count() >= 10,
             'La barre de sections reste visible après choix d’une section.' );
+        assert( await ui.locator( '[data-deprat-create-category][data-parent="0"]' ).isVisible(),
+            'Une catégorie racine peut être créée depuis la section sélectionnée.' );
         assert( await ui.locator( '.deprat-products-level-title', { hasText: 'Catégories' } ).isVisible(),
             'La deuxième rangée est identifiée par un titre discret.' );
         assert( await ui.locator( '.deprat-products-categories a', { hasText: 'Tubes' } ).count() === 1,
@@ -144,6 +150,17 @@ const assert = require( 'assert' );
         await page.waitForURL( /deprat_cat=\d+/ );
         assert.strictEqual( await page.evaluate( () => window.__depratDocumentMarker ), 'same-document',
             'La catégorie charge uniquement les onglets et la table, sans rechargement.' );
+        assert( await ui.locator( '[data-deprat-create-category].deprat-products-add-subcategory' ).isVisible(),
+            'Une sous-catégorie peut être créée sous la catégorie courante.' );
+        const contextualProductHref = await ui.locator( '[data-deprat-new-product-link]' ).getAttribute( 'href' );
+        assert( /deprat_prefill_cat=\d+/.test( contextualProductHref ),
+            'Nouveau produit reprend la catégorie sélectionnée.' );
+        await ui.locator( '[data-deprat-create-category].deprat-products-add-subcategory' ).click();
+        assert( await ui.locator( '[data-deprat-category-dialog]' ).isVisible(),
+            'Le formulaire de création de sous-catégorie s’ouvre en modal.' );
+        await ui.locator( '[data-deprat-dialog-close]' ).click();
+        assert( !await ui.locator( '[data-deprat-category-dialog]' ).isVisible(),
+            'Le modal peut être fermé sans modifier les catégories.' );
         assert( await ui.locator( '.deprat-products-breadcrumb' ).isVisible() );
         assert( await ui.locator( '.deprat-products-level-title', { hasText: 'Sous-catégories' } ).isVisible(),
             'La troisième rangée dispose également de son titre.' );
