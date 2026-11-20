@@ -29,6 +29,8 @@ function deprat_icon_library_entries() {
             'name' => $name ?: $label,
             'media_id' => deprat_catalog_section_media_allowed( $media ) ? $media : 0,
             'builtin' => true,
+            'position_x' => isset( $entry['position_x'] ) ? min( 100, max( 0, (int) $entry['position_x'] ) ) : 50,
+            'position_y' => isset( $entry['position_y'] ) ? min( 100, max( 0, (int) $entry['position_y'] ) ) : 50,
         );
     }
     foreach ( $saved as $key => $entry ) {
@@ -37,7 +39,9 @@ function deprat_icon_library_entries() {
         $name = isset( $entry['name'] ) ? sanitize_text_field( $entry['name'] ) : '';
         $media = isset( $entry['media_id'] ) ? absint( $entry['media_id'] ) : 0;
         if ( ! $name || ! deprat_catalog_section_media_allowed( $media ) ) { continue; }
-        $result[ $key ] = array( 'name' => $name, 'media_id' => $media, 'builtin' => false );
+        $result[ $key ] = array( 'name' => $name, 'media_id' => $media, 'builtin' => false,
+            'position_x' => isset( $entry['position_x'] ) ? min( 100, max( 0, (int) $entry['position_x'] ) ) : 50,
+            'position_y' => isset( $entry['position_y'] ) ? min( 100, max( 0, (int) $entry['position_y'] ) ) : 50 );
         if ( count( $result ) >= 150 ) { break; }
     }
     return $result;
@@ -53,9 +57,10 @@ function deprat_icon_library_markup( $key, $class = 'deprat-section-icon', $size
     if ( ! isset( $entries[ $key ] ) ) { return ''; }
     $row = $entries[ $key ];
     if ( $row['media_id'] ) {
-        return (string) wp_get_attachment_image( $row['media_id'], 'thumbnail', false, array(
+        return (string) wp_get_attachment_image( $row['media_id'], 'full', false, array(
             'class' => $class . ' deprat-library-image',
             'alt' => '', 'aria-hidden' => 'true', 'loading' => 'lazy',
+            'style' => 'object-fit:cover;object-position:' . (int) $row['position_x'] . '% ' . (int) $row['position_y'] . '%',
         ) );
     }
     // Rendus 3D livrés avec DEPRAT Core, par identifiant stable.
@@ -117,7 +122,9 @@ function deprat_icon_library_render_admin() {
             <?php foreach ( $entries as $key => $entry ) : ?>
                 <div class="deprat-library-card" data-library-key="<?php echo esc_attr( $key ); ?>"
                     data-library-name="<?php echo esc_attr( $entry['name'] ); ?>"
-                    data-library-media="<?php echo absint( $entry['media_id'] ); ?>">
+                    data-library-media="<?php echo absint( $entry['media_id'] ); ?>"
+                    data-library-position-x="<?php echo (int) $entry['position_x']; ?>"
+                    data-library-position-y="<?php echo (int) $entry['position_y']; ?>">
                     <div class="deprat-library-actions">
                         <button type="button" data-library-edit title="Modifier" aria-label="<?php echo esc_attr( 'Modifier ' . $entry['name'] ); ?>">✎</button>
                         <button type="button" data-library-delete title="Supprimer" aria-label="<?php echo esc_attr( 'Supprimer ' . $entry['name'] ); ?>">×</button>
@@ -137,11 +144,11 @@ function deprat_icon_library_render_admin() {
                     <input type="text" data-library-name maxlength="60" required placeholder="Ex. Moteur filaire">
                 </label>
                 <div class="deprat-library-image-field">
-                    <div class="deprat-library-edit-preview" data-library-preview>Choisir une image</div>
+                    <div class="deprat-library-edit-preview" data-library-preview tabindex="0" role="group" aria-label="Cadrage carré de l’icône : faites glisser l’image pour la déplacer">Choisir une image</div>
                     <div>
                         <button type="button" class="button" data-library-choose>Choisir ou importer une image</button>
                         <button type="button" class="button" data-library-clear hidden>Retirer l’image</button>
-                        <p>PNG, JPG ou WebP. Les pictogrammes d’origine peuvent rester sans image : leur dessin est conservé.</p>
+                        <p>PNG, JPG ou WebP. Faites glisser l’image dans le carré pour choisir son cadrage. Utilisez les flèches du clavier pour affiner. Le nom et le cadrage seront enregistrés.</p><p class="deprat-library-position-status" data-library-position-status>Position : centre</p>
                     </div>
                 </div>
                 <p class="deprat-library-error" data-library-error role="alert" hidden></p>
@@ -157,7 +164,7 @@ function deprat_icon_library_render_admin() {
 
 add_action( 'admin_enqueue_scripts', static function ( $hook ) {
     if ( 'product_page_deprat-categories-tree' !== $hook ) { return; }
-    wp_enqueue_style( 'deprat-icon-library', plugins_url( 'assets/css/icon-library.css', dirname( __DIR__ ) . '/deprat-core.php' ), array( 'deprat-category-tree' ), '0.1.48' );
+    wp_enqueue_style( 'deprat-icon-library', plugins_url( 'assets/css/icon-library.css', dirname( __DIR__ ) . '/deprat-core.php' ), array( 'deprat-category-tree' ), '0.1.54' );
     wp_enqueue_script( 'deprat-icon-library', plugins_url( 'assets/js/icon-library.js', dirname( __DIR__ ) . '/deprat-core.php' ), array( 'jquery', 'media-views' ), '0.1.48', true );
     wp_localize_script( 'deprat-icon-library', 'depratIconLibrary', array(
         'ajaxUrl' => admin_url( 'admin-ajax.php' ),
@@ -222,7 +229,9 @@ function deprat_icon_library_ajax_save() {
         if ( ! $media ) { wp_send_json_error( array( 'message' => 'Choisissez une image pour votre nouvelle icône.' ), 400 ); }
         do { $key = 'icon_' . bin2hex( random_bytes( 6 ) ); } while ( isset( $saved[ $key ] ) );
     }
-    $saved[ $key ] = array( 'name' => $name, 'media_id' => $media );
+    $x = isset( $_POST['position_x'] ) ? max( 0, min( 100, (int) $_POST['position_x'] ) ) : 50;
+    $y = isset( $_POST['position_y'] ) ? max( 0, min( 100, (int) $_POST['position_y'] ) ) : 50;
+    $saved[ $key ] = array( 'name' => $name, 'media_id' => $media, 'position_x' => $x, 'position_y' => $y );
     update_option( 'deprat_icon_library_v1', $saved, false );
     wp_send_json_success( array( 'key' => $key, 'message' => 'Icône enregistrée.' ) );
 }
