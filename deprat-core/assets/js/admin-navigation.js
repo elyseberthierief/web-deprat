@@ -208,6 +208,15 @@
         var brand=document.createElement('div');
         brand.className='deprat-admin-brand';
         brand.innerHTML='<span class="deprat-admin-brand-mark">D</span><strong>DEPRAT</strong><small>ADMINISTRATION</small>';
+        if (config.logoUrl) {
+            var mark=brand.querySelector('.deprat-admin-brand-mark');
+            var logo=document.createElement('img');
+            logo.src=config.logoUrl;
+            logo.alt='';
+            logo.loading='lazy';
+            mark.textContent='';
+            mark.appendChild(logo);
+        }
         sidebar.appendChild(brand);
 
         function isActiveUrl(url) {
