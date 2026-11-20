@@ -199,8 +199,27 @@
 
         // La page native WordPress de maintenance et d'extensions à mettre à jour.
         // Accès immédiat en tête du menu, réservé à l'administrateur.
-        var groups=[
-            {title:'Mises à jour',tone:'updates',icon:'refresh',url:config.updatesUrl},
+        // Raccourci demandé : la page WP Pusher Plugins avec le bouton
+        // « Update plugin » DEPRAT Core, et non update-core.php de WordPress.
+        // Retrouver l'URL réelle du menu natif : les slugs des extensions
+        // peuvent évoluer selon leur version.
+        var wpPusherEntry=entries.find(function(entry) {
+            return /wp[ -]?pusher/i.test(entry.id+' '+entry.title+' '+entry.url);
+        });
+        var wpPusherUrl='';
+        if (wpPusherEntry) {
+            var pluginSub=wpPusherEntry.children.find(function(child) {
+                return /plugins?/i.test(child.title) || /wppusher.*plugins?|plugins?.*wppusher/i.test(child.url);
+            });
+            wpPusherUrl=pluginSub ? pluginSub.url : wpPusherEntry.url;
+        }
+        // Si WP Pusher n'est pas disponible, ne pas afficher de faux
+        // raccourci qui ouvrirait les mises à jour WordPress à sa place.
+        var groups=[];
+        if (wpPusherUrl) {
+            groups.push({title:'Mise à jour DEPRAT',tone:'updates',icon:'refresh',url:wpPusherUrl});
+        }
+        groups.push(
             {title:'Tableau de bord',tone:'dashboard',icon:'house',url:dashboard?dashboard.url:config.dashboardUrl},
             {title:'Espace Boutique',tone:'boutique',icon:'shopping-cart',children:shopChildren},
              {title:'Espace Marketing',tone:'marketing',icon:'megaphone',children:marketingChildren},
@@ -208,7 +227,7 @@
             {title:'Espace Articles',tone:'articles',icon:'newspaper',children:postChildren},
             {title:'Médias',tone:'medias',icon:'images',url:media?media.url:config.mediaUrl},
             {title:'Réglages ADMINISTRATEUR',tone:'admin',icon:'lock',children:adminChildren}
-        ];
+        );
 
         var svgPaths={
             refresh:'<path d="M20 7v5h-5M4 17v-5h5"/><path d="M5.5 9a7 7 0 0 1 12-2l2.5 5M18.5 15a7 7 0 0 1-12 2L4 12"/>',
