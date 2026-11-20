@@ -1,0 +1,148 @@
+/* DEPRAT — navigation métier administrateur.
+ * Le menu WP est toujours présent et revient immédiatement en mode classique.
+ */
+body.deprat-admin-mode{--deprat-admin-sidebar:278px}
+body.deprat-admin-mode #adminmenuback,
+body.deprat-admin-mode #adminmenuwrap{
+    width:var(--deprat-admin-sidebar)!important;
+    background:#101f34!important;
+}
+body.deprat-admin-mode #adminmenuwrap{
+    min-height:calc(100vh - 32px);
+    box-shadow:3px 0 14px rgba(5,25,53,.1);
+}
+body.deprat-admin-mode #adminmenu,
+body.deprat-admin-mode #adminmenuwrap > #adminmenu + #adminmenuwrap{
+    display:none!important;
+}
+body.deprat-admin-mode #wpcontent,
+body.deprat-admin-mode #wpfooter{margin-left:var(--deprat-admin-sidebar)!important}
+body.deprat-admin-mode.folded #wpcontent,
+body.deprat-admin-mode.folded #wpfooter{margin-left:var(--deprat-admin-sidebar)!important}
+body.deprat-admin-mode #adminmenuwrap{overflow:visible}
+body.deprat-admin-mode .deprat-admin-menu{
+    display:block;
+    width:100%;
+    min-height:calc(100vh - 32px);
+    padding:14px 10px 24px;
+    box-sizing:border-box;
+    background:linear-gradient(160deg,#0a2344,#1a2a3c 44%,#101e33);
+    color:#dceafa;
+    font-family:inherit;
+    font-size:13px;
+    line-height:1.45;
+    overflow-wrap:anywhere;
+}
+.deprat-admin-menu *{box-sizing:border-box}
+.deprat-admin-menu .deprat-admin-brand{
+    min-height:72px;
+    display:flex;flex-wrap:wrap;align-items:center;
+    gap:8px 11px;padding:7px 10px 16px;
+    margin-bottom:12px;
+    border-bottom:1px solid rgba(225,239,255,.16);
+    color:#fff;
+}
+.deprat-admin-brand-mark{
+    width:36px;height:36px;flex:0 0 36px;
+    border-radius:50%;
+    display:grid;place-items:center;
+    border:3px solid #fff;
+    color:#c49b3b;
+    font-size:23px;font-weight:750;
+    line-height:1;
+}
+.deprat-admin-brand strong{font-size:21px;font-weight:680;letter-spacing:.025em}
+.deprat-admin-brand small{display:block;width:100%;font-size:10px;font-weight:500;letter-spacing:.16em;color:#acbfd6;padding-left:47px;margin-top:-15px}
+.deprat-admin-space{margin:0 0 9px}
+.deprat-admin-menu summary,
+.deprat-admin-menu a{
+    text-decoration:none;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    min-height:37px;
+    color:#eef4fb;
+    padding:8px 11px;
+    border-radius:9px;
+    font-size:13px;
+    font-weight:540;
+    line-height:1.35;
+    transition:background-color .13s ease,color .13s ease;
+}
+.deprat-admin-menu a:focus-visible,
+.deprat-admin-menu summary:focus-visible{outline:2px solid #fff;outline-offset:2px}
+.deprat-admin-menu .deprat-menu-icon{
+    width:19px;height:19px;flex:0 0 19px;
+    display:inline-grid;place-items:center;color:inherit;
+    opacity:.94;
+}
+.deprat-admin-menu .deprat-menu-icon svg{display:block;width:19px;height:19px}
+.deprat-admin-menu .deprat-menu-chevron{margin-left:auto;font-size:20px;line-height:1;transform:rotate(0);transition:transform .14s}
+.deprat-admin-menu details[open] > summary .deprat-menu-chevron{transform:rotate(180deg)}
+.deprat-admin-menu summary{list-style:none}
+.deprat-admin-menu summary::-webkit-details-marker{display:none}
+.deprat-admin-menu .deprat-admin-space > details > summary,
+.deprat-admin-menu .deprat-admin-space > a{
+    font-size:14px;
+    font-weight:660;
+    min-height:42px;
+    padding:10px 12px;
+    color:#fff;
+    border:1px solid rgba(255,255,255,.1);
+    box-shadow:inset 0 1px rgba(255,255,255,.12);
+}
+.deprat-admin-menu .space-dashboard > a{background:linear-gradient(110deg,#285a9b,#214575)}
+.deprat-admin-menu .space-boutique > details > summary{background:linear-gradient(110deg,#3f3b86,#272c62)}
+.deprat-admin-menu .space-clients > details > summary{background:linear-gradient(110deg,#334e8c,#263e70)}
+.deprat-admin-menu .space-marketing > details > summary{background:linear-gradient(110deg,#d7812b,#a94b24)}
+.deprat-admin-menu .space-accueil > details > summary{background:linear-gradient(110deg,#39895c,#166b42)}
+.deprat-admin-menu .space-articles > details > summary{background:linear-gradient(110deg,#ce9e28,#ae6d18)}
+.deprat-admin-menu .space-medias > a{background:linear-gradient(110deg,#2e8ab8,#196185)}
+.deprat-admin-menu .space-admin > details > summary{background:linear-gradient(110deg,#b94b69,#8e304b)}
+.deprat-admin-menu .deprat-menu-children{padding:5px 0 6px 9px;border-left:1px solid rgba(198,222,246,.17);margin-left:17px}
+.deprat-admin-menu .deprat-menu-children a,
+.deprat-admin-menu .deprat-menu-children summary{
+    min-height:33px;font-size:12.4px;padding:6px 9px;
+    color:#d3e0f0;font-weight:480;
+}
+.deprat-admin-menu .deprat-menu-children .deprat-menu-children{margin-left:14px;padding-left:4px}
+.deprat-admin-menu .deprat-menu-children .deprat-menu-icon{width:16px;height:16px;flex-basis:16px}
+.deprat-admin-menu .deprat-menu-children .deprat-menu-icon svg{width:15px;height:15px}
+.deprat-admin-menu a:hover,
+.deprat-admin-menu summary:hover{background-color:rgba(255,255,255,.12);color:#fff}
+.deprat-admin-menu a.is-active{
+    background:rgba(255,255,255,.15);color:#fff;
+    box-shadow:inset 3px 0 #d7ae4b;
+    font-weight:630;
+}
+.deprat-admin-menu .deprat-admin-classic{
+    margin-top:18px;border:1px solid rgba(211,230,252,.25);
+    color:#eef6ff;background:rgba(255,255,255,.05);
+    font-size:12px;min-height:43px;
+}
+.deprat-admin-menu .deprat-admin-classic:hover{background:#28558b}
+/* Les écrans WP restent identiques; seuls les contrôles DEPRAT s'adoucissent. */
+@media(max-width:960px){
+ body.deprat-admin-mode{--deprat-admin-sidebar:245px}
+ .deprat-admin-menu .deprat-admin-space > details > summary{font-size:13px}
+}
+@media(max-width:782px){
+ /* WP mobile affiche son menu selon ses propres mécanismes : ne pas casser le burger. */
+ body.deprat-admin-mode #wpcontent,
+ body.deprat-admin-mode #wpfooter,
+ body.deprat-admin-mode.folded #wpcontent,
+ body.deprat-admin-mode.folded #wpfooter{margin-left:0!important}
+ body.deprat-admin-mode #adminmenuback{display:none}
+ body.deprat-admin-mode #adminmenuwrap{
+    width:var(--deprat-admin-sidebar)!important;
+    position:fixed;top:46px;bottom:0;left:-280px;
+    overflow-y:auto;z-index:99999;
+    transition:left .2s;
+ }
+ body.deprat-admin-mode.wp-responsive-open #adminmenuwrap{left:0}
+ body.deprat-admin-mode .deprat-admin-menu{min-height:100%;padding-bottom:50px}
+}
+@media(prefers-reduced-motion:reduce){
+ .deprat-admin-menu a,.deprat-admin-menu summary,.deprat-admin-menu .deprat-menu-chevron{transition:none}
+}
