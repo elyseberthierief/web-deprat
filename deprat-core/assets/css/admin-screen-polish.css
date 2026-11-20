@@ -141,3 +141,94 @@ body.deprat-admin-mode.deprat-editorial-list .subsubsub a.current,
 body.deprat-admin-mode.deprat-editorial-list .deprat-editorial-shortcuts a.is-current {
     font-weight:650!important;
 }
+
+/* 0.1.74 — Bandeau des demandes WooCommerce (HPOS et liste historique).
+ * Même hiérarchie de titre et mêmes boutons que les écrans DEPRAT.
+ * Limité à l'écran des commandes pour ne pas altérer les actions WooCommerce ailleurs. */
+body.deprat-admin-mode.woocommerce_page_wc-orders #wpbody-content .wrap > h1,
+body.deprat-admin-mode.woocommerce_page_wc-orders #wpbody-content .wrap > .wp-heading-inline,
+body.deprat-admin-mode.post-type-shop_order #wpbody-content .wrap > h1,
+body.deprat-admin-mode.post-type-shop_order #wpbody-content .wrap > .wp-heading-inline {
+    color:#143e7a!important;
+    font-size:27px!important;
+    font-weight:650!important;
+    line-height:1.3!important;
+    letter-spacing:-.02em!important;
+    margin:14px 14px 17px 0!important;
+}
+body.deprat-admin-mode.woocommerce_page_wc-orders #wpbody-content .wrap > .page-title-action,
+body.deprat-admin-mode.woocommerce_page_wc-orders #wpbody-content .wrap > a.page-title-action,
+body.deprat-admin-mode.post-type-shop_order #wpbody-content .wrap > .page-title-action {
+    display:inline-flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    min-height:42px!important;
+    padding:10px 17px!important;
+    margin:8px 0 12px!important;
+    background:#193f7b!important;
+    color:#fff!important;
+    border:1px solid #193f7b!important;
+    border-radius:12px!important;
+    font-size:14px!important;
+    font-weight:610!important;
+    line-height:1.35!important;
+    text-decoration:none!important;
+    box-shadow:none!important;
+}
+body.deprat-admin-mode.woocommerce_page_wc-orders #wpbody-content .wrap > .page-title-action:hover,
+body.deprat-admin-mode.post-type-shop_order #wpbody-content .wrap > .page-title-action:hover {
+    background:#235292!important;
+    border-color:#235292!important;
+    color:#fff!important;
+}
+body.deprat-admin-mode.woocommerce_page_wc-orders #wpbody-content .wrap > .page-title-action:focus-visible,
+body.deprat-admin-mode.post-type-shop_order #wpbody-content .wrap > .page-title-action:focus-visible {
+    outline:3px solid #7aa6e2!important;
+    outline-offset:3px!important;
+}
+body.deprat-admin-mode.woocommerce_page_wc-orders #wpbody-content .subsubsub {
+    display:flex!important;
+    flex-wrap:wrap!important;
+    gap:10px!important;
+    margin:18px 0!important;
+    padding:0!important;
+    float:none!important;
+}
+body.deprat-admin-mode.woocommerce_page_wc-orders #wpbody-content .subsubsub li {
+    display:inline-flex!important;
+    margin:0!important;
+    padding:0!important;
+    float:none!important;
+    font-size:0!important;
+}
+body.deprat-admin-mode.woocommerce_page_wc-orders #wpbody-content .subsubsub a {
+    display:inline-flex!important;
+    align-items:center!important;
+    gap:7px!important;
+    min-height:45px!important;
+    padding:11px 17px!important;
+    border:1px solid #d7e5f4!important;
+    border-radius:14px!important;
+    background:#f7faff!important;
+    color:#143e7a!important;
+    font-size:14px!important;
+    font-weight:560!important;
+    text-decoration:none!important;
+}
+body.deprat-admin-mode.woocommerce_page_wc-orders #wpbody-content .subsubsub a.current {
+    border-color:#193f7b!important;
+    background:#193f7b!important;
+    color:#fff!important;
+    font-weight:650!important;
+}
+body.deprat-admin-mode.woocommerce_page_wc-orders #wpbody-content .subsubsub a .count {
+    border-radius:99px!important;
+    padding:2px 7px!important;
+    background:#e7eff8!important;
+    color:#35618f!important;
+    font-size:11px!important;
+}
+body.deprat-admin-mode.woocommerce_page_wc-orders #wpbody-content .subsubsub a.current .count {
+    color:#fff!important;
+    background:rgba(255,255,255,.2)!important;
+}
