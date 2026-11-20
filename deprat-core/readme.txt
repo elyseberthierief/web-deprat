@@ -1,4 +1,4 @@
-DEPRAT Core 0.1.70
+DEPRAT Core 0.1.71
 
 Le plugin reprend les extraits PHP actifs dans la sauvegarde du 14 novembre 2026.
 Extraits globaux : 5 à 11 et 15.
@@ -191,3 +191,10 @@ Version 0.1.70 — Espace Pages dans l'administration DEPRAT :
 - Retour en un clic au menu classique toujours disponible.
 
 - Ergonomie de la barre latérale : supprimer partout les liens redondants « Ouvrir [rubrique] ». Un clic sur le nom d'une rubrique ouvre directement sa page WordPress ; le chevron sert uniquement à afficher ou masquer les sous-rubriques. Cette règle est commune à Boutique, Paramètres, Clients, Marketing, Accueil, Articles, Pages et autres menus d'extensions.
+
+Version 0.1.71 — Menus de réglages et confort de navigation :
+- Sous Réglages ADMINISTRATEUR, regroupement automatique des menus natifs en WooCommerce, Elementor, Sécurité et sauvegarde, Réglages de base WP, Autres extensions.
+- Les nouveaux menus non reconnus sont toujours visibles sous Autres extensions ; pas de suppression d'extension ou de destination native.
+- Toutes les sections et sous-sections sont indépendamment dépliables, et restent ouvertes entre les pages durant la session de l'administrateur.
+- Sur la fiche de modification ou de création d'un produit WooCommerce, Espace Boutique s'ouvre automatiquement et Produits reste sélectionné même si l'URL WordPress ne contient plus le type de contenu.
+- Le bouton Admin classique demeure disponible et les droits ADV restent inchangés.
