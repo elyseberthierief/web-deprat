@@ -85,7 +85,7 @@
         var rows = [];
         function refreshRows() {
             rows = Array.from( form.querySelectorAll( '#the-list > tr' ) ).filter( function ( row ) {
-                return !row.classList.contains( 'no-items' );
+                return !row.classList.contains('no-items') && !row.classList.contains('deprat-products-create-card');
             } );
         }
         refreshRows();
@@ -124,6 +124,105 @@
                 node.open = false;
             } );
         } );
+
+        // Une carte « + Nouveau produit » au début de la grille : même
+        // destination que le bouton principal, enrichie par la catégorie active.
+        function ensureCreateCard() {
+            var tbody=form.querySelector('#the-list');
+            if (!tbody) { return; }
+            var source=layout.querySelector('[data-deprat-new-product-link]');
+            var tile=tbody.querySelector('.deprat-products-create-card');
+            if (!source) { if (tile) {tile.remove();} return; }
+            if (!tile) {
+                tile=document.createElement('tr');
+                tile.className='deprat-products-create-card';
+                var cell=document.createElement('td');
+                cell.colSpan=12;
+                var link=document.createElement('a');
+                link.className='deprat-products-create-card-link';
+                link.innerHTML='<span class="deprat-products-create-card-plus" aria-hidden="true">＋</span>'
+                    + '<strong>Nouveau produit</strong><span class="deprat-products-create-card-context"></span>';
+                cell.appendChild(link);
+                tile.appendChild(cell);
+            }
+            var link=tile.querySelector('a');
+            link.href=source.href;
+            var context=tile.querySelector('.deprat-products-create-card-context');
+            context.textContent=source.textContent.trim().replace(/^.*?Nouveau produit/, '').trim() || 'Dans la catégorie sélectionnée';
+            tbody.prepend(tile);
+            var topButton=layout.querySelector('.deprat-products-header .deprat-products-create');
+            if(topButton){topButton.href=source.href;}
+        }
+
+        // Le même modal gère une catégorie racine et une sous-catégorie.
+        // On utilise l'endpoint WooCommerce DEPRAT existant, qui vérifie
+        // nonce, capacités et parent réel avant toute création.
+        var categoryDialog=layout.querySelector('[data-deprat-category-dialog]');
+        var categoryForm=layout.querySelector('[data-deprat-category-form]');
+        var categoryFeedback=layout.querySelector('[data-deprat-category-feedback]');
+        var categoryContext=layout.querySelector('[data-deprat-category-context]');
+        var pendingCategory=null;
+        if(categoryDialog && categoryForm){
+            form.addEventListener('click',function(event){
+                var button=event.target.closest('[data-deprat-create-category]');
+                if(!button){return;}
+                event.preventDefault();
+                pendingCategory={
+                    parent:Number(button.dataset.parent)||0,
+                    section:button.dataset.section||'',
+                    name:button.dataset.parentName||''
+                };
+                categoryForm.reset();
+                categoryFeedback.textContent='';
+                categoryContext.textContent=pendingCategory.parent
+                    ? 'Créer une sous-catégorie dans « '+pendingCategory.name+' ».'
+                    : 'Créer une catégorie dans « '+pendingCategory.name+' ».';
+                categoryDialog.showModal();
+                categoryForm.querySelector('[name=name]').focus();
+            });
+            categoryForm.querySelector('[data-deprat-dialog-close]').addEventListener('click',function(){
+                categoryDialog.close();
+            });
+            categoryForm.addEventListener('submit',async function(event){
+                event.preventDefault();
+                if(!pendingCategory || !window.depratProductCreate){return;}
+                var value=categoryForm.querySelector('[name=name]').value.trim();
+                if(!value){return;}
+                var submit=categoryForm.querySelector('[type=submit]');
+                submit.disabled=true;
+                categoryFeedback.textContent='Création en cours…';
+                var body=new URLSearchParams({
+                    action:'deprat_category_tree_create',
+                    nonce:window.depratProductCreate.nonce,
+                    name:value,
+                    parent:String(pendingCategory.parent),
+                    section:pendingCategory.section
+                });
+                try {
+                    var result=await fetch(window.depratProductCreate.ajaxUrl,{
+                        method:'POST',
+                        credentials:'same-origin',
+                        body:body
+                    });
+                    var json=await result.json();
+                    if(!result.ok || !json.success || !json.data || !json.data.id){
+                        throw new Error(json.data && json.data.message || 'Création impossible.');
+                    }
+                    var destination=new URL(window.location.href);
+                    destination.searchParams.set('deprat_cat',String(json.data.id));
+                    if(pendingCategory.section){destination.searchParams.set('deprat_section',pendingCategory.section);}
+                    destination.searchParams.delete('paged');
+                    categoryDialog.close();
+                    // Le terme doit être visible dans toute l'arborescence :
+                    // recharger la liste serveur pour des compteurs cohérents.
+                    window.location.assign(destination.href);
+                }catch(error){
+                    categoryFeedback.textContent=error.message || 'Erreur réseau. Réessayez.';
+                }finally{
+                    submit.disabled=false;
+                }
+            });
+        }
 
         // Navigation de catalogue sans rechargement complet. On récupère
         // la sortie serveur de WooCommerce pour ne jamais inventer de données
@@ -190,6 +289,13 @@
             if ( currentBottom && nextBottom ) {
                 currentBottom.replaceWith( document.importNode( nextBottom, true ) );
             }
+            var nextNewProduct=updated.querySelector('[data-deprat-new-product-link]');
+            var existingNewProduct=layout.querySelector('[data-deprat-new-product-link]');
+            if(nextNewProduct && existingNewProduct){
+                existingNewProduct.href=nextNewProduct.href;
+                existingNewProduct.textContent=nextNewProduct.textContent;
+            }
+            ensureCreateCard();
             setProductView( currentView, false );
             refreshRows();
             updateVisibleRows();
@@ -279,6 +385,9 @@
             navigateProducts( window.location.href, false );
         } );
 
+        ensureCreateCard();
+        refreshRows();
+        updateVisibleRows();
         var selectedSection = layout.querySelector( '.deprat-products-sections .is-active' );
         if ( selectedSection && typeof selectedSection.scrollIntoView === 'function' ) {
             selectedSection.scrollIntoView( { block: 'nearest', inline: 'nearest' } );
