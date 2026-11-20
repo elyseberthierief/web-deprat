@@ -226,11 +226,11 @@
         }
         groups.push(
             {title:'Tableau de bord',tone:'dashboard',icon:'house',url:dashboard?dashboard.url:config.dashboardUrl},
-            {title:'Espace Boutique',tone:'boutique',icon:'shopping-cart',children:shopChildren},
-             {title:'Espace Marketing',tone:'marketing',icon:'megaphone',children:marketingChildren},
-            {title:'Espace Page d’accueil',tone:'accueil',icon:'house',children:homeChildren},
-            {title:'Espace Articles',tone:'articles',icon:'newspaper',children:postChildren},
-            {title:'Espace Pages',tone:'pages',icon:'files',children:pageChildren},
+            {title:'Espace Boutique',tone:'boutique',icon:'shopping-cart',url:ordersUrl,children:shopChildren},
+            {title:'Espace Marketing',tone:'marketing',icon:'megaphone',url:marketingUrl||config.marketingUrl,children:marketingChildren},
+            {title:'Espace Page d’accueil',tone:'accueil',icon:'house',url:config.homeSlideUrl,children:homeChildren},
+            {title:'Espace Articles',tone:'articles',icon:'newspaper',url:config.blogUrl,children:postChildren},
+            {title:'Espace Pages',tone:'pages',icon:'files',url:config.pagesUrl,children:pageChildren},
             {title:'Médias',tone:'medias',icon:'images',url:media?media.url:config.mediaUrl},
             {title:'Réglages ADMINISTRATEUR',tone:'admin',icon:'lock',children:adminChildren}
         );
@@ -345,14 +345,20 @@
             var summary=document.createElement('summary');
             summary.appendChild(n.nativeIcon ? nativeIcon(n.nativeIcon) : icon(n.icon));
             var label=document.createElement('span');label.textContent=n.title;
-            if (n.title==='Clients') {
-                // Le libellé Clients ouvre directement l'onglet Tous.
-                var clientLink=document.createElement('a');
-                clientLink.href=config.clientUrl;
-                clientLink.className='deprat-client-heading-link';
-                clientLink.appendChild(label);
-                clientLink.addEventListener('click',function(event){ event.stopPropagation(); });
-                summary.appendChild(clientLink);
+            // Règle unique du menu DEPRAT : cliquer le NOM ouvre la vraie page,
+            // cliquer le chevron déplie / replie seulement les sous-rubriques.
+            // Aucun lien « Ouvrir ... » supplémentaire n'est généré.
+            if (n.url) {
+                var headingLink=document.createElement('a');
+                headingLink.href=n.url;
+                headingLink.className='deprat-menu-heading-link';
+                headingLink.appendChild(label);
+                headingLink.addEventListener('click',function(event){event.stopPropagation();});
+                if (isActiveUrl(n.url)) {
+                    headingLink.classList.add('is-active');
+                    headingLink.setAttribute('aria-current','page');
+                }
+                summary.appendChild(headingLink);
             } else { summary.appendChild(label); }
             if (n.badgeCount>0) { summary.appendChild(badge(n.badgeCount)); }
             var arrow=document.createElement('span');
@@ -362,9 +368,6 @@
             summary.appendChild(arrow);
             details.appendChild(summary);
             var body=document.createElement('div');body.className='deprat-menu-children';
-            if (n.url && level>0 && !n.hideOpenLink) {
-                body.appendChild(renderLink(item('Ouvrir '+n.title,n.url,'chevron-right'),level+1));
-            }
             n.children.forEach(function(child){ body.appendChild(renderSection(child,level+1,rootTone)); });
             details.appendChild(body);
             if (body.querySelector('.is-active') ||
