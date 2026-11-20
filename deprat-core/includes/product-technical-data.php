@@ -466,6 +466,26 @@ function deprat_product_tech_admin_assets( $hook ) {
     global $post;
     $current_product_id = isset( $_GET['post'] ) ? absint( $_GET['post'] )
         : ( isset( $post->ID ) ? (int) $post->ID : 0 );
+    $prefill_category_ids = array();
+    $prefill_category_label = '';
+    if ( 'post-new.php' === $hook && isset( $_GET['deprat_prefill_cat'] ) ) {
+        $prefill_id = absint( $_GET['deprat_prefill_cat'] );
+        $prefill_term = $prefill_id ? get_term( $prefill_id, 'product_cat' ) : false;
+        if ( $prefill_term instanceof WP_Term ) {
+            $prefill_path = array_reverse( array_merge(
+                array( $prefill_term ),
+                array_map( static function ( $id ) {
+                    return get_term( (int) $id, 'product_cat' );
+                }, get_ancestors( $prefill_term->term_id, 'product_cat', 'taxonomy' ) )
+            ) );
+            foreach ( $prefill_path as $item ) {
+                if ( $item instanceof WP_Term ) {
+                    $prefill_category_ids[] = (int) $item->term_id;
+                    $prefill_category_label .= ( '' !== $prefill_category_label ? ' › ' : '' ) . $item->name;
+                }
+            }
+        }
+    }
     wp_enqueue_media();
     wp_enqueue_style( 'deprat-product-tech-admin', plugins_url( 'assets/css/product-technical-admin.css', dirname( __DIR__ ) . '/deprat-core.php' ), array(), '0.1.73' );
     wp_enqueue_script( 'deprat-product-tech-admin', plugins_url( 'assets/js/product-technical-admin.js', dirname( __DIR__ ) . '/deprat-core.php' ), array( 'jquery', 'media-views' ), '0.1.73', true );
@@ -473,6 +493,8 @@ function deprat_product_tech_admin_assets( $hook ) {
         'ajaxUrl' => admin_url( 'admin-ajax.php' ),
         'categoryNonce' => wp_create_nonce( 'deprat_create_product_category' ),
         'categoryTree' => deprat_category_tree_flat_options(),
+        'prefillCategoryIds' => $prefill_category_ids,
+        'prefillCategoryLabel' => $prefill_category_label,
         'uploadNonce' => wp_create_nonce( 'deprat_product_media_upload_' . $current_product_id ),
         'postId' => $current_product_id,
     ) );
