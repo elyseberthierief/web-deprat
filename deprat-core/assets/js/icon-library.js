@@ -29,6 +29,8 @@
         }
         function setPreview(url) {
             preview.replaceChildren();
+            sourceWidth = 1;
+            sourceHeight = 1;
             if (url) {
                 var img = document.createElement('img');
                 img.src = url;
@@ -39,6 +41,7 @@
                 img.addEventListener('load', function () {
                     sourceWidth = img.naturalWidth || 1;
                     sourceHeight = img.naturalHeight || 1;
+                    updatePosition();
                 });
                 preview.appendChild(img);
             } else {
@@ -62,8 +65,11 @@
             positionX = card && card.hasAttribute('data-library-position-x') ? Number(card.getAttribute('data-library-position-x')) : 50;
             positionY = card && card.hasAttribute('data-library-position-y') ? Number(card.getAttribute('data-library-position-y')) : 50;
             heading.textContent = card ? 'Modifier l’icône' : 'Ajouter une icône';
+            // La vignette de la carte WordPress est souvent déjà recadrée au carré :
+            // utiliser la vraie image source, non rognée, pour voir le déplacement.
             var img = card && card.querySelector('.deprat-library-art img');
-            setPreview(img ? img.src : '');
+            var source = card && card.dataset.librarySource;
+            setPreview(source || (img ? img.src : ''));
             // Le formulaire a son propre champ Nom : ne pas confondre avec les cartes data-library-name.
             nameInput.value = card ? (card.dataset.libraryName || card.querySelector('strong')?.textContent || '') : '';
             overlay.hidden = false;
@@ -124,8 +130,9 @@
                     }
                     imageId = Number(attachment.id) || 0;
                     positionX = 50; positionY = 50;
-                    var size = attachment.sizes && (attachment.sizes.thumbnail || attachment.sizes.medium);
-                    setPreview(size && size.url || attachment.url);
+                    // Jamais la taille « thumbnail » : WordPress peut y couper les bords
+                    // et tout déplacement serait alors invisible dans l'aperçu.
+                    setPreview(attachment.url || (attachment.sizes && attachment.sizes.full && attachment.sizes.full.url) || '');
                     setError('');
                 });
             }
@@ -138,9 +145,14 @@
             updatePosition();
         }
         preview.addEventListener('pointerdown', function (event) {
-            if (!imageId || !preview.querySelector('img')) { return; }
+            if (!imageId || !preview.querySelector('img') || sourceWidth <= 1 || sourceHeight <= 1) { return; }
+            if (event.button !== undefined && event.button !== 0) { return; }
             event.preventDefault();
-            dragging = { x: event.clientX, y: event.clientY };
+            dragging = {
+                x: event.clientX, y: event.clientY,
+                positionX: positionX, positionY: positionY
+            };
+            preview.classList.add('is-dragging');
             preview.setPointerCapture(event.pointerId);
         });
         preview.addEventListener('pointermove', function (event) {
@@ -150,13 +162,30 @@
             var scale = Math.max(square / sourceWidth, square / sourceHeight);
             var excessX = Math.max(0, sourceWidth * scale - square);
             var excessY = Math.max(0, sourceHeight * scale - square);
-            // Déplacer la photo ne modifie que l'axe où un vrai recadrage existe.
-            movePosition(excessX > 1 ? -(event.clientX - dragging.x) / excessX * 100 : 0,
-                excessY > 1 ? -(event.clientY - dragging.y) / excessY * 100 : 0);
-            dragging.x = event.clientX; dragging.y = event.clientY;
+            // Le point de départ reste fixe pendant toute la durée du geste :
+            // un déplacement lent, même inférieur à 1 %, reste visible.
+            positionX = excessX > 1 ?
+                Math.max(0, Math.min(100, Math.round(dragging.positionX -
+                    (event.clientX - dragging.x) / excessX * 100))) : 50;
+            positionY = excessY > 1 ?
+                Math.max(0, Math.min(100, Math.round(dragging.positionY -
+                    (event.clientY - dragging.y) / excessY * 100))) : 50;
+            updatePosition();
         });
-        preview.addEventListener('pointerup', function () { dragging = null; });
-        preview.addEventListener('pointercancel', function () { dragging = null; });
+        function finishDrag(event) {
+            if (!dragging) { return; }
+            dragging = null;
+            preview.classList.remove('is-dragging');
+            if (event && preview.hasPointerCapture && preview.hasPointerCapture(event.pointerId)) {
+                preview.releasePointerCapture(event.pointerId);
+            }
+        }
+        preview.addEventListener('pointerup', finishDrag);
+        preview.addEventListener('pointercancel', finishDrag);
+        preview.addEventListener('lostpointercapture', function () {
+            dragging = null;
+            preview.classList.remove('is-dragging');
+        });
         preview.addEventListener('keydown', function (event) {
             var delta = event.shiftKey ? 10 : 2;
             if (event.key === 'ArrowLeft') { movePosition(-delta, 0); }
