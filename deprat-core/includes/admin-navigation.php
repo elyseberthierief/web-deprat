@@ -52,13 +52,13 @@ add_action( 'admin_enqueue_scripts', static function () {
         'deprat-admin-navigation',
         plugins_url( 'assets/css/admin-navigation.css', dirname( __DIR__ ) . '/deprat-core.php' ),
         array(),
-        '0.1.69'
+        '0.1.70'
     );
     wp_enqueue_script(
         'deprat-admin-navigation',
         plugins_url( 'assets/js/admin-navigation.js', dirname( __DIR__ ) . '/deprat-core.php' ),
         array(),
-        '0.1.69',
+        '0.1.70',
         true
     );
     wp_add_inline_script(
@@ -76,6 +76,8 @@ add_action( 'admin_enqueue_scripts', static function () {
             'marketingUrl' => admin_url( 'admin.php?page=wc-admin&path=/marketing' ),
             'homeSlideUrl' => admin_url( 'edit.php?post_type=deprat_slide' ),
             'blogUrl' => admin_url( 'edit.php' ),
+            'pagesUrl' => admin_url( 'edit.php?post_type=page' ),
+            'addPageUrl' => admin_url( 'post-new.php?post_type=page' ),
             'mediaUrl' => admin_url( 'upload.php' ),
         ) ) . ';',
         'before'
