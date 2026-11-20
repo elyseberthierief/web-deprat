@@ -777,4 +777,18 @@ deprat_integration_assert(
     'Un visiteur doit pouvoir retirer une référence en AJAX de son panier de session.' );
 wp_set_current_user( $before_guest );
 
+// Le formulaire de demande des visiteurs doit ouvrir un dialogue frontal,
+// pas la connexion à l'administration WordPress.
+wp_set_current_user( 0 );
+if ( function_exists( 'WC' ) && WC()->cart && ! WC()->cart->is_empty() ) {
+    ob_start();
+    do_action( 'woocommerce_after_cart' );
+    $quote_guest_form = ob_get_clean();
+    deprat_integration_assert(
+        false !== strpos( $quote_guest_form, 'data-deprat-quote-open-login' )
+        && false !== strpos( $quote_guest_form, 'deprat-quote-login-dialog' )
+        && false !== strpos( $quote_guest_form, 'deprat_quote_register' )
+        && false === strpos( $quote_guest_form, 'wp-login.php' ),
+        'Depuis le panier, la connexion doit ouvrir une fenêtre WooCommerce et le compte pro complet.' );
+}
 WP_CLI::success( 'WordPress et WooCommerce : sauvegarde, médias et affichages vérifiés.' );
