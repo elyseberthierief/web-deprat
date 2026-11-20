@@ -6,6 +6,8 @@
         var config = window.depratCategoryTree;
         var root = app.querySelector( '.deprat-tree-root' );
         var form = app.querySelector( '[data-tree-create-form]' );
+        // Cet éditeur n'est nécessaire que dans l'onglet Organiser les catégories.
+        if ( !root || !form ) { return; }
         var formName = app.querySelector( '[data-tree-create-name]' );
         var formParent = app.querySelector( '[data-tree-create-parent]' );
         var formTitle = app.querySelector( '[data-tree-create-title]' );

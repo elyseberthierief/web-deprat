@@ -12,6 +12,10 @@ $category = ! $is_hub ? get_queried_object() : null;
 $roots = deprat_catalog_root_categories();
 ?>
 <main id="primary" class="deprat-catalog" aria-label="Catalogue professionnel DEPRAT">
+    <?php if ( ! $is_hub && $category && is_a( $category, 'WP_Term' ) ) : ?>
+        <?php deprat_category_slide_render( $category ); ?>
+    <?php endif; ?>
+    <?php if ( $is_hub ) : ?>
     <nav class="deprat-catalog-breadcrumb" aria-label="Fil d’Ariane">
         <?php if ( $is_hub && ! $is_all ) : ?>
             <strong aria-current="page">Nos composants</strong>
@@ -72,7 +76,8 @@ $roots = deprat_catalog_root_categories();
                 : 'L’ensemble de nos composants pour volets roulants, stores et portes de garage : tubes, liaisons, manœuvres, lames, coulisses, supports et accessoires.'; ?></p>
         <?php endif; ?>
     </header>
-    <?php if ( ! $is_hub || $is_all ) : ?>
+    <?php endif; ?>
+    <?php if ( $is_all ) : ?>
     <nav class="deprat-catalog-nav" aria-label="Catégories des composants">
         <?php foreach ( $roots as $root ) :
             $url = get_term_link( $root );

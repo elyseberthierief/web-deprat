@@ -15,7 +15,12 @@
         function show(index) {
             current = (index + slides.length) % slides.length;
             slides.forEach(function (slide, i) {
-                slide.hidden = i !== current;
+                var visible = i === current;
+                // Les anciennes slides restent dans le DOM pendant le fondu.
+                slide.hidden = false;
+                slide.classList.toggle('is-current', visible);
+                slide.setAttribute('aria-hidden', visible ? 'false' : 'true');
+                if ('inert' in slide) { slide.inert = !visible; }
             });
             dots.forEach(function (dot, i) {
                 dot.setAttribute('aria-pressed', i === current ? 'true' : 'false');
@@ -27,7 +32,7 @@
         function start() {
             stop();
             if (!isPaused && !reducedMotion && !document.hidden) {
-                timer = window.setInterval(function () { show(current + 1); }, 7000);
+                timer = window.setInterval(function () { show(current + 1); }, 6500);
             }
         }
         function move(delta) {

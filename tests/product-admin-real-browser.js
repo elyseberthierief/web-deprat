@@ -336,7 +336,7 @@ const assert = require( 'assert' );
         }
         await page.screenshot( { path: process.env.RUNNER_TEMP + '/deprat-mega-menu.png', fullPage: false } );
 
-        assert( ( await page.locator( '.deprat-catalog-header h1' ).textContent() ).includes( 'Tubes' ), 'La page Tubes a son propre titre.' );
+        assert( ( await page.locator( '.deprat-cat-hero h1' ).textContent() ).includes( 'Tubes' ), 'La page Tubes a son propre titre.' );
         assert( await page.locator( '.deprat-catalog-filter-form' ).isVisible(), 'La page Tubes affiche ses filtres.' );
         assert.strictEqual( await page.locator( '[data-catalog-card]' ).count(), 1, 'La page Tubes contient uniquement le tube.' );
         assert( ( await page.locator( '[data-catalog-card]' ).textContent() ).includes( 'Tube de test' ), 'Le tube doit apparaître.' );
@@ -428,7 +428,7 @@ const assert = require( 'assert' );
 
         await page.goto( base + '/?product_cat=embouts', { waitUntil: 'domcontentloaded' } );
         await page.waitForSelector( '.deprat-catalog-layout' );
-        assert( ( await page.locator( '.deprat-catalog-header h1' ).textContent() ).includes( 'Embouts' ), 'La page Embouts a son propre titre.' );
+        assert( ( await page.locator( '.deprat-cat-hero h1' ).textContent() ).includes( 'Embouts' ), 'La page Embouts a son propre titre.' );
         assert.strictEqual( await page.locator( '[data-catalog-card]' ).count(), 1, 'La page Embouts contient uniquement l’embout.' );
         assert( ( await page.locator( '[data-catalog-card]' ).textContent() ).includes( 'Embout DEPRAT de test' ), 'L’embout doit apparaître.' );
         assert.strictEqual( await page.locator( '[data-open-model]' ).count(), 0, 'Aucun bouton 360° inventé si le produit n’a pas de GLB.' );
@@ -681,8 +681,8 @@ const assert = require( 'assert' );
         const customKey = await newSection.getAttribute( 'data-preview-section' );
         assert( /^custom_[a-f0-9]{12}$/.test( customKey ),
             'Une section personnalisée a une clé stable, distincte des catégories.' );
-        assert( await newSection.locator( '.deprat-section-icon-wrap svg' ).isVisible(),
-            'L’icône issue de la palette apparaît dans la même grille.' );
+        assert( await newSection.locator( '.deprat-section-icon-wrap img' ).isVisible(),
+            'L’icône 3D Treuil issue de la palette apparaît dans la même grille.' );
         await newSection.locator( '[data-preview-edit-section]' ).click();
         await page.locator( '[data-section-editor-name]' ).fill( 'Motorisations et accessoires test' );
         await page.locator( 'input[name="deprat-section-icon"][value="liaison"]' ).check();

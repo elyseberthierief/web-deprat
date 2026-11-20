@@ -226,3 +226,8 @@
 @media (max-width: 540px) {
     .deprat-home-category-icon .deprat-category-icon { width: 34px; height: 34px; }
 }
+
+/* 0.1.54 — Fondu doux : les slides restent superposés le temps de la transition. */
+.deprat-home-slide{opacity:0;visibility:hidden;pointer-events:none;transition:opacity .85s ease-in-out,visibility 0s linear .85s}
+.deprat-home-slide.is-current{opacity:1;visibility:visible;pointer-events:auto;transition:opacity .85s ease-in-out,visibility 0s}
+@media(prefers-reduced-motion:reduce){.deprat-home-slide{transition:none!important}}

@@ -304,3 +304,115 @@ body #masthead .custom-logo-link img{
         display:flex;align-items:center;
     }
 }
+
+/* 0.1.54 — Maquette finale : aucun titre « Espace professionnel »,
+   pas de bouton Mon espace pro en doublon. */
+@media(min-width:922px){
+ body #masthead .deprat-header-identity-inner{
+   grid-template-columns:minmax(210px,.88fr) minmax(190px,1.05fr) minmax(175px,auto) minmax(215px,auto);
+   column-gap:clamp(12px,1.8vw,30px);min-height:124px;padding-block:17px;
+ }
+ body #masthead .deprat-header-pro-title{display:none!important}
+ body #masthead .deprat-header-pro-panel.is-connected{min-width:0}
+ body #masthead .deprat-header-pro-panel.is-visitor .deprat-header-pro-actions{justify-content:center!important;gap:15px}
+ body #masthead .deprat-header-pro-actions .deprat-pro-sortie{display:none!important}
+ body #masthead .deprat-header-pro-actions .deprat-pro-name{max-width:152px}
+ body #masthead .deprat-header-pro-actions .deprat-pro-details>summary{
+   display:flex;align-items:center;justify-content:center;gap:8px;min-height:45px;
+   padding:8px 13px;border:1px solid #b7cce6;border-radius:999px;
+   font-size:13px;font-weight:750;color:#103b80;background:#fff;
+ }
+ body #masthead .deprat-header-pro-actions .deprat-pro-details>summary:hover,
+ body #masthead .deprat-header-pro-actions .deprat-pro-details[open]>summary{background:#eef5ff}
+ body #masthead .deprat-header-pro-actions .deprat-pro-details summary .deprat-pro-name{display:inline-block}
+ body #masthead .deprat-header-pro-actions .deprat-cloche-v1{margin:0 4px 0 0}
+ body #masthead .deprat-header-pro-actions .deprat-login-details>summary{
+   color:#103b80;font-size:14px;font-weight:750;text-align:center;
+ }
+ body #masthead .deprat-header-pro-actions .deprat-pro-auth{gap:0}
+ body #masthead .deprat-header-pro-actions .deprat-header-account-button{
+   padding:11px 15px;min-height:45px;font-size:13px;
+ }
+ body #masthead .deprat-header-quote-button{
+   position:relative;display:inline-flex;gap:10px;align-items:center;justify-content:center;
+   min-height:49px;border-radius:10px;background:#103b80;color:#fff!important;
+   padding:10px 19px;white-space:nowrap;text-decoration:none!important;
+   font-size:clamp(12px,1vw,15px);font-weight:850;
+   transition:background-color .18s ease,transform .18s ease;
+ }
+ body #masthead .deprat-header-quote-button:hover,
+ body #masthead .deprat-header-quote-button:focus-visible{background:#0a2f6d;transform:translateY(-1px)}
+ body #masthead .deprat-header-quote-button .deprat-header-quote-icon{
+   position:static;display:grid;place-items:center;flex:0 0 25px;width:25px;height:27px;
+ }
+ body #masthead .deprat-header-quote-button .deprat-header-quote-icon svg{
+   width:24px;height:26px;stroke:#fff;stroke-width:1.7;fill:none;
+ }
+ body #masthead .deprat-header-quote-button .deprat-header-quote-count{
+   top:-10px;right:-8px;min-width:23px;height:23px;background:#c99c28;
+ }
+ body #masthead .main-header-menu>.menu-item>a.menu-link{
+   font-size:clamp(15px,1.12vw,17px)!important;
+   min-height:65px;padding-block:15px!important;font-weight:750;
+ }
+ /* Le trait actif doit rester à 5-7 px du texte et non au bas de sa grande boîte. */
+ body #masthead .main-header-menu>.current-menu-item>a.menu-link,
+ body #masthead .main-header-menu>.current-menu-ancestor>a.menu-link{position:relative}
+ body #masthead .main-header-menu>.deprat-mega-parent>a.menu-link:after{
+   /* Le chevron du méga-menu est fourni par le plugin et doit rester visible. */
+   left:auto;right:8px;bottom:auto;height:7px;width:7px;background:none;border:solid currentColor;
+   border-width:0 2px 2px 0;transform:rotate(45deg);top:24px;
+ }
+}
+@media(min-width:922px) and (max-width:1270px){
+ body #masthead .deprat-header-identity-inner{
+   grid-template-columns:215px minmax(180px,1fr) minmax(165px,auto) 205px;
+   column-gap:12px;
+ }
+ body #masthead .deprat-header-quote-button{padding:9px 12px;font-size:12px}
+ body #masthead .deprat-header-brand img{width:56px;height:56px}
+ body #masthead .deprat-header-brand-copy strong{font-size:27px}
+ body #masthead .deprat-header-brand-copy small{font-size:10px}
+ body #masthead .deprat-header-pro-actions .deprat-pro-details>summary{padding:8px}
+ body #masthead .deprat-header-pro-actions .deprat-pro-name{max-width:95px}
+ body #masthead .main-header-menu>.menu-item>a.menu-link{font-size:14px!important;padding-inline:11px!important}
+}
+@media(max-width:921px){body #masthead .deprat-header-quote-button{display:none!important}}
+@media(prefers-reduced-motion:reduce){body #masthead .deprat-header-quote-button{transition:none!important}}
+
+/* 0.1.54 — Sans compte connecté, ne réserver aucune quatrième colonne vide. */
+@media(min-width:922px){
+ body #masthead .deprat-header-identity-inner.is-visitor{
+    grid-template-columns:minmax(220px,.93fr) minmax(250px,1.15fr) minmax(280px,.8fr);
+ }
+ body #masthead .deprat-header-identity-inner.is-visitor .deprat-header-pro-panel{
+    display:flex;justify-content:center;align-items:center;
+ }
+ body #masthead .deprat-header-identity-inner.is-visitor .deprat-header-pro-actions{
+    justify-content:center;gap:16px;
+ }
+ body #masthead .deprat-header-identity-inner.is-visitor .deprat-pro-auth{
+    display:flex;align-items:center;
+ }
+ body #masthead .deprat-header-identity-inner.is-visitor .deprat-login-details>summary{
+    padding:11px 6px;font-weight:750;
+ }
+}
+@media(min-width:922px) and (max-width:1270px){
+ body #masthead .deprat-header-identity-inner.is-visitor{
+    grid-template-columns:215px minmax(230px,1fr) 280px;
+ }
+}
+
+@media(min-width:922px){
+  /* L'underline est le ::before natif DEPRAT, pas le chevron ::after. */
+  body #masthead .main-header-menu>.menu-item>a.menu-link::before{
+    bottom:14px;transform-origin:center;
+  }
+  body #masthead .main-header-menu>.deprat-mega-parent>a.menu-link::before{
+    bottom:14px;
+  }
+}
+
+/* Préserver le cadrage personnalisé des images de bibliothèque sur toutes les pages. */
+body img.deprat-library-image{object-fit:cover!important}

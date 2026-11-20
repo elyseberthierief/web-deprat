@@ -65,7 +65,7 @@ function deprat_site_header_tiers() {
             </div>
         </div>
         <div class="deprat-header-identity-row">
-            <div class="deprat-header-shell deprat-header-identity-inner">
+            <div class="deprat-header-shell deprat-header-identity-inner <?php echo is_user_logged_in() ? 'is-connected' : 'is-visitor'; ?>">
                 <a class="deprat-header-brand" href="<?php echo esc_url( home_url( '/' ) ); ?>" aria-label="DEPRAT — Accueil">
                     <?php if ( $logo_url ) : ?>
                         <img src="<?php echo esc_url( $logo_url ); ?>" width="90" height="90" alt="" loading="eager" decoding="async">
@@ -85,19 +85,29 @@ function deprat_site_header_tiers() {
                         <svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 5.5 5.5"/></svg>
                     </button>
                 </form>
-                <div class="deprat-header-pro-panel">
-                    <div class="deprat-header-pro-title"><span>Espace professionnel</span></div>
+                <div class="deprat-header-pro-panel <?php echo is_user_logged_in() ? 'is-connected' : 'is-visitor'; ?>">
                     <div class="deprat-header-pro-actions">
                         <?php if ( is_user_logged_in() ) : ?>
-                            <?php // Les notifications et le menu client sont générés par les shortcodes DEPRAT existants. ?>
-                            <?php echo do_shortcode( '[deprat_menu_pro]' ); ?>
-                            <a class="deprat-header-account-button" href="<?php echo esc_url( $account_url ); ?>">Mon espace pro</a>
+                            <?php
+                            // Reprendre le menu client et sa cloche existants : aucun doublon.
+                            $menu_pro = do_shortcode( '[deprat_menu_pro]' );
+                            $logout = function_exists( 'wc_get_account_endpoint_url' )
+                                ? wc_get_account_endpoint_url( 'customer-logout' ) : wp_logout_url( home_url( '/' ) );
+                            $logout_link = '<a class="deprat-header-logout" href="' . esc_url( $logout ) . '">Se déconnecter</a>';
+                            if ( false !== strpos( $menu_pro, '</nav></details>' ) ) {
+                                $menu_pro = str_replace( '</nav></details>', $logout_link . '</nav></details>', $menu_pro );
+                            }
+                            echo $menu_pro; // HTML échappé par les shortcodes DEPRAT existants.
+                            ?>
                         <?php else : ?>
                             <?php echo do_shortcode( '[deprat_menu_pro]' ); ?>
                             <a class="deprat-header-account-button" href="<?php echo esc_url( $account_url ); ?>">Créer un compte pro</a>
                         <?php endif; ?>
                     </div>
                 </div>
+                <?php if ( is_user_logged_in() ) : ?>
+                    <?php echo deprat_site_header_quote_button(); // Lien panier, icône et compteur, un seul bouton. ?>
+                <?php endif; ?>
             </div>
         </div>
     </div>
@@ -114,7 +124,7 @@ function deprat_site_header_quote_item( $items, $args ) {
 
     $url = function_exists( 'wc_get_cart_url' ) ? wc_get_cart_url() : '';
     if ( ! $url ) { return $items; }
-    $quantity = function_exists( 'WC' ) && WC()->cart ? (int) WC()->cart->get_cart_contents_count() : 0;
+    $quantity = function_exists( 'WC' ) && WC()->cart ? (int) count( WC()->cart->get_cart() ) : 0;
     $badge = $quantity > 0
         ? '<span class="deprat-header-quote-count" aria-label="' . esc_attr( $quantity . ' articles dans la demande' ) . '">' . esc_html( $quantity > 99 ? '99+' : (string) $quantity ) . '</span>'
         : '';
@@ -125,4 +135,22 @@ function deprat_site_header_quote_item( $items, $args ) {
         . '<span>Ma demande de devis</span></a></li>';
     return $items;
 }
-add_filter( 'wp_nav_menu_items', 'deprat_site_header_quote_item', 40, 2 );
+// La demande de devis figure désormais dans l'en-tête central : pas de doublon dans le menu.
+
+/** Un bouton entier clicable, lié au panier WooCommerce et à son nombre d'articles. */
+function deprat_site_header_quote_button() {
+    $url = function_exists( 'wc_get_cart_url' ) ? wc_get_cart_url() : '';
+    if ( ! $url ) { return ''; }
+    $count = function_exists( 'WC' ) && WC()->cart ? (int) count( WC()->cart->get_cart() ) : 0;
+    $badge = $count > 0 ? '<span class="deprat-header-quote-count" aria-label="' . esc_attr( $count . ' articles dans la demande' ) . '">' . esc_html( $count > 99 ? '99+' : (string) $count ) . '</span>' : '';
+    return '<a id="deprat-header-quote-link" class="deprat-header-quote-button" href="' . esc_url( $url ) . '">'
+        . '<span class="deprat-header-quote-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 2h12v20l-3-2-3 2-3-2-3 2V2Z"/><path d="M9 7h6M9 11h6M9 15h4"/></svg></span>'
+        . '<span>Ma demande de devis</span>' . $badge . '</a>';
+}
+/** Recalculer le compteur immédiatement après l'ajout AJAX au panier. */
+add_filter( 'woocommerce_add_to_cart_fragments', static function ( $fragments ) {
+    if ( is_user_logged_in() && function_exists( 'WC' ) && WC()->cart ) {
+        $fragments['#deprat-header-quote-link'] = deprat_site_header_quote_button();
+    }
+    return $fragments;
+} );

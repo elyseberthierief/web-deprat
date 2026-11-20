@@ -1,4 +1,4 @@
-DEPRAT Core 0.1.53
+DEPRAT Core 0.1.54
 
 Le plugin reprend les extraits PHP actifs dans la sauvegarde du 14 novembre 2026.
 Extraits globaux : 5 à 11 et 15.
@@ -85,3 +85,14 @@ Version 0.1.53 — Refonte réelle de l'en-tête Astra :
 - Entrée « Ma demande de devis » dans le menu principal, vers le panier WooCommerce, avec compteur d'articles.
 - En mobile, l'en-tête Astra natif et le menu hamburger sont conservés.
 - Contrôles après déploiement : trois lignes desktop, bon logo, recherche, connexion/notifications, ouverture du méga-menu, lien devis, et affichage téléphone.
+
+Version 0.1.54 — Paramètres de la boutique / Bandeaux catégories / Bibliothèque :
+- Nouvelle entrée admin « Paramètres de la boutique » sous Produits avec 3 onglets : Organiser les catégories, Les icônes et Les slides. L'ancienne arborescence reste accessible pour compatibilité.
+- Les slides catégories sont un type de contenu dédié : catégorie WooCommerce obligatoire, titre et description facultatifs, image issue de la médiathèque, ordre, brouillon/masquage. Chaque catégorie ne voit que ses propres slides, aucune transmission à ses sous-catégories.
+- En l’absence de slide, bandeau dégradé avec nom et description du terme WooCommerce. Sur les pages catégories uniquement, en pleine largeur ; le catalogue général et les fiches produits ne changent pas.
+- Les transitions des slides d’accueil et des catégories passent à un fondu de 850 ms, avec pause au survol, navigation manuelle et respect de « réduire les animations ».
+- « Les icônes » : réparation du champ Nom mal sélectionné par le script ; modification et enregistrement de l'intitulé.
+- Images non carrées : prévisualisation et cadrage 1:1, déplacement à la souris / au toucher / aux flèches, position horizontale et verticale sauvegardées dans la bibliothèque et réutilisées sur les cartes.
+- En-tête : connecté = cloche + un seul contrôle compte / nom ; la déconnexion est dans le menu déroulant. Déconnecté = « Se connecter » + « Créer un compte pro » centrés sans titre redondant. Bouton bleu unique « Ma demande de devis », icône et texte cliquables ensemble, compteur doré quand le panier contient des articles.
+- Navigation agrandie et soulignement actif rapproché.
+- Vérifications conseillées sur desktop et mobile pour chaque modification (voir PR).

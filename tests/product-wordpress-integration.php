@@ -633,7 +633,7 @@ deprat_integration_assert(
     false !== strpos( $deprat_header_test, 'deprat-header-contact-row' )
     && false !== strpos( $deprat_header_test, 'deprat-header-identity-row' )
     && false !== strpos( $deprat_header_test, 'contact@deprat.com' )
-    && false !== strpos( $deprat_header_test, 'Espace professionnel' )
+    && false === strpos( $deprat_header_test, '<div class="deprat-header-pro-title">' )
     && false !== strpos( $deprat_header_test, 'name="post_type" value="product"' )
     && false !== strpos( $deprat_header_test, 'deprat-header-pro-actions' ),
     'Le header complet doit fournir coordonnées, recherche et compte professionnel.' );
@@ -642,5 +642,44 @@ $quote_menu_html = deprat_site_header_quote_item( '', $menu_args );
 deprat_integration_assert( false !== strpos( $quote_menu_html, 'Ma demande de devis' )
     && false !== strpos( $quote_menu_html, 'deprat-header-quote-menu-item' ),
     'Le menu Astra doit ajouter le véritable lien panier de devis.' );
+
+
+// Un slide n'appartient qu'à une seule vraie catégorie WooCommerce.
+$category_slide_id = wp_insert_post( array(
+    'post_type' => 'deprat_cat_slide',
+    'post_status' => 'publish',
+    'post_title' => 'Bandeau test Tubes',
+    'menu_order' => 1,
+), true );
+deprat_integration_assert( ! is_wp_error( $category_slide_id ) && $category_slide_id > 0,
+    'Le type de contenu Slides catégories doit être créable.' );
+update_post_meta( $category_slide_id, '_deprat_category_slide_term', (int) $tube_category['term_id'] );
+update_post_meta( $category_slide_id, '_deprat_category_slide_heading', 'Tubes de démonstration' );
+update_post_meta( $category_slide_id, '_deprat_category_slide_description', 'Description dédiée à cette catégorie.' );
+$for_tubes = deprat_category_slides_for_term( (int) $tube_category['term_id'] );
+$for_embouts = deprat_category_slides_for_term( (int) $end_category['term_id'] );
+deprat_integration_assert( count( $for_tubes ) >= 1
+    && 'Tubes de démonstration' === $for_tubes[0]['heading'],
+    'Le bandeau ne doit apparaître que dans sa catégorie.' );
+deprat_integration_assert( 0 === count( $for_embouts ),
+    'La sous-catégorie Embouts ne doit pas hériter du slide Tubes.' );
+ob_start();
+deprat_category_slide_render( get_term( (int) $tube_category['term_id'], 'product_cat' ) );
+$category_slide_html = ob_get_clean();
+deprat_integration_assert( false !== strpos( $category_slide_html, 'Tubes de démonstration' )
+    && false !== strpos( $category_slide_html, 'deprat-cat-hero-breadcrumb' )
+    && false !== strpos( $category_slide_html, 'Description dédiée' ),
+    'Le bandeau doit afficher le bon titre, la description et le fil d’Ariane.' );
+wp_delete_post( $category_slide_id, true );
+ob_start();
+deprat_category_slide_render( get_term( (int) $end_category['term_id'], 'product_cat' ) );
+$fallback_slide_html = ob_get_clean();
+deprat_integration_assert( false !== strpos( $fallback_slide_html, 'deprat-cat-hero' )
+    && false !== strpos( $fallback_slide_html, 'Embouts' ),
+    'Sans slide, une sous-catégorie garde son bandeau bleu par défaut.' );
+deprat_integration_assert( false !== strpos( deprat_site_header_quote_button(), 'Ma demande de devis' ),
+    'Le bouton devis central est accessible et pointe vers le panier.' );
+deprat_integration_assert( false === has_filter( 'wp_nav_menu_items', 'deprat_site_header_quote_item' ),
+    'La demande de devis ne doit pas être dupliquée en bas dans le menu.' );
 
 WP_CLI::success( 'WordPress et WooCommerce : sauvegarde, médias et affichages vérifiés.' );
