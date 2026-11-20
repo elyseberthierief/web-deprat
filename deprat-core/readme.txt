@@ -1,4 +1,4 @@
-DEPRAT Core 0.1.69
+DEPRAT Core 0.1.70
 
 Le plugin reprend les extraits PHP actifs dans la sauvegarde du 14 novembre 2026.
 Extraits globaux : 5 à 11 et 15.
@@ -183,3 +183,9 @@ Version 0.1.69 — Raccourci Mises à jour corrigé :
 - Le raccourci en haut du menu admin DEPRAT ouvre la page native « WP Pusher Plugins » (bouton « Update plugin » pour DEPRAT Core), et non « Mises à jour WordPress ».
 - Son adresse est détectée à partir du menu WP Pusher installé, plutôt que coder un slug potentiellement différent. Si WP Pusher n'est pas chargé, aucun faux lien vers les mises à jour WordPress n'est affiché.
 - La suppression de « Comptes et permissions WP » dans Réglages ADMINISTRATEUR (0.1.68) reste conservée pour ne pas ouvrir les deux espaces simultanément.
+
+Version 0.1.70 — Espace Pages dans l'administration DEPRAT :
+- Nouvel espace de couleur bleu ardoise, distinct d'Espace Articles, reprenant les véritables pages WordPress.
+- Sous-menu Toutes les pages vers la liste native edit.php?post_type=page, et Ajouter une page vers post-new.php?post_type=page.
+- Le menu Pages WordPress n'est pas dupliqué sous Réglages ADMINISTRATEUR ; toutes les pages et leurs contenus restent inchangés.
+- Retour en un clic au menu classique toujours disponible.
