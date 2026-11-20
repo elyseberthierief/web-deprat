@@ -77,7 +77,7 @@ $roots = deprat_catalog_root_categories();
         <?php endif; ?>
     </header>
     <?php endif; ?>
-    <?php if ( ! $is_hub || $is_all ) : ?>
+    <?php if ( $is_all ) : ?>
     <nav class="deprat-catalog-nav" aria-label="Catégories des composants">
         <?php foreach ( $roots as $root ) :
             $url = get_term_link( $root );
