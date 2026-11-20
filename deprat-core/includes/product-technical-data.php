@@ -325,11 +325,32 @@ function deprat_product_tech_create_category() {
     if ( term_exists( $name, 'product_cat', $parent ) ) {
         wp_send_json_error( array( 'message' => 'Cette catégorie existe déjà à cet emplacement.' ), 409 );
     }
+    $section = isset( $_POST['section'] ) && is_scalar( $_POST['section'] )
+        ? sanitize_key( wp_unslash( $_POST['section'] ) ) : '';
+    $sections = deprat_catalog_section_definitions();
+    if ( ! $parent && ! isset( $sections[ $section ] ) ) {
+        wp_send_json_error( array( 'message' => 'Sélectionnez une section DEPRAT valide.' ), 400 );
+    }
     $created = wp_insert_term( $name, 'product_cat', array( 'parent' => $parent ) );
     if ( is_wp_error( $created ) ) {
         wp_send_json_error( array( 'message' => $created->get_error_message() ), 400 );
     }
-    wp_send_json_success( array( 'id' => (int) $created['term_id'], 'name' => $name, 'parent' => $parent ) );
+    $term_id = (int) $created['term_id'];
+    if ( ! $parent ) {
+        update_term_meta( $term_id, '_deprat_catalog_section', $section );
+    } else {
+        $parent_term = get_term( $parent, 'product_cat' );
+        if ( $parent_term instanceof WP_Term ) {
+            $ancestors = deprat_product_list_ancestors( $parent_term );
+            $root = $ancestors ? $ancestors[0] : $parent_term;
+            $section = deprat_catalog_section_for_term( $root );
+        }
+    }
+    wp_send_json_success( array(
+        'id' => $term_id, 'name' => $name, 'parent' => $parent,
+        'section' => $section,
+        'sectionTitle' => isset( $sections[ $section ] ) ? $sections[ $section ] : 'Autres composants',
+    ) );
 }
 add_action( 'wp_ajax_deprat_product_category_create', 'deprat_product_tech_create_category' );
 
