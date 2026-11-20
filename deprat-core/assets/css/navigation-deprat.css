@@ -358,12 +358,6 @@ body #masthead .custom-logo-link img{
  /* Le trait actif doit rester à 5-7 px du texte et non au bas de sa grande boîte. */
  body #masthead .main-header-menu>.current-menu-item>a.menu-link,
  body #masthead .main-header-menu>.current-menu-ancestor>a.menu-link{position:relative}
- body #masthead .main-header-menu>.current-menu-item>a.menu-link:after,
- body #masthead .main-header-menu>.current-menu-ancestor>a.menu-link:after{
-   content:"";position:absolute;bottom:10px;left:16px;right:16px;
-   height:3px;border:0;background:#b68b24;border-radius:4px;
-   transform:none;width:auto;
- }
  body #masthead .main-header-menu>.deprat-mega-parent>a.menu-link:after{
    /* Le chevron du méga-menu est fourni par le plugin et doit rester visible. */
    left:auto;right:8px;bottom:auto;height:7px;width:7px;background:none;border:solid currentColor;
@@ -408,4 +402,14 @@ body #masthead .custom-logo-link img{
  body #masthead .deprat-header-identity-inner.is-visitor{
     grid-template-columns:215px minmax(230px,1fr) 280px;
  }
+}
+
+@media(min-width:922px){
+  /* L'underline est le ::before natif DEPRAT, pas le chevron ::after. */
+  body #masthead .main-header-menu>.menu-item>a.menu-link::before{
+    bottom:14px;transform-origin:center;
+  }
+  body #masthead .main-header-menu>.deprat-mega-parent>a.menu-link::before{
+    bottom:14px;
+  }
 }
