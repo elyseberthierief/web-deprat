@@ -570,3 +570,55 @@ body.deprat-sticky-header-enabled #masthead .sub-menu{
       max-height:calc(100dvh - var(--deprat-sticky-top,0px));
   }
 }
+
+/* 0.1.62 — Suppression d'une ligne dans la liste de devis et accès invité.
+   Le bouton est le même que sur l'accueil, même pour un visiteur. */
+@media(min-width:922px){
+ body #masthead .deprat-header-mini-cart-item{position:relative}
+ body #masthead .deprat-header-mini-cart-details{flex:1 1 auto;min-width:0}
+ body #masthead .deprat-header-mini-cart-remove{
+   flex:0 0 30px;display:grid;place-items:center;
+   align-self:center;width:30px;height:30px;padding:6px;
+   border:1px solid #d9e5f1;border-radius:8px;
+   background:#fff;color:#68809a;cursor:pointer;
+   transition:background-color .16s,border-color .16s,color .16s;
+ }
+ body #masthead .deprat-header-mini-cart-remove svg{width:18px;height:18px}
+ body #masthead .deprat-header-mini-cart-remove:hover,
+ body #masthead .deprat-header-mini-cart-remove:focus-visible{
+   background:#fff1f0;color:#b93e38;border-color:#efb9b4;outline-offset:2px;
+ }
+ body #masthead .deprat-header-mini-cart-remove:disabled{opacity:.5;cursor:wait}
+ body #masthead .deprat-header-mini-cart-guest-note{
+   margin:8px 15px 0;padding:10px 12px;border-radius:8px;
+   background:#f0f5fd;color:#365d89;font-size:12px;line-height:1.5;
+ }
+ body #masthead .deprat-mini-cart-error{
+   margin:10px 14px;padding:9px;border-radius:7px;
+   border:1px solid #e8b9b9;background:#fff4f3;color:#982b2b;
+   font-size:12px;
+ }
+ body #masthead .deprat-header-quote-widget.is-removing .deprat-header-mini-cart{opacity:1}
+ body #masthead .deprat-header-identity-inner.is-visitor{
+   grid-template-columns:minmax(190px,.85fr) minmax(190px,1.05fr)
+      minmax(180px,.82fr) minmax(190px,.85fr);
+   column-gap:clamp(8px,1.3vw,23px);
+ }
+ body #masthead .deprat-header-identity-inner.is-visitor .deprat-header-pro-actions{gap:8px}
+ body #masthead .deprat-header-identity-inner.is-visitor .deprat-header-account-button{
+   padding:9px 12px;font-size:12px;
+ }
+}
+@media(min-width:922px) and (max-width:1270px){
+ body #masthead .deprat-header-identity-inner.is-visitor{
+   grid-template-columns:190px minmax(170px,1fr) minmax(175px,.8fr) 188px;
+   column-gap:9px;
+ }
+ body #masthead .deprat-header-identity-inner.is-visitor .deprat-header-brand img{width:50px;height:50px}
+ body #masthead .deprat-header-identity-inner.is-visitor .deprat-header-brand-copy strong{font-size:23px}
+ body #masthead .deprat-header-identity-inner.is-visitor .deprat-header-account-button{font-size:11px!important}
+}
+@media(max-width:921px){
+ /* Astra conserve son bouton panier mobile, y compris en visiteur. */
+ body #masthead .deprat-header-quote-widget{display:none!important}
+}
