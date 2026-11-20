@@ -124,7 +124,7 @@ function deprat_site_header_quote_item( $items, $args ) {
 
     $url = function_exists( 'wc_get_cart_url' ) ? wc_get_cart_url() : '';
     if ( ! $url ) { return $items; }
-    $quantity = function_exists( 'WC' ) && WC()->cart ? (int) WC()->cart->get_cart_contents_count() : 0;
+    $quantity = function_exists( 'WC' ) && WC()->cart ? (int) count( WC()->cart->get_cart() ) : 0;
     $badge = $quantity > 0
         ? '<span class="deprat-header-quote-count" aria-label="' . esc_attr( $quantity . ' articles dans la demande' ) . '">' . esc_html( $quantity > 99 ? '99+' : (string) $quantity ) . '</span>'
         : '';
@@ -141,7 +141,7 @@ function deprat_site_header_quote_item( $items, $args ) {
 function deprat_site_header_quote_button() {
     $url = function_exists( 'wc_get_cart_url' ) ? wc_get_cart_url() : '';
     if ( ! $url ) { return ''; }
-    $count = function_exists( 'WC' ) && WC()->cart ? (int) WC()->cart->get_cart_contents_count() : 0;
+    $count = function_exists( 'WC' ) && WC()->cart ? (int) count( WC()->cart->get_cart() ) : 0;
     $badge = $count > 0 ? '<span class="deprat-header-quote-count" aria-label="' . esc_attr( $count . ' articles dans la demande' ) . '">' . esc_html( $count > 99 ? '99+' : (string) $count ) . '</span>' : '';
     return '<a id="deprat-header-quote-link" class="deprat-header-quote-button" href="' . esc_url( $url ) . '">'
         . '<span class="deprat-header-quote-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 2h12v20l-3-2-3 2-3-2-3 2V2Z"/><path d="M9 7h6M9 11h6M9 15h4"/></svg></span>'
