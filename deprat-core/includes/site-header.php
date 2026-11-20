@@ -65,7 +65,7 @@ function deprat_site_header_tiers() {
             </div>
         </div>
         <div class="deprat-header-identity-row">
-            <div class="deprat-header-shell deprat-header-identity-inner">
+            <div class="deprat-header-shell deprat-header-identity-inner <?php echo is_user_logged_in() ? 'is-connected' : 'is-visitor'; ?>">
                 <a class="deprat-header-brand" href="<?php echo esc_url( home_url( '/' ) ); ?>" aria-label="DEPRAT — Accueil">
                     <?php if ( $logo_url ) : ?>
                         <img src="<?php echo esc_url( $logo_url ); ?>" width="90" height="90" alt="" loading="eager" decoding="async">
