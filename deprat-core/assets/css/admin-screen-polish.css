@@ -302,3 +302,172 @@ body.deprat-admin-mode.post-type-shop_order #wpbody-content .wrap table.wp-list-
         padding:8px 10px!important;
     }
 }
+
+/* 0.1.78 — Pages, Articles et Clients : exactement le modèle d'onglets
+   « Paramètres de la boutique » (ligne basse, coins HAUTS, bleu uni). */
+body.deprat-admin-mode.deprat-editorial-list #wpbody-content .subsubsub,
+body.deprat-admin-mode.users-php #wpbody-content .subsubsub{
+    display:flex!important;
+    flex-wrap:nowrap!important;
+    align-items:stretch!important;
+    gap:14px!important;
+    float:none!important;
+    clear:both;
+    width:100%!important;
+    max-width:100%!important;
+    padding:0!important;
+    margin:22px 0 25px!important;
+    background:transparent!important;
+    border:0!important;
+    border-bottom:1px solid #bfd3ed!important;
+    box-shadow:none!important;
+    overflow-x:auto;
+    overflow-y:hidden;
+    scrollbar-width:thin;
+    box-sizing:border-box;
+}
+body.deprat-admin-mode.deprat-editorial-list #wpbody-content .subsubsub li,
+body.deprat-admin-mode.users-php #wpbody-content .subsubsub li{
+    display:flex!important;
+    flex:0 0 auto!important;
+    float:none!important;
+    align-items:stretch!important;
+    margin:0!important;
+    padding:0!important;
+    color:transparent!important;
+    font-size:0!important;
+    line-height:1.3!important;
+}
+body.deprat-admin-mode.deprat-editorial-list #wpbody-content .subsubsub li a,
+body.deprat-admin-mode.users-php #wpbody-content .subsubsub li a {
+    position:relative;
+    float:none!important;
+    display:inline-flex!important;
+    flex:0 0 auto!important;
+    align-items:center!important;
+    justify-content:center!important;
+    gap:5px!important;
+    min-height:67px!important;
+    padding:17px 24px!important;
+    margin:0 0 -1px!important;
+    color:#103b80!important;
+    background:#f5f8fd!important;
+    border:1px solid #cbd9eb!important;
+    border-radius:15px 15px 0 0!important;
+    box-shadow:none!important;
+    white-space:nowrap;
+    font-size:16px!important;
+    font-weight:560!important;
+    line-height:1.3!important;
+    letter-spacing:0!important;
+    text-decoration:none!important;
+    box-sizing:border-box;
+    transition:background-color .15s,border-color .15s;
+}
+body.deprat-admin-mode.deprat-editorial-list #wpbody-content .subsubsub li a:hover:not(.current),
+body.deprat-admin-mode.users-php #wpbody-content .subsubsub li a:hover:not(.current){
+    background:#eaf2fc!important;
+    border-color:#afc8e7!important;
+}
+body.deprat-admin-mode.deprat-editorial-list #wpbody-content .subsubsub li a.current,
+body.deprat-admin-mode.users-php #wpbody-content .subsubsub li a.current {
+    z-index:1;
+    color:#fff!important;
+    background:#173f80!important;
+    border-color:#173f80!important;
+    border-radius:15px 15px 0 0!important;
+    font-weight:650!important;
+}
+body.deprat-admin-mode.deprat-editorial-list #wpbody-content .subsubsub .count,
+body.deprat-admin-mode.users-php #wpbody-content .subsubsub .count,
+body.deprat-admin-mode.users-php #wpbody-content .subsubsub a[href*="deprat_pending"] .count {
+    display:inline!important;
+    min-width:0!important;
+    min-height:0!important;
+    margin:0!important;
+    padding:0!important;
+    color:inherit!important;
+    background:transparent!important;
+    border:0!important;
+    border-radius:0!important;
+    box-shadow:none!important;
+    font-size:inherit!important;
+    font-weight:inherit!important;
+    line-height:inherit!important;
+}
+body.deprat-admin-mode.deprat-editorial-list #wpbody-content .subsubsub li a:focus-visible,
+body.deprat-admin-mode.users-php #wpbody-content .subsubsub li a:focus-visible{
+    outline:3px solid #7aa6e2!important;
+    outline-offset:-3px!important;
+}
+
+/* Tables éditoriales & clients : moins d'espacement, bloc recentré.
+   Les formulaires Quick Edit et les actions natives sont conservés. */
+body.deprat-admin-mode.deprat-editorial-list #wpbody-content .wrap table.wp-list-table,
+body.deprat-admin-mode.users-php #wpbody-content .wrap table.wp-list-table {
+    width:calc(100% - 48px)!important;
+    max-width:calc(100% - 48px)!important;
+    margin:18px 24px 24px!important;
+    border:1px solid #dce6f1!important;
+    border-radius:12px!important;
+    border-collapse:separate!important;
+    border-spacing:0!important;
+    box-shadow:0 4px 16px rgba(22,62,110,.045)!important;
+}
+body.deprat-admin-mode.deprat-editorial-list #wpbody-content .wp-list-table thead th,
+body.deprat-admin-mode.deprat-editorial-list #wpbody-content .wp-list-table thead td,
+body.deprat-admin-mode.deprat-editorial-list #wpbody-content .wp-list-table tfoot th,
+body.deprat-admin-mode.deprat-editorial-list #wpbody-content .wp-list-table tfoot td,
+body.deprat-admin-mode.users-php #wpbody-content .wp-list-table thead th,
+body.deprat-admin-mode.users-php #wpbody-content .wp-list-table thead td,
+body.deprat-admin-mode.users-php #wpbody-content .wp-list-table tfoot th {
+    padding:10px 12px!important;
+    font-size:11.5px!important;
+    font-weight:640!important;
+    line-height:1.35!important;
+    background:#edf4fb!important;
+    color:#173e72!important;
+    vertical-align:middle!important;
+}
+body.deprat-admin-mode.deprat-editorial-list #wpbody-content .wp-list-table tbody tr:not(.inline-edit-row)>td,
+body.deprat-admin-mode.deprat-editorial-list #wpbody-content .wp-list-table tbody tr:not(.inline-edit-row)>th,
+body.deprat-admin-mode.users-php #wpbody-content .wp-list-table tbody tr>td,
+body.deprat-admin-mode.users-php #wpbody-content .wp-list-table tbody tr>th {
+    padding:9px 12px!important;
+    height:auto!important;
+    font-size:12.5px!important;
+    line-height:1.4!important;
+    color:#365572;
+    vertical-align:middle!important;
+}
+body.deprat-admin-mode.deprat-editorial-list #wpbody-content .wp-list-table tbody .row-actions,
+body.deprat-admin-mode.users-php #wpbody-content .wp-list-table tbody .row-actions{
+    padding-top:3px!important;
+    line-height:1.35!important;
+}
+body.deprat-admin-mode.users-php #wpbody-content .wp-list-table tbody .avatar{
+    width:30px;height:30px;
+}
+body.deprat-admin-mode.deprat-editorial-list #wpbody-content .wp-list-table tbody tr:not(.inline-edit-row):hover,
+body.deprat-admin-mode.users-php #wpbody-content .wp-list-table tbody tr:hover{
+    background:#f1f6fc!important;
+}
+@media(max-width:782px){
+    body.deprat-admin-mode.deprat-editorial-list #wpbody-content .subsubsub,
+    body.deprat-admin-mode.users-php #wpbody-content .subsubsub{gap:9px!important;}
+    body.deprat-admin-mode.deprat-editorial-list #wpbody-content .subsubsub li a,
+    body.deprat-admin-mode.users-php #wpbody-content .subsubsub li a{
+        min-height:52px!important;padding:12px 15px!important;
+        font-size:13px!important;
+    }
+    body.deprat-admin-mode.deprat-editorial-list #wpbody-content .wrap table.wp-list-table,
+    body.deprat-admin-mode.users-php #wpbody-content .wrap table.wp-list-table{
+        width:calc(100% - 20px)!important;
+        max-width:calc(100% - 20px)!important;
+        margin:12px 10px 20px!important;
+    }
+    body.deprat-admin-mode.deprat-editorial-list #wpbody-content .wp-list-table tbody tr:not(.inline-edit-row)>td,
+    body.deprat-admin-mode.users-php #wpbody-content .wp-list-table tbody tr>td{
+        padding:8px 10px!important;
+    }
+}
