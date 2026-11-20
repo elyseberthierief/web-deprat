@@ -197,8 +197,7 @@
         // Réglages ADMINISTRATEUR par la boucle entries ci-dessus.
         // Ne pas réinsérer Paramètres boutique dans la partie technique.
 
-        // La page native WordPress de maintenance et d'extensions à mettre à jour.
-        // Accès immédiat en tête du menu, réservé à l'administrateur.
+        // Accès immédiat à la page WP Pusher Plugins utilisée pour DEPRAT Core.
         // Raccourci demandé : la page WP Pusher Plugins avec le bouton
         // « Update plugin » DEPRAT Core, et non update-core.php de WordPress.
         // Retrouver l'URL réelle du menu natif : les slugs des extensions
@@ -217,7 +216,7 @@
         // raccourci qui ouvrirait les mises à jour WordPress à sa place.
         var groups=[];
         if (wpPusherUrl) {
-            groups.push({title:'Mise à jour DEPRAT',tone:'updates',icon:'refresh',url:wpPusherUrl});
+            groups.push({title:'Mises à jour',tone:'updates',icon:'refresh',url:wpPusherUrl});
         }
         groups.push(
             {title:'Tableau de bord',tone:'dashboard',icon:'house',url:dashboard?dashboard.url:config.dashboardUrl},
