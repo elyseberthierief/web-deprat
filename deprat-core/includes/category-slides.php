@@ -198,20 +198,64 @@ add_action( 'save_post_deprat_cat_slide', 'deprat_category_slide_save' );
 
 function deprat_category_slide_admin_list() {
     $slides = get_posts( array( 'post_type' => 'deprat_cat_slide', 'post_status' => array( 'publish', 'draft', 'pending', 'future', 'private' ), 'numberposts' => 100, 'orderby' => 'menu_order', 'order' => 'ASC' ) );
-    echo '<div class="deprat-shop-slide-list"><h2>Slides des catégories</h2>';
-    echo '<p>Créez un bandeau pour <strong>une seule catégorie</strong>. Son titre, sa description et sa photo sont modifiables. Sans slide actif, la catégorie utilise automatiquement son nom et sa description WooCommerce sur un dégradé bleu.</p>';
-    echo '<p><a class="button button-primary" href="' . esc_url( admin_url( 'post-new.php?post_type=deprat_cat_slide' ) ) . '">+ Créer un slide de catégorie</a></p>';
+    echo '<div class="deprat-shop-slide-list"><h2>Slides de la boutique et des catégories</h2>';
+    echo '<p>Créez un bandeau pour <strong>Nos composants</strong> ou pour <strong>une catégorie précise</strong>. Chaque slide dispose de son fond standard DEPRAT, d’un dégradé/couleur personnalisé ou d’une image couvrante. Sans configuration, le bleu standard reste appliqué.</p>';
+    echo '<p><a class="button button-primary" href="' . esc_url( admin_url( 'post-new.php?post_type=deprat_cat_slide' ) ) . '">+ Créer un slide de boutique ou catégorie</a></p>';
     if ( ! $slides ) {
         echo '<p>Aucun slide personnalisé pour le moment.</p></div>'; return;
     }
     echo '<table class="widefat striped"><thead><tr><th>Slide</th><th>Catégorie</th><th>Ordre</th><th>Affichage</th><th>Action</th></tr></thead><tbody>';
     foreach ( $slides as $slide ) {
         $term = get_term( (int) get_post_meta( $slide->ID, '_deprat_category_slide_term', true ), 'product_cat' );
-        $label = $term && ! is_wp_error( $term ) ? $term->name : 'À sélectionner';
+        $label = 'shop' === get_post_meta( $slide->ID, '_deprat_category_slide_scope', true )
+            ? 'Boutique générale — Nos composants'
+            : ( $term && ! is_wp_error( $term ) ? $term->name : 'À sélectionner' );
         $visible = 'publish' === $slide->post_status && '1' !== get_post_meta( $slide->ID, '_deprat_category_slide_hidden', true );
-        echo '<tr><td>' . esc_html( $slide->post_title ) . '</td><td>' . esc_html( $label ) . '</td><td>' . (int) $slide->menu_order . '</td><td>' . ( $visible ? 'Visible' : 'Masqué / brouillon' ) . '</td><td><a href="' . esc_url( get_edit_post_link( $slide->ID ) ) . '">Modifier</a></td></tr>';
+        $mode = get_post_meta( $slide->ID, '_deprat_category_slide_bg_mode', true ) ?: 'standard';
+        $mode_names = array( 'standard' => 'DEPRAT standard', 'gradient' => 'Dégradé personnalisé', 'solid' => 'Couleur unie', 'image' => 'Image couvrante' );
+        echo '<tr><td>' . esc_html( $slide->post_title ) . '</td><td>' . esc_html( $label ) . '</td><td>' . (int) $slide->menu_order . '</td><td>' . ( $visible ? 'Visible' : 'Masqué / brouillon' ) . ' — ' . esc_html( $mode_names[ $mode ] ?? 'DEPRAT standard' ) . '</td><td><a href="' . esc_url( get_edit_post_link( $slide->ID ) ) . '">Modifier</a></td></tr>';
     }
     echo '</tbody></table></div>';
+}
+
+/** Paramètres sûrs d'arrière-plan, avec compatibilité des anciens slides. */
+function deprat_category_slide_bg_config( $post_id ) {
+    $mode = (string) get_post_meta( $post_id, '_deprat_category_slide_bg_mode', true );
+    if ( ! in_array( $mode, array( 'standard', 'gradient', 'solid', 'image' ), true ) ) { $mode = 'standard'; }
+    $start = sanitize_hex_color( get_post_meta( $post_id, '_deprat_category_slide_bg_start', true ) ) ?: '#072e67';
+    $end = sanitize_hex_color( get_post_meta( $post_id, '_deprat_category_slide_bg_end', true ) ) ?: '#1264b1';
+    $solid = sanitize_hex_color( get_post_meta( $post_id, '_deprat_category_slide_bg_solid', true ) ) ?: '#103b80';
+    $id = (int) get_post_meta( $post_id, '_deprat_category_slide_bg_image', true );
+    $url = $id && wp_attachment_is_image( $id ) ? wp_get_attachment_image_url( $id, 'full' ) : '';
+    if ( 'image' === $mode && ! $url ) { $mode = 'standard'; }
+    return array( 'mode' => $mode, 'start' => $start, 'end' => $end, 'solid' => $solid, 'image_url' => $url ?: '' );
+}
+
+/** Convertir un post-slide en données indépendantes du template. */
+function deprat_category_slide_data( $post ) {
+    return array(
+        'heading' => trim( (string) get_post_meta( $post->ID, '_deprat_category_slide_heading', true ) ),
+        'description' => trim( (string) get_post_meta( $post->ID, '_deprat_category_slide_description', true ) ),
+        'image_id' => (int) get_post_meta( $post->ID, '_deprat_category_slide_image', true ),
+        'background' => deprat_category_slide_bg_config( $post->ID ),
+    );
+}
+
+/** Le diaporama de la boutique générale n'appartient à aucune catégorie. */
+function deprat_category_slides_for_shop() {
+    $posts = get_posts( array(
+        'post_type' => 'deprat_cat_slide', 'post_status' => 'publish',
+        'numberposts' => 30, 'meta_key' => '_deprat_category_slide_scope',
+        'meta_value' => 'shop', 'orderby' => 'menu_order',
+        'order' => 'ASC', 'suppress_filters' => true,
+    ) );
+    $slides = array();
+    foreach ( $posts as $post ) {
+        if ( '1' !== (string) get_post_meta( $post->ID, '_deprat_category_slide_hidden', true ) ) {
+            $slides[] = deprat_category_slide_data( $post );
+        }
+    }
+    return $slides;
 }
 
 /** Un terme précis => uniquement ses propres slides. */
@@ -230,11 +274,7 @@ function deprat_category_slides_for_term( $term_id ) {
     $slides = array();
     foreach ( $posts as $post ) {
         if ( '1' === (string) get_post_meta( $post->ID, '_deprat_category_slide_hidden', true ) ) { continue; }
-        $slides[] = array(
-            'heading' => trim( (string) get_post_meta( $post->ID, '_deprat_category_slide_heading', true ) ),
-            'description' => trim( (string) get_post_meta( $post->ID, '_deprat_category_slide_description', true ) ),
-            'image_id' => (int) get_post_meta( $post->ID, '_deprat_category_slide_image', true ),
-        );
+        $slides[] = deprat_category_slide_data( $post );
     }
     return $slides;
 }
@@ -264,25 +304,53 @@ function deprat_category_slide_breadcrumb( $term ) {
     echo '<span aria-hidden="true">›</span><strong aria-current="page">' . esc_html( $term->name ) . '</strong></nav>';
 }
 
-/** Le bandeau de catégorie est en pleine largeur et n'affecte jamais la boutique globale. */
-function deprat_category_slide_render( $term ) {
-    if ( ! $term || is_wp_error( $term ) || ! isset( $term->term_id ) ) { return; }
-    $slides = deprat_category_slides_for_term( (int) $term->term_id );
-    if ( ! $slides ) { $slides[] = array( 'heading' => '', 'description' => '', 'image_id' => 0 ); }
+/** Bandeau commun boutique/catégorie, avec fallback standard homogène. */
+function deprat_category_slide_render( $term = null ) {
+    $is_shop = null === $term;
+    if ( ! $is_shop && ( is_wp_error( $term ) || ! isset( $term->term_id ) ) ) { return; }
+    $slides = $is_shop ? deprat_category_slides_for_shop() : deprat_category_slides_for_term( (int) $term->term_id );
+    if ( ! $slides ) {
+        $slides[] = array( 'heading' => '', 'description' => '', 'image_id' => 0,
+            'background' => array( 'mode' => 'standard' ) );
+    }
     $count = count( $slides );
-    echo '<section class="deprat-cat-hero" aria-label="Présentation de la catégorie ' . esc_attr( $term->name ) . '" data-deprat-category-slider>';
+    $title = $is_shop ? 'Nos composants' : $term->name;
+    echo '<section class="deprat-cat-hero" aria-label="Présentation de ' . esc_attr( $title ) . '" data-deprat-category-slider>';
     echo '<div class="deprat-cat-hero-slides">';
     foreach ( $slides as $i => $slide ) {
-        $heading = $slide['heading'] ?: $term->name;
-        $description = $slide['description'] ?: wp_strip_all_tags( (string) $term->description );
+        $heading = $slide['heading'] ?: $title;
+        $description = $slide['description'] ?: ( $is_shop
+            ? 'Découvrez l’ensemble des composants DEPRAT pour volets roulants, stores et portes de garage.'
+            : wp_strip_all_tags( (string) $term->description ) );
         $image_id = $slide['image_id'];
-        if ( ! $image_id && 1 === $count ) {
+        if ( ! $is_shop && ! $image_id && 1 === $count ) {
             $custom = (int) get_term_meta( $term->term_id, '_deprat_category_image_id', true );
             $image_id = $custom ?: (int) get_term_meta( $term->term_id, 'thumbnail_id', true );
         }
-        echo '<article class="deprat-cat-hero-slide' . ( 0 === $i ? ' is-active' : '' ) . '" data-deprat-category-slide aria-hidden="' . ( 0 === $i ? 'false' : 'true' ) . '">';
+        $bg = isset( $slide['background'] ) && is_array( $slide['background'] ) ? $slide['background'] : array( 'mode' => 'standard' );
+        $mode = isset( $bg['mode'] ) && in_array( $bg['mode'], array( 'standard', 'gradient', 'solid', 'image' ), true )
+            ? $bg['mode'] : 'standard';
+        $bg_style = '';
+        if ( 'gradient' === $mode ) {
+            $bg_style = 'background:linear-gradient(115deg,' . $bg['start'] . ',' . $bg['end'] . ');';
+        } elseif ( 'solid' === $mode ) {
+            $bg_style = 'background-color:' . $bg['solid'] . ';';
+        }
+        echo '<article class="deprat-cat-hero-slide' . ( 0 === $i ? ' is-active' : '' ) . '" data-deprat-category-slide'
+            . ' data-background-mode="' . esc_attr( $mode ) . '"'
+            . ( $bg_style ? ' style="' . esc_attr( $bg_style ) . '"' : '' )
+            . ' aria-hidden="' . ( 0 === $i ? 'false' : 'true' ) . '">';
+        if ( 'image' === $mode && ! empty( $bg['image_url'] ) ) {
+            // Une image couvre TOUT le slide ; l'illustration technique reste indépendante.
+            echo '<div class="deprat-cat-hero-background" aria-hidden="true" style="background-image:url(&quot;'
+                . esc_attr( esc_url_raw( $bg['image_url'] ) ) . '&quot;)"></div>';
+        }
         echo '<div class="deprat-cat-hero-inner"><div class="deprat-cat-hero-copy">';
-        deprat_category_slide_breadcrumb( $term );
+        if ( $is_shop ) {
+            echo '<nav class="deprat-cat-hero-breadcrumb" aria-label="Fil d’Ariane"><strong aria-current="page">Nos composants</strong></nav>';
+        } else {
+            deprat_category_slide_breadcrumb( $term );
+        }
         echo '<span class="deprat-cat-hero-gold-rule" aria-hidden="true"></span>';
         if ( 0 === $i ) { echo '<h1>' . esc_html( $heading ) . '</h1>'; }
         else { echo '<h2>' . esc_html( $heading ) . '</h2>'; }
