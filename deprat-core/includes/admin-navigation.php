@@ -52,13 +52,26 @@ add_action( 'admin_enqueue_scripts', static function () {
         'deprat-admin-navigation',
         plugins_url( 'assets/css/admin-navigation.css', dirname( __DIR__ ) . '/deprat-core.php' ),
         array(),
-        '0.1.71'
+        '0.1.72'
     );
     wp_enqueue_script(
         'deprat-admin-navigation',
         plugins_url( 'assets/js/admin-navigation.js', dirname( __DIR__ ) . '/deprat-core.php' ),
         array(),
-        '0.1.71',
+        '0.1.72',
+        true
+    );
+    wp_enqueue_style(
+        'deprat-admin-screen-polish',
+        plugins_url( 'assets/css/admin-screen-polish.css', dirname( __DIR__ ) . '/deprat-core.php' ),
+        array( 'deprat-admin-navigation' ),
+        '0.1.72'
+    );
+    wp_enqueue_script(
+        'deprat-admin-screen-polish',
+        plugins_url( 'assets/js/admin-screen-polish.js', dirname( __DIR__ ) . '/deprat-core.php' ),
+        array( 'deprat-admin-navigation' ),
+        '0.1.72',
         true
     );
     wp_add_inline_script(
@@ -109,3 +122,21 @@ add_action( 'wp_dashboard_setup', static function () {
     }
 }, PHP_INT_MAX );
 
+
+/**
+ * Styliser seulement les véritables listes de contenu DEPRAT : Pages,
+ * Articles, Slides et Médias. Les écrans d'édition Elementor/WooCommerce
+ * restent natifs pour préserver leur fonctionnement.
+ */
+add_filter( 'admin_body_class', static function ( $classes ) {
+    if ( ! deprat_admin_design_enabled() ) { return $classes; }
+    $screen = get_current_screen();
+    if ( ! $screen ) { return $classes; }
+    $id = (string) $screen->id;
+    if ( in_array( $id, array(
+        'edit-post', 'edit-page', 'edit-deprat_slide', 'upload',
+    ), true ) ) {
+        $classes .= ' deprat-editorial-list';
+    }
+    return $classes;
+} );
