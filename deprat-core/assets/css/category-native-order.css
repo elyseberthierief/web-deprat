@@ -1,0 +1,18 @@
+/* Les catégories suivent les sections configurées dans DEPRAT. */
+body.taxonomy-product_cat .deprat-native-category-group th{
+ background:#eaf2fb!important;color:#143e77!important;
+ padding:12px 15px!important;border-top:1px solid #cbdcf0;
+ border-bottom:1px solid #d9e6f4;font-size:13px;
+ font-weight:650;letter-spacing:.01em;text-align:left;
+}
+body.taxonomy-product_cat .deprat-taxonomy-section-pill{
+ display:inline-flex;padding:4px 9px;border-radius:7px;
+ background:#f0f6fd;color:#23548b;border:1px solid #d5e3f1;
+ font-size:11px;line-height:1.4;font-weight:550;
+}
+body.taxonomy-product_cat .wp-list-table{
+ border:1px solid #dae6f2;border-radius:10px;overflow:hidden;
+}
+body.taxonomy-product_cat .wp-list-table th{
+ color:#194779;font-weight:620;
+}
