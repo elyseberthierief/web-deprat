@@ -186,16 +186,15 @@
         // Ne jamais dupliquer des menus métier sous Réglages ADMINISTRATEUR.
         // Les sous-menus liés aux produits, aux slides, au marketing et aux
         // catégories restent accessibles depuis leurs espaces respectifs.
-        if (users) {
-            var userExtras=users.children.filter(function(c){
-                return /role|capabilit|profil|permission/i.test(c.title)
-                    && !/liste|compte|utilisateur/i.test(c.title);
-            });
-            if (userExtras.length) {
-                adminChildren.push({title:'Comptes et permissions WP',url:users.url,icon:'shield',
-                    children:userExtras.map(function(c){return item(c.title,c.url,'chevron-right');})});
-            }
-        }
+        // Important : ne pas réinsérer le menu natif « Comptes/Utilisateurs »
+        // sous Réglages ADMINISTRATEUR. Ce serait la même page users.php que
+        // « Espace Boutique > Clients », et les deux groupes s'ouvriraient
+        // simultanément dès qu'on consulte une liste de comptes.
+        //
+        // Le menu WordPress original et tous ses réglages restent disponibles
+        // d'un clic via « Admin classique ». Les extensions dédiées aux rôles
+        // qui exposent leur propre menu racine restent automatiquement dans
+        // Réglages ADMINISTRATEUR par la boucle entries ci-dessus.
         // Ne pas réinsérer Paramètres boutique dans la partie technique.
 
         // La page native WordPress de maintenance et d'extensions à mettre à jour.
