@@ -37,7 +37,8 @@ try {
         'deprat-dash-two-columns',
         'Dernières commandes',
         'Comptes à valider',
-        'users.php?deprat_view=clients&amp;role=deprat_pending',
+        'users.php?deprat_view=clients',
+        'role=deprat_pending',
     ) as $expected ) {
         if ( false === strpos( $html, $expected ) ) {
             throw new RuntimeException( 'Élément de tableau de bord absent : ' . $expected );
