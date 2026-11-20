@@ -73,6 +73,7 @@ add_action( 'admin_enqueue_scripts', static function () {
             'settingsUrl' => admin_url( 'admin.php?page=deprat-shop-settings' ),
             'clientUrl' => admin_url( 'users.php' ),
             'pendingUrl' => admin_url( 'users.php?role=deprat_pending' ),
+            'pendingCount' => (int) ( count_users()['avail_roles']['deprat_pending'] ?? 0 ),
             'marketingUrl' => admin_url( 'admin.php?page=wc-admin&path=/marketing' ),
             'homeSlideUrl' => admin_url( 'edit.php?post_type=deprat_slide' ),
             'blogUrl' => admin_url( 'edit.php' ),
