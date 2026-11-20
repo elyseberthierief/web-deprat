@@ -336,7 +336,7 @@ const assert = require( 'assert' );
         }
         await page.screenshot( { path: process.env.RUNNER_TEMP + '/deprat-mega-menu.png', fullPage: false } );
 
-        assert( ( await page.locator( '.deprat-catalog-header h1' ).textContent() ).includes( 'Tubes' ), 'La page Tubes a son propre titre.' );
+        assert( ( await page.locator( '.deprat-cat-hero h1' ).textContent() ).includes( 'Tubes' ), 'La page Tubes a son propre titre.' );
         assert( await page.locator( '.deprat-catalog-filter-form' ).isVisible(), 'La page Tubes affiche ses filtres.' );
         assert.strictEqual( await page.locator( '[data-catalog-card]' ).count(), 1, 'La page Tubes contient uniquement le tube.' );
         assert( ( await page.locator( '[data-catalog-card]' ).textContent() ).includes( 'Tube de test' ), 'Le tube doit apparaître.' );
@@ -428,7 +428,7 @@ const assert = require( 'assert' );
 
         await page.goto( base + '/?product_cat=embouts', { waitUntil: 'domcontentloaded' } );
         await page.waitForSelector( '.deprat-catalog-layout' );
-        assert( ( await page.locator( '.deprat-catalog-header h1' ).textContent() ).includes( 'Embouts' ), 'La page Embouts a son propre titre.' );
+        assert( ( await page.locator( '.deprat-cat-hero h1' ).textContent() ).includes( 'Embouts' ), 'La page Embouts a son propre titre.' );
         assert.strictEqual( await page.locator( '[data-catalog-card]' ).count(), 1, 'La page Embouts contient uniquement l’embout.' );
         assert( ( await page.locator( '[data-catalog-card]' ).textContent() ).includes( 'Embout DEPRAT de test' ), 'L’embout doit apparaître.' );
         assert.strictEqual( await page.locator( '[data-open-model]' ).count(), 0, 'Aucun bouton 360° inventé si le produit n’a pas de GLB.' );
@@ -471,7 +471,7 @@ const assert = require( 'assert' );
         }
         await page.goto( fullShopUrl, { waitUntil: 'domcontentloaded' } );
         await page.waitForSelector( '.deprat-catalog-results' );
-        assert( ( await page.locator( '.deprat-catalog-header h1' ).textContent() ).includes( 'Tous les composants' ),
+        assert( ( await page.locator( '.deprat-cat-hero h1' ).textContent() ).includes( 'Tous les composants' ),
             'Le bouton ouvre une page Tous les composants et non la page des catégories.' );
         const allProductsText = await page.locator( '[data-catalog-products]' ).textContent();
         assert( allProductsText.includes( 'Tube de test' ) && allProductsText.includes( 'Embout DEPRAT de test' ),
