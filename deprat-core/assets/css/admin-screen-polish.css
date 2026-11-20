@@ -232,3 +232,73 @@ body.deprat-admin-mode.woocommerce_page_wc-orders #wpbody-content .subsubsub a.c
     color:#fff!important;
     background:rgba(255,255,255,.2)!important;
 }
+
+/* 0.1.74 — Liste des demandes : densité professionnelle et marges respirantes.
+ * Ne touche pas aux formulaires d'édition des commandes. */
+body.deprat-admin-mode.woocommerce_page_wc-orders #wpbody-content .wrap table.wp-list-table,
+body.deprat-admin-mode.post-type-shop_order #wpbody-content .wrap table.wp-list-table {
+    width:calc(100% - 48px)!important;
+    max-width:calc(100% - 48px)!important;
+    margin:18px 24px 24px!important;
+    border:1px solid #dce6f1!important;
+    border-radius:12px!important;
+    border-spacing:0!important;
+    border-collapse:separate!important;
+    table-layout:auto;
+    box-shadow:0 4px 16px rgba(22,62,110,.045)!important;
+    overflow:hidden;
+}
+body.deprat-admin-mode.woocommerce_page_wc-orders #wpbody-content .wrap table.wp-list-table thead th,
+body.deprat-admin-mode.woocommerce_page_wc-orders #wpbody-content .wrap table.wp-list-table tfoot th,
+body.deprat-admin-mode.post-type-shop_order #wpbody-content .wrap table.wp-list-table thead th,
+body.deprat-admin-mode.post-type-shop_order #wpbody-content .wrap table.wp-list-table tfoot th {
+    padding:10px 12px!important;
+    font-size:12px!important;
+    line-height:1.35!important;
+    font-weight:620!important;
+    background:#edf4fb!important;
+    color:#173e72!important;
+    vertical-align:middle!important;
+}
+body.deprat-admin-mode.woocommerce_page_wc-orders #wpbody-content .wrap table.wp-list-table tbody td,
+body.deprat-admin-mode.woocommerce_page_wc-orders #wpbody-content .wrap table.wp-list-table tbody th,
+body.deprat-admin-mode.post-type-shop_order #wpbody-content .wrap table.wp-list-table tbody td,
+body.deprat-admin-mode.post-type-shop_order #wpbody-content .wrap table.wp-list-table tbody th {
+    padding:9px 12px!important;
+    font-size:12.5px!important;
+    line-height:1.4!important;
+    vertical-align:middle!important;
+    height:auto!important;
+}
+body.deprat-admin-mode.woocommerce_page_wc-orders #wpbody-content .wrap table.wp-list-table tbody tr:nth-child(even),
+body.deprat-admin-mode.post-type-shop_order #wpbody-content .wrap table.wp-list-table tbody tr:nth-child(even){
+    background:#fafcff!important;
+}
+body.deprat-admin-mode.woocommerce_page_wc-orders #wpbody-content .wrap table.wp-list-table tbody tr:hover,
+body.deprat-admin-mode.post-type-shop_order #wpbody-content .wrap table.wp-list-table tbody tr:hover {
+    background:#f1f6fc!important;
+}
+body.deprat-admin-mode.woocommerce_page_wc-orders #wpbody-content .wrap table.wp-list-table tbody .row-actions,
+body.deprat-admin-mode.post-type-shop_order #wpbody-content .wrap table.wp-list-table tbody .row-actions {
+    padding-top:3px!important;
+    line-height:1.3!important;
+}
+body.deprat-admin-mode.woocommerce_page_wc-orders #wpbody-content .wrap table.wp-list-table .button,
+body.deprat-admin-mode.post-type-shop_order #wpbody-content .wrap table.wp-list-table .button {
+    min-height:27px!important;
+    padding:3px 9px!important;
+    font-size:11.5px!important;
+    border-radius:7px!important;
+}
+@media(max-width:782px){
+    body.deprat-admin-mode.woocommerce_page_wc-orders #wpbody-content .wrap table.wp-list-table,
+    body.deprat-admin-mode.post-type-shop_order #wpbody-content .wrap table.wp-list-table {
+        width:calc(100% - 20px)!important;
+        max-width:calc(100% - 20px)!important;
+        margin:12px 10px 20px!important;
+    }
+    body.deprat-admin-mode.woocommerce_page_wc-orders #wpbody-content .wrap table.wp-list-table tbody td,
+    body.deprat-admin-mode.post-type-shop_order #wpbody-content .wrap table.wp-list-table tbody td {
+        padding:8px 10px!important;
+    }
+}
