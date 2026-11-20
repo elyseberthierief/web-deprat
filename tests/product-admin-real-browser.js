@@ -681,8 +681,8 @@ const assert = require( 'assert' );
         const customKey = await newSection.getAttribute( 'data-preview-section' );
         assert( /^custom_[a-f0-9]{12}$/.test( customKey ),
             'Une section personnalisée a une clé stable, distincte des catégories.' );
-        assert( await newSection.locator( '.deprat-section-icon-wrap svg' ).isVisible(),
-            'L’icône issue de la palette apparaît dans la même grille.' );
+        assert( await newSection.locator( '.deprat-section-icon-wrap img' ).isVisible(),
+            'L’icône 3D Treuil issue de la palette apparaît dans la même grille.' );
         await newSection.locator( '[data-preview-edit-section]' ).click();
         await page.locator( '[data-section-editor-name]' ).fill( 'Motorisations et accessoires test' );
         await page.locator( 'input[name="deprat-section-icon"][value="liaison"]' ).check();
