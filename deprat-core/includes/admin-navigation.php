@@ -52,13 +52,13 @@ add_action( 'admin_enqueue_scripts', static function () {
         'deprat-admin-navigation',
         plugins_url( 'assets/css/admin-navigation.css', dirname( __DIR__ ) . '/deprat-core.php' ),
         array(),
-        '0.1.66'
+        '0.1.67'
     );
     wp_enqueue_script(
         'deprat-admin-navigation',
         plugins_url( 'assets/js/admin-navigation.js', dirname( __DIR__ ) . '/deprat-core.php' ),
         array(),
-        '0.1.66',
+        '0.1.67',
         true
     );
     wp_add_inline_script(
@@ -73,6 +73,7 @@ add_action( 'admin_enqueue_scripts', static function () {
             'settingsUrl' => admin_url( 'admin.php?page=deprat-shop-settings' ),
             'clientUrl' => admin_url( 'users.php' ),
             'pendingUrl' => admin_url( 'users.php?role=deprat_pending' ),
+            'pendingCount' => (int) ( count_users()['avail_roles']['deprat_pending'] ?? 0 ),
             'marketingUrl' => admin_url( 'admin.php?page=wc-admin&path=/marketing' ),
             'homeSlideUrl' => admin_url( 'edit.php?post_type=deprat_slide' ),
             'blogUrl' => admin_url( 'edit.php' ),
@@ -81,3 +82,26 @@ add_action( 'admin_enqueue_scripts', static function () {
         'before'
     );
 } );
+
+/**
+ * Tableau de bord DEPRAT : retirer uniquement les boîtes superflues de
+ * l'écran administrateur, sans désactiver les extensions correspondantes.
+ */
+add_action( 'wp_dashboard_setup', static function () {
+    if ( ! deprat_admin_design_enabled() ) { return; }
+    $ids = array(
+        'dashboard_recent_comments',
+        'dashboard_quick_press',
+        'wpforms_reports_widget_lite',
+        'wpforms_dashboard_widget',
+        'wpforms_reports_widget',
+        'wpforms_tasks_widget',
+        'wpforms_welcome_widget',
+    );
+    foreach ( $ids as $id ) {
+        foreach ( array( 'normal', 'side', 'column3', 'column4' ) as $context ) {
+            remove_meta_box( $id, 'dashboard', $context );
+        }
+    }
+}, PHP_INT_MAX );
+

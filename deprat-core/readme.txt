@@ -1,4 +1,4 @@
-DEPRAT Core 0.1.66
+DEPRAT Core 0.1.67
 
 Le plugin reprend les extraits PHP actifs dans la sauvegarde du 14 novembre 2026.
 Extraits globaux : 5 à 11 et 15.
@@ -165,3 +165,11 @@ Version 0.1.66 — Navigation Paramètres de la boutique :
 - Liens explicites « Organiser les catégories », « Organiser les icônes », « Organiser les slides ».
 - Nouvel onglet « Organiser les caractéristiques techniques », volontairement sans réglages pour l'instant, en attente de définition du fonctionnement.
 - Accès aux quatre onglets depuis la barre latérale ou via la page Paramètres de la boutique, sans modifier les données enregistrées.
+
+Version 0.1.67 — Administration DEPRAT, comptes et tableau de bord :
+- La sélection du menu distingue correctement les Slides d’accueil (deprat_slide) des Articles WordPress (post sans type explicite) : une seule page active.
+- Espace Boutique > Clients : clic sur Clients ouvre « Tous les comptes », suppression des liens supplémentaires « Ouvrir Clients » et « Liste des comptes ouverts » ; « Comptes pro en attente » reste le seul sous-menu.
+- Le compteur réel des comptes au rôle deprat_pending est affiché en pastille rouge à côté de Clients et de Comptes pro en attente.
+- Page Utilisateurs stylisée : onglets Tous, Administrateurs, Clients, Comptes pro en attente avec nombres d'origine WordPress, tableau et contrôles DEPRAT plus lisibles ; les validations de compte continuent d'utiliser le système WordPress existant.
+- Tableau de bord WordPress harmonisé dans la même identité graphique ; masquer uniquement les widgets Commentaires, Brouillon rapide (« Créer un extrait ») et WPForms, sans supprimer données/extensions.
+- Rubrique Réglages ADMINISTRATEUR : pictogramme cadenas à la place de l'engrenage, sans changer les permissions.
