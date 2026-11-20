@@ -96,3 +96,10 @@ Version 0.1.54 — Paramètres de la boutique / Bandeaux catégories / Biblioth�
 - En-tête : connecté = cloche + un seul contrôle compte / nom ; la déconnexion est dans le menu déroulant. Déconnecté = « Se connecter » + « Créer un compte pro » centrés sans titre redondant. Bouton bleu unique « Ma demande de devis », icône et texte cliquables ensemble, compteur doré quand le panier contient des articles.
 - Navigation agrandie et soulignement actif rapproché.
 - Vérifications conseillées sur desktop et mobile pour chaque modification (voir PR).
+
+Version 0.1.56 — Bibliothèque d'icônes : déplacement visuel du recadrage.
+- À l'édition, la photo source entière est chargée dans l'aperçu, pas la vignette WordPress déjà recadrée.
+- Le carré de découpe est agrandi et possède des lignes de tiers ; la photo se déplace réellement et en direct au glissement.
+- Un glissement lent est pris en compte grâce à un calcul cumulatif ; les % correspondent à la position visible.
+- Le cadrage reste déplaçable à la souris, au toucher et aux flèches du clavier, puis enregistré.
+- Ne change pas les icônes existantes tant que l'éditeur n'enregistre pas leurs modifications.
