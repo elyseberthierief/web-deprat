@@ -438,6 +438,18 @@
         // la compatibilité avec le bouton réduire le menu est préservée.
         wrap.appendChild(sidebar);
         document.body.classList.add('deprat-admin-mode');
+
+        // Les pages WordPress rechargent naturellement. Restaurer le
+        // défilement du MENU (indépendant du contenu principal) après
+        // reconstruction, pour reprendre exactement à la même rubrique.
+        var scrollKey='deprat-admin-menu-scroll-v1';
+        try {
+            var savedScroll=Number(sessionStorage.getItem(scrollKey))||0;
+            if(savedScroll>0){wrap.scrollTop=savedScroll;}
+        } catch(err) {}
+        wrap.addEventListener('scroll',function(){
+            try{sessionStorage.setItem(scrollKey,String(wrap.scrollTop));}catch(err){}
+        },{passive:true});
         // L'original demeure entièrement dans le DOM et revient à tout moment
         // en quittant le mode DEPRAT depuis la barre d'administration.
     }
