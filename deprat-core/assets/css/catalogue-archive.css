@@ -469,3 +469,48 @@
  .deprat-catalog-child-icon{width:62px;height:62px}
  .deprat-catalog-child-icon>svg,.deprat-catalog-child-icon>img{width:45px!important;height:45px!important}
 }
+
+/* 0.1.54 — Bandeau éditorial propre à chaque catégorie, largeur totale,
+   indépendant du catalogue général et des fiches produits. */
+.deprat-cat-hero{position:relative;width:100%;margin:0;overflow:hidden;color:white;background:#063878;border-bottom:4px solid #c49a31;isolation:isolate}
+.deprat-cat-hero:before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background:
+  linear-gradient(138deg,rgba(1,37,89,.74),transparent 66%),
+  linear-gradient(117deg,#00295f 0%,#0b5bb0 49%,#003575 100%);}
+.deprat-cat-hero:after{content:"";position:absolute;inset:-25% -10%;z-index:-1;pointer-events:none;opacity:.5;background:linear-gradient(135deg,transparent 20%,rgba(56,132,216,.2) 20%,rgba(56,132,216,.2) 40%,transparent 40%,transparent 66%,rgba(49,113,207,.15) 66%,rgba(49,113,207,.15) 85%,transparent 85%);transform:skewX(-12deg)}
+.deprat-cat-hero-slides{position:relative;min-height:318px}
+.deprat-cat-hero-slide{position:absolute;inset:0;z-index:0;visibility:hidden;opacity:0;pointer-events:none;transition:opacity .85s ease-in-out,visibility 0s linear .85s}
+.deprat-cat-hero-slide.is-active{z-index:1;visibility:visible;opacity:1;pointer-events:auto;transition:opacity .85s ease-in-out,visibility 0s}
+.deprat-cat-hero-inner{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:40px;align-items:center;min-height:318px;width:min(100% - 70px,1550px);margin:auto;padding:34px 10px}
+.deprat-cat-hero-copy{position:relative;z-index:2;align-self:center;min-width:0}
+.deprat-cat-hero-breadcrumb{display:flex;flex-wrap:wrap;gap:12px;align-items:center;font-size:13px;line-height:1.5;color:#edf5ff;margin:0 0 19px}
+.deprat-cat-hero-breadcrumb a{color:#edf5ff;text-decoration:none}
+.deprat-cat-hero-breadcrumb a:hover{text-decoration:underline;color:white}
+.deprat-cat-hero-breadcrumb strong{color:white;font-weight:800}
+.deprat-cat-hero-gold-rule{display:block;width:54px;height:4px;background:#d5a332;border-radius:9px;margin-bottom:17px}
+.deprat-cat-hero h1,.deprat-cat-hero h2{color:white!important;font-size:clamp(36px,4.2vw,66px);font-weight:850;line-height:1.1;margin:0 0 13px;letter-spacing:-.025em;text-shadow:0 2px 7px rgba(0,22,61,.1)}
+.deprat-cat-hero p{font-size:clamp(15px,1.2vw,19px);line-height:1.55;color:#f1f6ff;margin:0;max-width:760px}
+.deprat-cat-hero-image{position:relative;display:grid;place-items:center;min-width:0;height:250px}
+.deprat-cat-hero-image img{display:block;max-height:250px;max-width:100%;width:100%;height:100%;object-fit:contain;object-position:center;filter:drop-shadow(0 12px 18px rgba(0,26,67,.16))}
+.deprat-cat-hero-arrow{position:absolute;z-index:4;top:49%;width:38px;height:38px;display:grid;place-items:center;border:0;border-radius:50%;font-size:32px;line-height:1;color:white;background:rgba(150,197,245,.27);cursor:pointer;transform:translateY(-50%)}
+.deprat-cat-hero-arrow:hover,.deprat-cat-hero-arrow:focus-visible{background:rgba(150,197,245,.48)}
+.deprat-cat-hero-prev{left:8px}.deprat-cat-hero-next{right:8px}
+.deprat-cat-hero-dots{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);z-index:5;display:flex;gap:8px}
+.deprat-cat-hero-dots button{width:10px;height:10px;padding:0;border-radius:50%;border:0;background:rgba(255,255,255,.47);cursor:pointer}
+.deprat-cat-hero-dots button[aria-pressed=true]{background:white;box-shadow:0 0 0 2px rgba(255,255,255,.23)}
+@media(max-width:820px){
+ .deprat-cat-hero-inner{grid-template-columns:minmax(0,1fr) 34%;gap:16px;width:calc(100% - 34px);padding:29px 5px}
+ .deprat-cat-hero-slides,.deprat-cat-hero-inner{min-height:270px}
+ .deprat-cat-hero-image{height:165px}
+ .deprat-cat-hero-image img{max-height:165px}
+ .deprat-cat-hero h1,.deprat-cat-hero h2{font-size:clamp(30px,5vw,44px)}
+}
+@media(max-width:560px){
+ .deprat-cat-hero-inner{grid-template-columns:minmax(0,1fr);min-height:260px}
+ .deprat-cat-hero-slides{min-height:260px}
+ .deprat-cat-hero-image{display:none}
+ .deprat-cat-hero-breadcrumb{gap:7px;font-size:11px}
+ .deprat-cat-hero h1,.deprat-cat-hero h2{font-size:34px}
+ .deprat-cat-hero p{font-size:14px}
+ .deprat-cat-hero-arrow{width:30px;height:30px;font-size:25px}
+}
+@media(prefers-reduced-motion:reduce){.deprat-cat-hero-slide{transition:none!important}}
