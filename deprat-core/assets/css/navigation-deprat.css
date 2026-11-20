@@ -456,6 +456,12 @@ body img.deprat-library-image{object-fit:cover!important}
    transition:opacity .2s ease,transform .2s ease,visibility .2s;
    z-index:200;
  }
+ /* La zone invisible fait le pont entre le bouton et la fenêtre : elle
+    reste ouverte quand on descend la souris vers les articles. */
+ body #masthead .deprat-header-quote-widget::after{
+   content:"";position:absolute;z-index:1;top:100%;right:0;
+   width:100%;height:14px;pointer-events:auto;background:transparent;
+ }
  body #masthead .deprat-header-mini-cart::before{
    content:"";position:absolute;top:0;left:0;right:0;height:3px;background:#c59a2d;
  }
