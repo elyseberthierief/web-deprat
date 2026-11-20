@@ -295,6 +295,28 @@ const assert = require( 'assert' );
         await page.setViewportSize( { width: 1550, height: 1000 } );
         await page.goto( base + '/?product_cat=tubes', { waitUntil: 'domcontentloaded' } );
         await page.waitForSelector( '.deprat-catalog-layout' );
+        // Les trois bandeaux du masthead restent FIXÉS quand l'utilisateur
+        // descend. Le spacer empêche de recouvrir le début du catalogue.
+        await page.waitForFunction( () => document.body.classList.contains('deprat-sticky-header-enabled') );
+        const stickyTopBefore = await page.locator('#masthead').evaluate(
+            node => node.getBoundingClientRect().top
+        );
+        const stickyHeight = await page.locator('#masthead').evaluate(
+            node => node.getBoundingClientRect().height
+        );
+        const stickySpacer = await page.locator('.deprat-sticky-header-spacer').evaluate(
+            node => node.getBoundingClientRect().height
+        );
+        assert(Math.abs(stickySpacer - stickyHeight) < 3,
+            'Le spacer doit conserver la hauteur intégrale du masthead Astra.');
+        await page.evaluate(() => window.scrollTo(0, 350));
+        await page.waitForTimeout(250);
+        const stickyTopAfter = await page.locator('#masthead').evaluate(
+            node => node.getBoundingClientRect().top
+        );
+        assert(Math.abs(stickyTopAfter - stickyTopBefore) < 3,
+            'Les bandeaux du header doivent rester au même endroit pendant le scroll.');
+        await page.evaluate(() => window.scrollTo(0, 0));
         assert( await page.locator( '.deprat-mega-parent .deprat-mega-panel' ).count() > 0, 'Le menu principal Astra doit ouvrir le méga-menu des catégories.' );
         assert( ( await page.locator( '.deprat-mega-panel' ).first().textContent() ).includes( 'Embouts' ), 'Les sous-pages de catégorie apparaissent dans le méga-menu.' );
         assert( ( await page.locator( '.deprat-mega-parent' ).first().textContent() ).includes( 'Nos composants' ), 'Le menu Boutique est renommé Nos composants.' );
