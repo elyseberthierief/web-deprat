@@ -327,6 +327,155 @@ add_action( 'admin_head-index.php', function () {
     .deprat-home-footer{margin:0;padding:12px 16px;background:#fafbfd;border-top:1px solid #e8eef5}
     .deprat-home-footer a{font-size:12px;text-decoration:none;font-weight:700}
     @media(max-width:782px){.deprat-home-table{min-width:540px}.deprat-home-table td{padding:12px 10px}}
+
+    /* 0.1.78 — Portail d'accueil DEPRAT : accueil personnalisé et deux colonnes.
+       Ciblé uniquement sur l'admin DEPRAT, sans toucher au WordPress classique. */
+    body.deprat-admin-mode.index-php #wpbody-content>.wrap>h1{display:none!important}
+    body.deprat-admin-mode.index-php #dashboard-widgets #postbox-container-1{
+        width:100%!important;max-width:100%!important;float:none!important;
+    }
+    body.deprat-admin-mode.index-php #dashboard-widgets #postbox-container-1 .meta-box-sortables{
+        min-height:0!important;
+    }
+    body.deprat-admin-mode.index-php #deprat_accueil_portail{
+        border:0!important;box-shadow:none!important;background:transparent!important;
+        margin:0!important;overflow:visible!important;
+    }
+    body.deprat-admin-mode.index-php #deprat_accueil_portail>.postbox-header{
+        display:none!important;
+    }
+    body.deprat-admin-mode.index-php #deprat_accueil_portail>.inside{
+        display:block!important;margin:0!important;padding:0!important;
+    }
+    body.deprat-admin-mode.index-php .deprat-dash-shell{
+        display:grid;gap:18px;
+        max-width:100%;padding:4px 8px 12px 0;
+        color:#183c6e;box-sizing:border-box;
+    }
+    body.deprat-admin-mode.index-php .deprat-dash-welcome{
+        display:flex;align-items:center;justify-content:space-between;gap:24px;
+        min-height:128px;padding:23px 27px;
+        border:1px solid #d3e1f1;border-radius:14px;
+        background:linear-gradient(112deg,#f7faff,#eaf3fe);
+        box-shadow:0 4px 15px rgba(21,63,116,.035);
+    }
+    .deprat-dash-eyebrow{
+        margin:0 0 7px!important;font-size:11px!important;
+        letter-spacing:.075em;text-transform:uppercase;
+        color:#52749b;font-weight:650;
+    }
+    body.deprat-admin-mode.index-php .deprat-dash-welcome h1{
+        display:block!important;margin:0 0 7px!important;
+        font-size:clamp(23px,2.2vw,31px)!important;
+        letter-spacing:-.025em!important;font-weight:660!important;
+        line-height:1.2;color:#143e7a!important;
+    }
+    .deprat-dash-welcome p:last-child{
+        margin:0;font-size:13px;line-height:1.5;color:#617994;
+    }
+    .deprat-dash-brand{
+        color:#173e7a;font-size:19px;font-weight:750;letter-spacing:.08em;
+        white-space:nowrap;
+    }
+    .deprat-dash-quick-links{
+        display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+        gap:14px;
+    }
+    .deprat-dash-quick{
+        position:relative;display:flex;align-items:center;gap:14px;
+        min-width:0;min-height:106px;padding:17px 18px;
+        border-radius:13px;border:1px solid rgba(15,35,76,.08);
+        color:#fff!important;text-decoration:none!important;
+        box-shadow:0 5px 15px rgba(15,49,93,.095);
+        transition:transform .15s,box-shadow .15s;
+    }
+    .deprat-dash-quick:hover{
+        transform:translateY(-2px);
+        box-shadow:0 10px 22px rgba(15,49,93,.14);
+        color:#fff!important;
+    }
+    .deprat-dash-quick:focus-visible{outline:3px solid #84addd;outline-offset:3px}
+    .deprat-dash-quick--orders{background:linear-gradient(115deg,#403b88,#282e66)}
+    .deprat-dash-quick--products{background:linear-gradient(115deg,#544996,#35377d)}
+    .deprat-dash-quick--pending{background:linear-gradient(115deg,#334e8c,#263e70)}
+    .deprat-dash-quick-symbol{
+        flex:0 0 43px;height:43px;display:grid;place-items:center;
+        border:1px solid rgba(255,255,255,.21);border-radius:11px;
+        background:rgba(255,255,255,.12);font-size:26px;line-height:1;
+    }
+    .deprat-dash-quick-content{min-width:0;display:grid;gap:5px}
+    .deprat-dash-quick-content strong{
+        display:block;color:#fff;font-size:17px;line-height:1.22;font-weight:650;
+    }
+    .deprat-dash-quick-content small{
+        display:block;color:rgba(255,255,255,.83);
+        font-size:11.5px;line-height:1.4;
+    }
+    .deprat-dash-quick-count,.deprat-dash-quick-arrow{
+        margin-left:auto;flex:0 0 auto;
+        display:inline-flex;align-items:center;justify-content:center;
+        min-height:29px;padding:5px 9px;border-radius:9px;
+        background:rgba(255,255,255,.2);
+        color:#fff;font-size:11px;font-weight:650;white-space:nowrap;
+    }
+    .deprat-dash-quick-arrow{font-size:20px;padding:4px 9px}
+    .deprat-dash-two-columns{
+        display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+        align-items:start;gap:18px;
+    }
+    .deprat-dash-panel{
+        min-width:0;overflow:hidden;background:#fff;
+        border:1px solid #dce6f1;border-radius:13px;
+        box-shadow:0 3px 13px rgba(16,51,95,.045);
+    }
+    .deprat-dash-panel-header{
+        display:flex;justify-content:space-between;align-items:center;gap:12px;
+        padding:17px 19px;background:#f5f8fd;
+        border-bottom:1px solid #e1eaf4;
+    }
+    .deprat-dash-panel-header h2{
+        margin:0 0 4px;font-size:16px!important;font-weight:650;
+        line-height:1.3;color:#143e7a;
+    }
+    .deprat-dash-panel-header p{
+        margin:0;font-size:11.5px;line-height:1.4;color:#6c8099;
+    }
+    .deprat-dash-panel-header>a{
+        flex:0 0 auto;color:#18538e;text-decoration:none;
+        font-weight:650;font-size:12px;
+    }
+    .deprat-dash-panel-header>a:hover{text-decoration:underline}
+    .deprat-dash-panel .deprat-home-help{
+        padding:10px 17px;background:#fff;font-size:11.5px;
+    }
+    .deprat-dash-panel .deprat-home-scroll{overflow-x:auto;max-width:100%}
+    .deprat-dash-panel .deprat-home-table{
+        min-width:500px;font-size:12px;
+    }
+    .deprat-dash-panel .deprat-home-table th{
+        padding:10px 10px;font-size:10.5px;letter-spacing:0;
+    }
+    .deprat-dash-panel .deprat-home-table td{
+        padding:10px;line-height:1.35;font-size:11.5px;
+    }
+    .deprat-dash-panel .deprat-home-table td strong{font-size:12px}
+    .deprat-dash-panel .deprat-home-table .deprat-home-reference a{font-size:12px}
+    .deprat-dash-panel .deprat-home-footer{display:none!important}
+    @media(max-width:1450px){
+        .deprat-dash-quick-links{gap:11px}
+        .deprat-dash-quick{padding:15px 13px;gap:10px}
+        .deprat-dash-quick-symbol{flex-basis:36px;height:36px}
+        .deprat-dash-quick-content strong{font-size:15px}
+    }
+    @media(max-width:1250px){
+        .deprat-dash-two-columns{grid-template-columns:minmax(0,1fr)}
+    }
+    @media(max-width:900px){
+        .deprat-dash-quick-links{grid-template-columns:minmax(0,1fr)}
+        .deprat-dash-quick{min-height:83px}
+        .deprat-dash-welcome{padding:18px!important}
+        .deprat-dash-brand{display:none}
+    }
     </style>
     <?php
 } );
