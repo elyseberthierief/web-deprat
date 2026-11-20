@@ -349,3 +349,22 @@ body.deprat-admin-mode.index-php #dashboard-widgets .postbox .handlediv{
 .deprat-admin-menu .deprat-menu-details > summary > .deprat-menu-chevron{
     cursor:pointer;
 }
+
+/* 0.1.71 : familles de réglages administrateur, toutes dépliables séparément. */
+.deprat-admin-menu .space-admin > details > .deprat-menu-children > .deprat-menu-details > summary{
+    margin:3px 0 5px;
+    padding:9px 10px;
+    border-radius:8px;
+    border:1px solid rgba(200,222,246,.13);
+    background:rgba(255,255,255,.065);
+    color:#eef5fc;
+    font-size:12.7px;
+    font-weight:620;
+}
+.deprat-admin-menu .space-admin > details > .deprat-menu-children > .deprat-menu-details > summary:hover{
+    background:rgba(255,255,255,.12);
+}
+.deprat-admin-menu .space-admin > details > .deprat-menu-children > .deprat-menu-details > .deprat-menu-children{
+    padding-left:8px;
+    margin-bottom:7px;
+}
