@@ -102,6 +102,8 @@
         // Les slides d'accueil ont leur propre post_type, séparé des Articles WP.
         var home=take(/menu-posts-deprat_slide|edit\.php\?post_type=deprat_slide/);
         var posts=take(/menu-posts(?:\s|$)|\/edit\.php$/);
+        // Séparer les pages statiques WordPress des articles du blog.
+        var pages=take(/menu-pages|edit\.php\?post_type=page(?:$|&)/);
         var media=take(/menu-media|\/upload\.php/);
 
         // Les commandes sont généralement logées sous WooCommerce ;
@@ -165,6 +167,10 @@
             });
         }
 
+        var pageChildren=[
+            item('Toutes les pages',pages?pages.url:config.pagesUrl,'files'),
+            item('Ajouter une page',config.addPageUrl,'plus')
+        ];
         var adminChildren=[];
         entries.forEach(function (e) {
             if (!used.has(e)) {
@@ -224,6 +230,7 @@
              {title:'Espace Marketing',tone:'marketing',icon:'megaphone',children:marketingChildren},
             {title:'Espace Page d’accueil',tone:'accueil',icon:'house',children:homeChildren},
             {title:'Espace Articles',tone:'articles',icon:'newspaper',children:postChildren},
+            {title:'Espace Pages',tone:'pages',icon:'files',children:pageChildren},
             {title:'Médias',tone:'medias',icon:'images',url:media?media.url:config.mediaUrl},
             {title:'Réglages ADMINISTRATEUR',tone:'admin',icon:'lock',children:adminChildren}
         );
@@ -240,6 +247,7 @@
             images:'<rect x="2" y="4" width="20" height="16" rx="2"/><circle cx="8" cy="9" r="2"/><path d="m3 18 6-5 4 3 3-4 5 6"/>',
             megaphone:'<path d="M3 10v4h4l12 6V4L7 10zM6 14l2 6h4"/>',
             newspaper:'<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 7h5v5H7zm8 0h3m-3 4h3M7 16h11"/>',
+            files:'<path d="M8 3h9l4 4v13a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M17 3v5h4M2 8v13a2 2 0 0 0 2 2h12M10 12h7m-7 4h7"/>',
             puzzle:'<path d="M9 3h6v4a2 2 0 1 1 4 0h2v6h-4a2 2 0 1 0 0 4v4h-6v-4a2 2 0 1 0-4 0H3v-6h4a2 2 0 1 0 0-4H3V3z"/>',
             shield:'<path d="M12 2 3 6v6c0 6 4 9 9 10 5-1 9-4 9-10V6z"/>',
             lock:'<rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/><circle cx="12" cy="15.5" r="1"/>',
