@@ -52,13 +52,13 @@ add_action( 'admin_enqueue_scripts', static function () {
         'deprat-admin-navigation',
         plugins_url( 'assets/css/admin-navigation.css', dirname( __DIR__ ) . '/deprat-core.php' ),
         array(),
-        '0.1.66'
+        '0.1.67'
     );
     wp_enqueue_script(
         'deprat-admin-navigation',
         plugins_url( 'assets/js/admin-navigation.js', dirname( __DIR__ ) . '/deprat-core.php' ),
         array(),
-        '0.1.66',
+        '0.1.67',
         true
     );
     wp_add_inline_script(
