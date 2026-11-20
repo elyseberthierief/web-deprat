@@ -1,0 +1,44 @@
+/* DEPRAT — modal de connexion pour envoyer la demande, sans accès wp-admin. */
+.deprat-quote-guest-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.deprat-quote-guest-actions .button{min-height:47px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+.deprat-quote-login-dialog{
+    position:fixed;
+    inset:0;
+    margin:auto!important;
+    width:min(500px,calc(100vw - 32px));
+    max-width:calc(100vw - 32px);
+    max-height:min(88vh,720px);
+    overflow:auto;
+    box-sizing:border-box;
+    border:1px solid #d6e2ef;
+    border-radius:16px;
+    background:white;
+    padding:26px 30px 28px!important;
+    color:#183b69;
+    z-index:100020;
+    box-shadow:0 24px 75px rgba(3,23,60,.3);
+}
+.deprat-quote-login-dialog::backdrop{background:rgba(5,23,52,.58);backdrop-filter:blur(3px)}
+.deprat-quote-login-dialog.is-fallback-open{display:block;position:fixed}
+.deprat-quote-login-dialog .deprat-quote-login-heading{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}
+.deprat-quote-login-dialog .deprat-quote-login-heading h3{font-size:27px;color:#103b80;line-height:1.2;margin:0}
+.deprat-quote-login-dialog .deprat-quote-login-close{
+   background:#eef4fa;border:0;border-radius:9px;width:35px;height:35px;
+   display:grid;place-items:center;color:#174376;font-size:25px;cursor:pointer;
+}
+.deprat-quote-login-dialog .deprat-quote-login-intro{color:#607694;line-height:1.5;font-size:14px;margin:0 0 21px}
+.deprat-quote-login-dialog .deprat-quote-login-form{border:0!important;padding:0!important;margin:0!important;display:block}
+.deprat-quote-login-dialog .deprat-quote-login-form>p{margin:0 0 17px}
+.deprat-quote-login-dialog .deprat-quote-login-form label{display:block;margin:0 0 7px;font-weight:750;font-size:14px;color:#173d75}
+.deprat-quote-login-dialog .deprat-quote-login-form input[type=text],
+.deprat-quote-login-dialog .deprat-quote-login-form input[type=password]{
+    display:block;width:100%;min-height:48px;border:1px solid #cbd8e9;border-radius:9px;
+    padding:11px 13px;background:white;box-sizing:border-box;
+}
+.deprat-quote-login-dialog .deprat-quote-login-remember label{display:flex;gap:9px;align-items:center;font-weight:500}
+.deprat-quote-login-dialog .deprat-quote-login-submit{
+    width:100%;min-height:48px;background:#103b80!important;color:white!important;
+    border:0;border-radius:9px;font-weight:800;cursor:pointer;
+}
+.deprat-quote-login-dialog .deprat-quote-login-forgot{margin:15px 0 0!important;text-align:center}
+@media(max-width:600px){.deprat-quote-login-dialog{padding:22px 18px!important}}
