@@ -52,13 +52,13 @@ add_action( 'admin_enqueue_scripts', static function () {
         'deprat-admin-navigation',
         plugins_url( 'assets/css/admin-navigation.css', dirname( __DIR__ ) . '/deprat-core.php' ),
         array(),
-        '0.1.64'
+        '0.1.66'
     );
     wp_enqueue_script(
         'deprat-admin-navigation',
         plugins_url( 'assets/js/admin-navigation.js', dirname( __DIR__ ) . '/deprat-core.php' ),
         array(),
-        '0.1.64',
+        '0.1.66',
         true
     );
     wp_add_inline_script(
@@ -67,6 +67,7 @@ add_action( 'admin_enqueue_scripts', static function () {
             'classicUrl' => deprat_admin_menu_mode_url( 'classic' ),
             'logoUrl' => (int) get_theme_mod( 'custom_logo' ) ? wp_get_attachment_image_url( (int) get_theme_mod( 'custom_logo' ), 'medium' ) : '',
             'dashboardUrl' => admin_url( 'index.php' ),
+            'updatesUrl' => admin_url( 'update-core.php' ),
             'productUrl' => admin_url( 'edit.php?post_type=product' ),
             'ordersUrl' => admin_url( 'admin.php?page=wc-orders' ),
             'settingsUrl' => admin_url( 'admin.php?page=deprat-shop-settings' ),

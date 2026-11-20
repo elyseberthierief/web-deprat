@@ -1,4 +1,4 @@
-DEPRAT Core 0.1.64
+DEPRAT Core 0.1.66
 
 Le plugin reprend les extraits PHP actifs dans la sauvegarde du 14 novembre 2026.
 Extraits globaux : 5 à 11 et 15.
@@ -152,3 +152,16 @@ Version 0.1.64 — Admin DEPRAT métier et finition typographique :
 - La page Organiser les catégories utilise des fontes moins grasses, des ombres discrètes et des angles moins ronds, sans toucher aux outils de déplacement/sauvegarde.
 - Certaines rubriques futures (caractéristiques techniques globales, produits mis en avant) ne reçoivent pas encore de faux liens.
 - En cas de blocage visuel, le plugin n'altère pas les destinations natives ; revenir au menu classique par la barre WordPress.
+
+Version 0.1.65 — Corrections du menu administrateur :
+- Les applications techniques de Réglages ADMINISTRATEUR utilisent les pictogrammes natifs de leur menu WordPress/extension plutôt qu’une icône puzzle générique.
+- Suppression du doublon « Autres réglages Produits » qui ouvrait simultanément l’Espace Boutique et les réglages admin.
+- Le lien Slides d’accueil ouvre toujours la liste du type deprat_slide, indépendamment des articles WordPress.
+- Les chevrons du menu sont des SVG petits, centrés et homogènes.
+- Un accès direct « Mises à jour » (page WordPress update-core.php) apparaît au-dessus de Tableau de bord, réservé à l’admin.
+
+Version 0.1.66 — Navigation Paramètres de la boutique :
+- Suppression du doublon « Ouvrir Paramètres de la boutique » dans l'arborescence DEPRAT.
+- Liens explicites « Organiser les catégories », « Organiser les icônes », « Organiser les slides ».
+- Nouvel onglet « Organiser les caractéristiques techniques », volontairement sans réglages pour l'instant, en attente de définition du fonctionnement.
+- Accès aux quatre onglets depuis la barre latérale ou via la page Paramètres de la boutique, sans modifier les données enregistrées.

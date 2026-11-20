@@ -27,9 +27,14 @@
             var children = Array.from(li.querySelectorAll(':scope > .wp-submenu a[href]')).map(function (a) {
                 return {title:clean(a.textContent),url:a.href};
             }).filter(function (item) { return item.url && item.title; });
+            var nativeIcon = li.querySelector(':scope > a.menu-top .wp-menu-image');
             entries.push({
                 id:li.id, title:clean(li.querySelector('.wp-menu-name') && li.querySelector('.wp-menu-name').textContent || top.textContent),
-                url:top.href, children:children
+                url:top.href, children:children,
+                // Garder les véritables pictogrammes fournis par WordPress et les extensions.
+                // Les classes dashicons, images et styles de l'icône native sont copiés
+                // dans un conteneur isolé pour ne pas déplacer le menu original.
+                nativeIcon: nativeIcon ? nativeIcon.cloneNode(true) : null
             });
         });
         function findEntry(regex) { return entries.find(function(e){ return regex.test(e.id+' '+normalize(e.url)); }); }
@@ -49,9 +54,8 @@
             if (!node || !node.url) { return; }
             if (!arr.some(function(v){ return normalize(v.url)===normalize(node.url); })) { arr.push(node); }
         }
-        function list(tab) {
-            var settings=config.settingsUrl;
-            return item(tab, settings + '&tab=' + ({'Catégories':'categories','Icônes':'icons','Slides':'slides'}[tab]||'categories'),'chevron-right');
+        function shopTab(title, slug) {
+            return item(title, config.settingsUrl + '&tab=' + slug, 'chevron-right');
         }
 
         var dashboard=take(/menu-dashboard|\/index\.php/);
@@ -61,6 +65,7 @@
         var settings=take(/toplevel_page_deprat-shop-settings|admin\.php\?page=deprat-shop-settings/);
         var users=take(/menu-users|\/users\.php/);
         var marketing=take(/toplevel_page_woocommerce-marketing|wc-admin.*path=.*marketing|menu-posts-shop_coupon|edit\.php\?post_type=shop_coupon/);
+        // Les slides d'accueil ont leur propre post_type, séparé des Articles WP.
         var home=take(/menu-posts-deprat_slide|edit\.php\?post_type=deprat_slide/);
         var posts=take(/menu-posts(?:\s|$)|\/edit\.php$/);
         var media=take(/menu-media|\/upload\.php/);
@@ -88,7 +93,13 @@
             title:'Paramètres de la boutique',
             url:settings ? settings.url : config.settingsUrl,
             icon:'settings',
-            children:[list('Catégories'),list('Icônes'),list('Slides')]
+            hideOpenLink:true,
+            children:[
+                shopTab('Organiser les catégories', 'categories'),
+                shopTab('Organiser les icônes', 'icons'),
+                shopTab('Organiser les slides', 'slides'),
+                shopTab('Organiser les caractéristiques techniques', 'characteristics')
+            ]
         };
         // Caractéristiques techniques : lorsque leur écran dédié sera ajouté,
         // il sera classé ici ; pas de lien factice vers un outil inexistant.
@@ -100,7 +111,7 @@
         shopChildren.push({title:'Clients',url:users?users.url:config.clientUrl,icon:'users',children:clientChildren});
         var marketingChildren = [];
         marketingChildren.push(item('Promotions / Codes',marketingUrl || config.marketingUrl,'ticket-percent'));
-        var homeChildren=[item('Slides d’accueil',home?home.url:config.homeSlideUrl,'images')];
+        var homeChildren=[item('Slides d’accueil',config.homeSlideUrl,'images')];
         var postChildren=[item('Tous les articles',posts?posts.url:config.blogUrl,'newspaper')];
         if (posts) {
             var addPost=posts.children.find(function(c){return /ajouter|add new/i.test(c.title);});
@@ -116,7 +127,7 @@
         entries.forEach(function (e) {
             if (!used.has(e)) {
                 // Une extension future apparaît automatiquement ici avec tous ses sous-menus.
-                adminChildren.push({title:e.title,url:e.url,icon:'puzzle',children:childrenAsNodes(e)});
+                adminChildren.push({title:e.title,url:e.url,icon:'native',nativeIcon:e.nativeIcon,children:childrenAsNodes(e)});
             }
         });
         // Les réglages WooCommerce ne doivent pas disparaître parce que la
@@ -125,49 +136,30 @@
             var wooSettings=woo.children.filter(function(c){return !/wc-orders|shop_order|commandes/i.test(c.url+' '+c.title);});
             if (wooSettings.length) {
                 adminChildren.unshift({
-                    title:'Réglages WooCommerce',url:woo.url,icon:'settings',
+                    title:'Réglages WooCommerce',url:woo.url,icon:'native',nativeIcon:woo.nativeIcon,
                     children:wooSettings.map(function(c){return item(c.title,c.url,'chevron-right');})
                 });
             }
         }
-        if (products) {
-            var extras=products.children.filter(function(c){return !/tous les produits|all products|ajouter|add new/i.test(c.title);});
-            if (extras.length) {
-                adminChildren.push({title:'Autres réglages Produits',url:products.url,icon:'settings',
-                    children:extras.map(function(c){return item(c.title,c.url,'chevron-right');})});
-            }
-        }
-        if (marketing) {
-            var marketExtras=marketing.children.filter(function(c){return !/coupon|promotion|code promo/i.test(c.title);});
-            if (marketExtras.length) {
-                adminChildren.push({title:'Autres outils Marketing',url:marketing.url,icon:'settings',
-                    children:marketExtras.map(function(c){return item(c.title,c.url,'chevron-right');})});
-            }
-        }
-        if (home && home.children.length) {
-            var homeExtras=home.children.filter(function(c){return !/tous|all|ajouter|add new/i.test(c.title);});
-            if (homeExtras.length) {
-                adminChildren.push({title:'Autres réglages Slides accueil',url:home.url,icon:'settings',
-                    children:homeExtras.map(function(c){return item(c.title,c.url,'chevron-right');})});
-            }
-        }
+        // Ne jamais dupliquer des menus métier sous Réglages ADMINISTRATEUR.
+        // Les sous-menus liés aux produits, aux slides, au marketing et aux
+        // catégories restent accessibles depuis leurs espaces respectifs.
         if (users) {
-            var userExtras=users.children.filter(function(c){return !/tous les comptes|all users/i.test(c.title);});
+            var userExtras=users.children.filter(function(c){
+                return /role|capabilit|profil|permission/i.test(c.title)
+                    && !/liste|compte|utilisateur/i.test(c.title);
+            });
             if (userExtras.length) {
                 adminChildren.push({title:'Comptes et permissions WP',url:users.url,icon:'shield',
                     children:userExtras.map(function(c){return item(c.title,c.url,'chevron-right');})});
             }
         }
-        if (settings && settings.children.length) {
-            // Garder aussi toutes les autres destinations du menu déjà en place.
-            var other=settings.children.filter(function(c){return !/deprat-shop-settings/.test(c.url);});
-            if (other.length) {
-                adminChildren.push({title:'Autres pages Paramètres boutique',url:settings.url,icon:'settings',
-                    children:other.map(function(c){return item(c.title,c.url,'chevron-right');})});
-            }
-        }
+        // Ne pas réinsérer Paramètres boutique dans la partie technique.
 
+        // La page native WordPress de maintenance et d'extensions à mettre à jour.
+        // Accès immédiat en tête du menu, réservé à l'administrateur.
         var groups=[
+            {title:'Mises à jour',tone:'updates',icon:'refresh',url:config.updatesUrl},
             {title:'Tableau de bord',tone:'dashboard',icon:'house',url:dashboard?dashboard.url:config.dashboardUrl},
             {title:'Espace Boutique',tone:'boutique',icon:'shopping-cart',children:shopChildren},
              {title:'Espace Marketing',tone:'marketing',icon:'megaphone',children:marketingChildren},
@@ -178,6 +170,7 @@
         ];
 
         var svgPaths={
+            refresh:'<path d="M20 7v5h-5M4 17v-5h5"/><path d="M5.5 9a7 7 0 0 1 12-2l2.5 5M18.5 15a7 7 0 0 1-12 2L4 12"/>',
             house:'<path d="m3 10 9-7 9 7v11h-6v-7H9v7H3z"/>',
             'shopping-cart':'<circle cx="9" cy="20" r="1"/><circle cx="19" cy="20" r="1"/><path d="M2 3h3l3 13h12l2-9H6"/>',
             users:'<circle cx="9" cy="8" r="3"/><path d="M3 21v-2a6 6 0 0 1 12 0v2"/><path d="M17 5a3 3 0 0 1 0 6m1 5a5 5 0 0 1 3 5"/>',
@@ -200,6 +193,16 @@
             span.className='deprat-menu-icon';
             span.setAttribute('aria-hidden','true');
             span.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+(svgPaths[name]||svgPaths.circle)+'</svg>';
+            return span;
+        }
+        function nativeIcon(nativeElement) {
+            var span=document.createElement('span');
+            span.className='deprat-menu-icon deprat-native-menu-icon';
+            span.setAttribute('aria-hidden','true');
+            if (nativeElement) {
+                var cloned=nativeElement.cloneNode(true);
+                span.appendChild(cloned);
+            }
             return span;
         }
         var sidebar=document.createElement('nav');
@@ -232,7 +235,7 @@
             var link=document.createElement('a');
             link.className='deprat-admin-link level-'+level;
             link.href=n.url;
-            link.appendChild(icon(n.icon));
+            link.appendChild(n.nativeIcon ? nativeIcon(n.nativeIcon) : icon(n.icon));
             var label=document.createElement('span');
             label.textContent=n.title;
             link.appendChild(label);
@@ -245,12 +248,18 @@
             var details=document.createElement('details');
             details.className='deprat-menu-details level-'+level;
             var summary=document.createElement('summary');
-            summary.appendChild(icon(n.icon));
+            summary.appendChild(n.nativeIcon ? nativeIcon(n.nativeIcon) : icon(n.icon));
             var label=document.createElement('span');label.textContent=n.title;summary.appendChild(label);
-            var arrow=document.createElement('span');arrow.className='deprat-menu-chevron';arrow.textContent='⌄';summary.appendChild(arrow);
+            var arrow=document.createElement('span');
+            arrow.className='deprat-menu-chevron';
+            arrow.setAttribute('aria-hidden','true');
+            arrow.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>';
+            summary.appendChild(arrow);
             details.appendChild(summary);
             var body=document.createElement('div');body.className='deprat-menu-children';
-            if (n.url && level>0) { body.appendChild(renderLink(item('Ouvrir '+n.title,n.url,'chevron-right'),level+1)); }
+            if (n.url && level>0 && !n.hideOpenLink) {
+                body.appendChild(renderLink(item('Ouvrir '+n.title,n.url,'chevron-right'),level+1));
+            }
             n.children.forEach(function(child){ body.appendChild(renderSection(child,level+1,rootTone)); });
             details.appendChild(body);
             if (body.querySelector('.is-active') || (level===0 && rootTone==='boutique' && /deprat-shop-settings/.test(location.search))) { details.open=true; }
