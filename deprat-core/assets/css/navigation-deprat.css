@@ -385,3 +385,27 @@ body #masthead .custom-logo-link img{
 }
 @media(max-width:921px){body #masthead .deprat-header-quote-button{display:none!important}}
 @media(prefers-reduced-motion:reduce){body #masthead .deprat-header-quote-button{transition:none!important}}
+
+/* 0.1.54 — Sans compte connecté, ne réserver aucune quatrième colonne vide. */
+@media(min-width:922px){
+ body #masthead .deprat-header-identity-inner.is-visitor{
+    grid-template-columns:minmax(220px,.93fr) minmax(250px,1.15fr) minmax(280px,.8fr);
+ }
+ body #masthead .deprat-header-identity-inner.is-visitor .deprat-header-pro-panel{
+    display:flex;justify-content:center;align-items:center;
+ }
+ body #masthead .deprat-header-identity-inner.is-visitor .deprat-header-pro-actions{
+    justify-content:center;gap:16px;
+ }
+ body #masthead .deprat-header-identity-inner.is-visitor .deprat-pro-auth{
+    display:flex;align-items:center;
+ }
+ body #masthead .deprat-header-identity-inner.is-visitor .deprat-login-details>summary{
+    padding:11px 6px;font-weight:750;
+ }
+}
+@media(min-width:922px) and (max-width:1270px){
+ body #masthead .deprat-header-identity-inner.is-visitor{
+    grid-template-columns:215px minmax(230px,1fr) 280px;
+ }
+}
