@@ -539,3 +539,37 @@ body.tax-product_cat #content > .ast-container {
 body.tax-product_cat #primary.deprat-catalog > .deprat-cat-hero{
     margin-top:0!important;
 }
+
+/* 0.1.58 — Fond configurable par slide : standard commun ou personnalisation. */
+.deprat-cat-hero-slide[data-background-mode="gradient"],
+.deprat-cat-hero-slide[data-background-mode="solid"],
+.deprat-cat-hero-slide[data-background-mode="image"] {
+    background-color:#063878;
+}
+.deprat-cat-hero-slide[data-background-mode="image"] .deprat-cat-hero-inner,
+.deprat-cat-hero-slide[data-background-mode="gradient"] .deprat-cat-hero-inner,
+.deprat-cat-hero-slide[data-background-mode="solid"] .deprat-cat-hero-inner {
+    position:relative;
+    z-index:2;
+}
+.deprat-cat-hero-background {
+    position:absolute;
+    z-index:0;
+    inset:0;
+    background-size:cover;
+    background-position:center center;
+    background-repeat:no-repeat;
+    pointer-events:none;
+}
+.deprat-cat-hero-slide[data-background-mode="image"]::before {
+    content:"";
+    position:absolute;
+    z-index:1;
+    inset:0;
+    background:linear-gradient(90deg,rgba(0,27,67,.65) 0%,rgba(0,37,80,.36) 55%,rgba(0,28,71,.15) 100%);
+    pointer-events:none;
+}
+.deprat-cat-hero-slide[data-background-mode="image"] .deprat-cat-hero-copy{
+    text-shadow:0 1px 4px rgba(0,22,50,.2);
+}
+/* Sans slide personnalisé, le dégradé DEPRAT original reste inchangé. */
