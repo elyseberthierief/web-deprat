@@ -399,7 +399,7 @@ add_action( 'manage_product_posts_custom_column', static function ( $column, $po
 
 function deprat_product_list_admin_assets( $hook ) {
     if ( 'edit.php' !== $hook || ! deprat_product_list_is_screen() ) { return; }
-    wp_enqueue_style( 'deprat-product-list', plugins_url( 'assets/css/product-list-admin.css', dirname( __DIR__ ) . '/deprat-core.php' ), array(), '0.1.72' );
+    wp_enqueue_style( 'deprat-product-list', plugins_url( 'assets/css/product-list-admin.css', dirname( __DIR__ ) . '/deprat-core.php' ), array(), '0.1.76' );
     wp_enqueue_script( 'deprat-product-list', plugins_url( 'assets/js/product-list-admin.js', dirname( __DIR__ ) . '/deprat-core.php' ), array(), '0.1.72', true );
     wp_add_inline_script( 'deprat-product-list', 'window.depratProductCreate=' . wp_json_encode( array(
         'ajaxUrl' => admin_url( 'admin-ajax.php' ),
