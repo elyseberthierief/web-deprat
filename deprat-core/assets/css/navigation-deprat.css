@@ -433,6 +433,7 @@ body img.deprat-library-image{object-fit:cover!important}
  body #masthead .deprat-header-identity-row,
  body #masthead .deprat-header-shell,
  body #masthead .deprat-header-identity-inner{overflow:visible!important}
+ body #masthead .deprat-header-identity-row{position:relative;z-index:40}
  body #masthead .deprat-header-quote-widget{
    position:relative;display:flex;justify-content:flex-end;align-items:center;min-width:0;
    z-index:150;
