@@ -174,6 +174,21 @@ add_action( 'woocommerce_after_cart', function () {
     echo '</section>';
 }, 20 );
 
+/** Scripts de la fenêtre de connexion privée à la page panier WooCommerce. */
+add_action( 'wp_enqueue_scripts', function () {
+    if ( ! function_exists( 'is_cart' ) || ! is_cart() || is_user_logged_in() ) { return; }
+    wp_enqueue_style(
+        'deprat-quote-login-modal',
+        plugins_url( 'assets/css/quote-login-modal.css', dirname( __DIR__ ) . '/deprat-core.php' ),
+        array(), '0.1.63'
+    );
+    wp_enqueue_script(
+        'deprat-quote-login-modal',
+        plugins_url( 'assets/js/quote-login-modal.js', dirname( __DIR__ ) . '/deprat-core.php' ),
+        array(), '0.1.63', true
+    );
+}, 50 );
+
 // 4. E-mails HTML DEPRAT : notification vers l'administrateur WP pour le moment.
 
 // 4 bis. Modèle d'e-mail DEPRAT (client et administration, même style que le compte pro).
