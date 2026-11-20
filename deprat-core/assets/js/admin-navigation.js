@@ -54,9 +54,8 @@
             if (!node || !node.url) { return; }
             if (!arr.some(function(v){ return normalize(v.url)===normalize(node.url); })) { arr.push(node); }
         }
-        function list(tab) {
-            var settings=config.settingsUrl;
-            return item(tab, settings + '&tab=' + ({'Catégories':'categories','Icônes':'icons','Slides':'slides'}[tab]||'categories'),'chevron-right');
+        function shopTab(title, slug) {
+            return item(title, config.settingsUrl + '&tab=' + slug, 'chevron-right');
         }
 
         var dashboard=take(/menu-dashboard|\/index\.php/);
@@ -94,7 +93,13 @@
             title:'Paramètres de la boutique',
             url:settings ? settings.url : config.settingsUrl,
             icon:'settings',
-            children:[list('Catégories'),list('Icônes'),list('Slides')]
+            hideOpenLink:true,
+            children:[
+                shopTab('Organiser les catégories', 'categories'),
+                shopTab('Organiser les icônes', 'icons'),
+                shopTab('Organiser les slides', 'slides'),
+                shopTab('Organiser les caractéristiques techniques', 'characteristics')
+            ]
         };
         // Caractéristiques techniques : lorsque leur écran dédié sera ajouté,
         // il sera classé ici ; pas de lien factice vers un outil inexistant.
@@ -252,7 +257,9 @@
             summary.appendChild(arrow);
             details.appendChild(summary);
             var body=document.createElement('div');body.className='deprat-menu-children';
-            if (n.url && level>0) { body.appendChild(renderLink(item('Ouvrir '+n.title,n.url,'chevron-right'),level+1)); }
+            if (n.url && level>0 && !n.hideOpenLink) {
+                body.appendChild(renderLink(item('Ouvrir '+n.title,n.url,'chevron-right'),level+1));
+            }
             n.children.forEach(function(child){ body.appendChild(renderSection(child,level+1,rootTone)); });
             details.appendChild(body);
             if (body.querySelector('.is-active') || (level===0 && rootTone==='boutique' && /deprat-shop-settings/.test(location.search))) { details.open=true; }
