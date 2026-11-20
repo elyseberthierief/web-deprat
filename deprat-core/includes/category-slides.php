@@ -82,7 +82,7 @@ function deprat_category_slide_admin_assets() {
 add_action( 'admin_enqueue_scripts', 'deprat_category_slide_admin_assets' );
 
 function deprat_category_slide_save( $id ) {
-    if ( empty( $_POST['deprat_category_slide_nonce'] )
+    if ( empty( $_POST['deprat_category_slide_nonce'] ) || ! is_string( $_POST['deprat_category_slide_nonce'] )
         || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['deprat_category_slide_nonce'] ) ), 'deprat_category_slide_save' )
         || ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE )
         || wp_is_post_revision( $id ) || ! current_user_can( 'edit_post', $id ) ) { return; }
