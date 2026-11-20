@@ -329,7 +329,7 @@ function deprat_category_tree_admin_page() {
     <div class="wrap deprat-tree-admin deprat-shop-settings" data-deprat-category-tree>
         <h1>Paramètres de la boutique</h1>
         <nav class="nav-tab-wrapper deprat-shop-tabs" aria-label="Paramètres de la boutique">
-            <?php foreach ( array( 'categories' => '1. Organiser les catégories', 'icons' => '2. Organiser les icônes', 'slides' => '3. Organiser les slides', 'characteristics' => '4. Organiser les caractéristiques techniques' ) as $key => $label ) : ?>
+            <?php foreach ( array( 'categories' => 'Catégories', 'icons' => 'Icônes', 'slides' => 'Slides', 'characteristics' => 'Caractéristiques techniques' ) as $key => $label ) : ?>
                 <a class="nav-tab <?php echo $tab === $key ? 'nav-tab-active' : ''; ?>"
                    href="<?php echo esc_url( add_query_arg( 'tab', $key, $base ) ); ?>"
                    <?php echo $tab === $key ? 'aria-current="page"' : ''; ?>><?php echo esc_html( $label ); ?></a>

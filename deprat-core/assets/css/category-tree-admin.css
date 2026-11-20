@@ -620,3 +620,58 @@ body.deprat-tree-modal-open{overflow:hidden}
 .deprat-shop-settings .deprat-characteristics-placeholder p{
     font-size:13px;line-height:1.6;color:#627892;margin:0;
 }
+
+/* 0.1.74 — Même présentation que les onglets Tous / Publiés de DEPRAT.
+ * Les onglets sont des cartes indépendantes, sans rail ni forme de dossier. */
+.deprat-shop-settings .deprat-shop-tabs.nav-tab-wrapper {
+    display:flex!important;
+    flex-wrap:wrap!important;
+    align-items:center!important;
+    gap:14px!important;
+    padding:0!important;
+    margin:20px 0 26px!important;
+    background:transparent!important;
+    border:0!important;
+    box-shadow:none!important;
+}
+.deprat-shop-settings .deprat-shop-tabs .nav-tab {
+    float:none!important;
+    display:inline-flex!important;
+    align-items:center;
+    justify-content:center;
+    min-height:64px;
+    padding:16px 22px!important;
+    margin:0!important;
+    color:#143e7a!important;
+    background:#f7faff!important;
+    border:1px solid #d7e5f4!important;
+    border-radius:16px!important;
+    box-shadow:none!important;
+    font-size:16px!important;
+    font-weight:550!important;
+    line-height:1.35!important;
+    text-decoration:none!important;
+    transition:background-color .15s ease,border-color .15s ease,color .15s ease;
+}
+.deprat-shop-settings .deprat-shop-tabs .nav-tab:hover:not(.nav-tab-active),
+.deprat-shop-settings .deprat-shop-tabs .nav-tab:focus-visible:not(.nav-tab-active){
+    background:#eaf3fc!important;
+    border-color:#b6cce7!important;
+}
+.deprat-shop-settings .deprat-shop-tabs .nav-tab.nav-tab-active{
+    color:#fff!important;
+    background:#193f7b!important;
+    border-color:#193f7b!important;
+    border-radius:16px!important;
+    font-weight:650!important;
+}
+.deprat-shop-settings .deprat-shop-tabs .nav-tab:focus-visible {
+    outline:3px solid #7aa6e2;
+    outline-offset:3px;
+}
+@media(max-width:782px){
+    .deprat-shop-settings .deprat-shop-tabs.nav-tab-wrapper{gap:9px!important}
+    .deprat-shop-settings .deprat-shop-tabs .nav-tab{
+        min-height:50px;padding:12px 15px!important;font-size:13px!important;
+    }
+}
