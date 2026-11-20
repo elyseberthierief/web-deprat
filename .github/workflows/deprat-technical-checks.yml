@@ -49,6 +49,7 @@ jobs:
           node --check deprat-core/assets/js/catalogue-mega-menu.js
           node --check deprat-core/assets/js/icon-library.js
           node --check deprat-core/assets/js/category-slides.js
+          node --check deprat-core/assets/js/category-slide-background-admin.js
           node --check deprat-core/assets/js/category-tree-admin.js
           node --check deprat-core/assets/js/category-tree-preview.js
           node --check deprat-core/assets/js/product-list-admin.js

@@ -1,4 +1,4 @@
-DEPRAT Core 0.1.54
+DEPRAT Core 0.1.58
 
 Le plugin reprend les extraits PHP actifs dans la sauvegarde du 14 novembre 2026.
 Extraits globaux : 5 à 11 et 15.
@@ -108,3 +108,11 @@ Version 0.1.57 — Bandeau catégorie et navigation :
 - Suppression des marges et espaces Astra entre l'en-tête et le bandeau des pages catégories produit uniquement.
 - Trait doré de la navigation desktop rapproché du titre, sans modifier le chevron de méga-menu.
 - Titre de la section de sous-catégories : « Choisissez une sous-catégorie ». Suppression de la phrase redondante, sans toucher aux classes HTML ni à leur CSS.
+
+Version 0.1.58 — Fonds des slides, boutique et catégories :
+- Dans Paramètres boutique > Les slides > Modifier, quatre choix de fond : « Fond standard DEPRAT » (défaut), dégradé personnalisé (deux couleurs), couleur unie, image de fond plein écran (cover).
+- Aperçu dynamique du fond lors du changement des couleurs, du mode ou de l'image.
+- Choix d'une photo couvrante depuis la médiathèque WordPress ; image de fond indépendante de l'illustration technique optionnelle à droite.
+- Dégradé DEPRAT conservé automatiquement sur les anciennes bannières et sur les catégories sans slide personnalisé. Un choix invalide ou une image manquante revient au mode standard.
+- Un slide peut aussi être affecté à la boutique générale « Nos composants », sans se propager aux catégories.
+- Retour au fond standard possible à tout moment ; les anciennes couleurs et images restent mémorisées.

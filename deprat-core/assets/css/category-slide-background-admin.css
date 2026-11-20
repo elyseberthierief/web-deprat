@@ -1,0 +1,14 @@
+.deprat-slide-background-settings{padding:8px 0 12px}
+.deprat-slide-bg-modes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:17px 0}
+.deprat-slide-bg-modes label{display:flex;align-items:center;gap:9px;min-height:45px;padding:10px 14px;border:1px solid #d0deef;background:#f7faff;border-radius:8px;font-weight:700;color:#103b80;cursor:pointer}
+.deprat-slide-bg-modes label:has(input:checked){background:#e7f0fc;border-color:#103b80;box-shadow:0 0 0 1px #103b80}
+.deprat-slide-bg-modes input{margin:0;accent-color:#103b80}
+.deprat-slide-bg-fields{display:flex;gap:20px;flex-wrap:wrap;align-items:center;padding:13px 15px;background:#f4f7fb;border:1px solid #d7e3f0;border-radius:8px;margin-bottom:16px}
+.deprat-slide-bg-fields[hidden]{display:none!important}
+.deprat-slide-bg-fields>label{display:flex;align-items:center;gap:10px;font-weight:700;color:#103b80}
+.deprat-slide-bg-fields input[type=color]{width:64px;height:40px;padding:3px;border:1px solid #c6d5e7;border-radius:6px;cursor:pointer}
+.deprat-slide-bg-image-preview{max-width:520px}
+.deprat-slide-bg-image-preview img{display:block;width:100%;height:auto;max-height:170px;object-fit:cover;border-radius:8px}
+.deprat-slide-bg-preview{display:flex;align-items:center;justify-content:center;min-height:140px;padding:22px;color:#fff;font-size:19px;font-weight:800;border-bottom:4px solid #c69a32;border-radius:10px;background:linear-gradient(120deg,#072e67 0%,#1264b1 62%,#003575 100%);background-size:cover;background-position:center;box-sizing:border-box;text-align:center;transition:background-color .15s ease}
+.deprat-slide-bg-preview span{text-shadow:0 1px 4px rgba(1,18,48,.65)}
+@media(max-width:700px){.deprat-slide-bg-modes{grid-template-columns:1fr}}
