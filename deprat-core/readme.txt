@@ -1,4 +1,4 @@
-DEPRAT Core 0.1.68
+DEPRAT Core 0.1.69
 
 Le plugin reprend les extraits PHP actifs dans la sauvegarde du 14 novembre 2026.
 Extraits globaux : 5 à 11 et 15.
@@ -178,3 +178,8 @@ Version 0.1.68 — Séparer le menu Clients des réglages techniques :
 - La liste des comptes clients et administrateurs reste gérée par la page native WordPress users.php dans « Espace Boutique > Clients » avec les filtres Tous, Administrateurs, Clients et Comptes pro en attente.
 - Retrait du doublon « Comptes et permissions WP » sous « Réglages ADMINISTRATEUR » car il pointait lui aussi vers users.php : la rubrique technique ne s'ouvre plus lors de la consultation des clients.
 - Aucune modification aux comptes, rôles ou capacités WordPress ; l'administration classique reste disponible pour toute gestion avancée.
+
+Version 0.1.69 — Raccourci Mises à jour corrigé :
+- Le raccourci en haut du menu admin DEPRAT ouvre la page native « WP Pusher Plugins » (bouton « Update plugin » pour DEPRAT Core), et non « Mises à jour WordPress ».
+- Son adresse est détectée à partir du menu WP Pusher installé, plutôt que coder un slug potentiellement différent. Si WP Pusher n'est pas chargé, aucun faux lien vers les mises à jour WordPress n'est affiché.
+- La suppression de « Comptes et permissions WP » dans Réglages ADMINISTRATEUR (0.1.68) reste conservée pour ne pas ouvrir les deux espaces simultanément.
