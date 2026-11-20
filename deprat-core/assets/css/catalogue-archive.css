@@ -514,3 +514,6 @@
  .deprat-cat-hero-arrow{width:30px;height:30px;font-size:25px}
 }
 @media(prefers-reduced-motion:reduce){.deprat-cat-hero-slide{transition:none!important}}
+
+/* Les icônes personnalisées utilisent le cadrage manuel de l'administration. */
+.deprat-catalog-child-icon img.deprat-library-image{object-fit:cover!important}
