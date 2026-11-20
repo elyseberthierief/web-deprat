@@ -52,6 +52,7 @@ jobs:
           node --check deprat-core/assets/js/category-slide-background-admin.js
           node --check deprat-core/assets/js/quote-hover.js
           node --check deprat-core/assets/js/sticky-header.js
+          node --check deprat-core/assets/js/quote-login-modal.js
           node --check deprat-core/assets/js/category-tree-admin.js
           node --check deprat-core/assets/js/category-tree-preview.js
           node --check deprat-core/assets/js/product-list-admin.js

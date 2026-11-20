@@ -131,10 +131,38 @@ add_action( 'woocommerce_after_cart', function () {
         // seul l'envoi d'une demande exige l'authentification du professionnel.
         $cart_url = wc_get_cart_url();
         $account_url = function_exists( 'wc_get_page_permalink' ) ? wc_get_page_permalink( 'myaccount' ) : wp_registration_url();
-        $register_url = add_query_arg( 'redirect_to', $cart_url, $account_url );
-        echo '<p>Votre sélection est prête. Pour <strong>envoyer la demande de devis</strong>, connectez-vous ou créez votre compte professionnel. Les références de votre panier sont conservées lors de votre navigation et de la connexion dans ce navigateur.</p>';
-        echo '<p class="deprat-quote-guest-actions"><a class="button alt" href="' . esc_url( wp_login_url( $cart_url ) ) . '">Se connecter pour envoyer</a> ';
+        // La page Mon compte charge le formulaire d'ouverture pro DEPRAT
+        // (société, SIRET, nom, téléphone, adresse, etc.).
+        // Ne jamais utiliser wp_login_url() : il dirige vers wp-login.php.
+        $register_url = add_query_arg( 'deprat_quote_register', '1', $account_url );
+        echo '<p>Votre sélection est prête. Pour <strong>envoyer la demande de devis</strong>, connectez-vous ou créez votre compte professionnel. Les références de votre panier restent conservées dans ce navigateur.</p>';
+        echo '<p class="deprat-quote-guest-actions"><button type="button" class="button alt" data-deprat-quote-open-login aria-haspopup="dialog" aria-controls="deprat-quote-login-dialog">Se connecter pour envoyer</button> ';
         echo '<a class="button" href="' . esc_url( $register_url ) . '">Créer un compte pro</a></p>';
+        // Fenêtre de connexion WooCommerce, locale à la demande de devis.
+        // Le traitement des identifiants reste celui de WooCommerce, avec nonce.
+        $attempted = ! empty( $_POST['deprat_quote_login'] );
+        $username = $attempted && isset( $_POST['username'] ) && is_string( $_POST['username'] )
+            ? sanitize_text_field( wp_unslash( $_POST['username'] ) ) : '';
+        echo '<dialog id="deprat-quote-login-dialog" class="deprat-quote-login-dialog" aria-labelledby="deprat-quote-login-title"'
+            . ( $attempted ? ' data-deprat-quote-login-reopen="1"' : '' ) . '>';
+        echo '<div class="deprat-quote-login-heading"><h3 id="deprat-quote-login-title">Se connecter</h3>'
+            . '<button type="button" class="deprat-quote-login-close" data-deprat-quote-close-login aria-label="Fermer la fenêtre">×</button></div>';
+        echo '<p class="deprat-quote-login-intro">Identifiez-vous pour envoyer votre demande de devis. Votre sélection sera conservée.</p>';
+        echo '<form method="post" action="' . esc_url( $cart_url ) . '" class="woocommerce-form woocommerce-form-login deprat-quote-login-form">';
+        do_action( 'woocommerce_login_form_start' );
+        echo '<p><label for="deprat-quote-login-username">Identifiant ou e-mail <span aria-hidden="true">*</span></label>'
+            . '<input id="deprat-quote-login-username" type="text" name="username" autocomplete="username" required value="' . esc_attr( $username ) . '"></p>';
+        echo '<p><label for="deprat-quote-login-password">Mot de passe <span aria-hidden="true">*</span></label>'
+            . '<input id="deprat-quote-login-password" type="password" name="password" autocomplete="current-password" required></p>';
+        do_action( 'woocommerce_login_form' );
+        echo '<p class="deprat-quote-login-remember"><label><input type="checkbox" name="rememberme" value="forever"> Se souvenir de moi</label></p>';
+        echo '<input type="hidden" name="deprat_quote_login" value="1">';
+        echo '<input type="hidden" name="redirect" value="' . esc_url( $cart_url ) . '">';
+        wp_nonce_field( 'woocommerce-login', 'woocommerce-login-nonce' );
+        echo '<button class="button alt deprat-quote-login-submit" type="submit" name="login" value="1">Se connecter</button>';
+        echo '<p class="deprat-quote-login-forgot"><a href="' . esc_url( function_exists( 'wc_lostpassword_url' ) ? wc_lostpassword_url() : wp_lostpassword_url() ) . '">Mot de passe oublié ?</a></p>';
+        do_action( 'woocommerce_login_form_end' );
+        echo '</form></dialog>';
     } else {
         echo '<form method="post" action="' . esc_url( wc_get_cart_url() ) . '">';
         echo '<p><label for="deprat_commentaire">Commentaire (facultatif)</label></p>';
@@ -145,6 +173,21 @@ add_action( 'woocommerce_after_cart', function () {
     }
     echo '</section>';
 }, 20 );
+
+/** Scripts de la fenêtre de connexion privée à la page panier WooCommerce. */
+add_action( 'wp_enqueue_scripts', function () {
+    if ( ! function_exists( 'is_cart' ) || ! is_cart() || is_user_logged_in() ) { return; }
+    wp_enqueue_style(
+        'deprat-quote-login-modal',
+        plugins_url( 'assets/css/quote-login-modal.css', dirname( __DIR__ ) . '/deprat-core.php' ),
+        array(), '0.1.63'
+    );
+    wp_enqueue_script(
+        'deprat-quote-login-modal',
+        plugins_url( 'assets/js/quote-login-modal.js', dirname( __DIR__ ) . '/deprat-core.php' ),
+        array(), '0.1.63', true
+    );
+}, 50 );
 
 // 4. E-mails HTML DEPRAT : notification vers l'administrateur WP pour le moment.
 

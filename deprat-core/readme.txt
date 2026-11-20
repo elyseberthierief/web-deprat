@@ -1,4 +1,4 @@
-DEPRAT Core 0.1.62
+DEPRAT Core 0.1.63
 
 Le plugin reprend les extraits PHP actifs dans la sauvegarde du 14 novembre 2026.
 Extraits globaux : 5 à 11 et 15.
@@ -138,3 +138,8 @@ Version 0.1.62 — Mini-panier et devis invités :
 - Le visiteur peut constituer et modifier la liste sans compte. La création d'une demande côté ADV reste conditionnée à une connexion (vérification existante côté serveur).
 - Sur le panier, visiteurs voient les actions « Se connecter pour envoyer » et « Créer un compte pro » ; leur liste reste dans la session WooCommerce du navigateur.
 - Contrôler notamment les références identiques dans plusieurs conditionnements, le retour après connexion et l'affichage mobile.
+
+Version 0.1.63 — Envoi devis invité :
+- « Se connecter pour envoyer » affiche désormais la fenêtre modale WooCommerce avec identifiant/e-mail, mot de passe, mémorisation et oubli de mot de passe. Aucun renvoi vers wp-login.php / wp-admin.
+- « Créer un compte pro » ouvre la page Mon compte WooCommerce, qui utilise le formulaire d'ouverture DEPRAT complet (société, SIRET, adresse, coordonnées) lorsque les inscriptions clients sont activées.
+- Le panier reste en session pendant la connexion et la page d'inscription ; l'envoi reste protégé côté serveur.
