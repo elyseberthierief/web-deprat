@@ -104,8 +104,7 @@ $roots = deprat_catalog_root_categories();
     <?php if ( $direct_children ) : ?>
         <section class="deprat-catalog-children" aria-labelledby="deprat-catalog-children-title">
             <div class="deprat-catalog-children-heading">
-                <h2 id="deprat-catalog-children-title">Sous-catégories de <?php echo esc_html( $category->name ); ?></h2>
-                <p>Choisissez une famille de composants pour consulter ses références.</p>
+                <h2 id="deprat-catalog-children-title">Choisissez une sous-catégorie</h2>
             </div>
             <div class="deprat-catalog-children-grid">
                 <?php foreach ( $direct_children as $child ) :
