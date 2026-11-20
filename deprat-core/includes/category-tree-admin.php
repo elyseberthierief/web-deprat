@@ -844,3 +844,47 @@ add_action( 'admin_enqueue_scripts', static function () {
     wp_add_inline_script( 'deprat-taxonomy-order', 'window.depratNativeCategoryOrder=' .
         wp_json_encode( array( 'rows' => deprat_category_tree_sectioned_options() ) ) . ';', 'before' );
 } );
+
+/**
+ * Création native WooCommerce : une catégorie RACINE choisit sa section.
+ * Le parent d'une sous-catégorie fait autorité si elle est enfant.
+ */
+function deprat_native_category_section_selector( $current = '' ) {
+    $sections = deprat_catalog_section_definitions();
+    echo '<select id="deprat-native-section" name="deprat_section">';
+    foreach ( $sections as $key => $title ) {
+        echo '<option value="' . esc_attr( $key ) . '"' .
+            selected( $current ?: 'autres', $key, false ) . '>' .
+            esc_html( $title ) . '</option>';
+    }
+    echo '</select>';
+}
+add_action( 'product_cat_add_form_fields', static function () {
+    if ( ! current_user_can( 'manage_product_terms' ) ) { return; }
+    echo '<div class="form-field deprat-native-section-field">';
+    echo '<label for="deprat-native-section">Section DEPRAT</label>';
+    deprat_native_category_section_selector();
+    echo '<p>Sélectionnez une section pour une catégorie principale. Les sous-catégories reprennent automatiquement la section de leur parent.</p>';
+    echo '</div>';
+} );
+add_action( 'product_cat_edit_form_fields', static function ( $term ) {
+    if ( ! current_user_can( 'manage_product_terms' ) || ! $term instanceof WP_Term ) { return; }
+    if ( $term->parent ) { return; }
+    $section = deprat_catalog_section_for_term( $term );
+    echo '<tr class="form-field deprat-native-section-field"><th scope="row"><label for="deprat-native-section">Section DEPRAT</label></th><td>';
+    deprat_native_category_section_selector( $section );
+    echo '<p class="description">L’ordre de présentation suit « Organiser les catégories ».</p></td></tr>';
+} );
+$deprat_native_save_section = static function ( $term_id ) {
+    if ( ! current_user_can( 'manage_product_terms' ) ) { return; }
+    if ( ! isset( $_POST['deprat_section'] ) || ! is_scalar( $_POST['deprat_section'] ) ) { return; }
+    $term = get_term( (int) $term_id, 'product_cat' );
+    if ( ! $term instanceof WP_Term || $term->parent ) { return; }
+    $key = sanitize_key( wp_unslash( $_POST['deprat_section'] ) );
+    $valid = deprat_catalog_section_definitions();
+    if ( isset( $valid[ $key ] ) ) {
+        update_term_meta( (int) $term_id, '_deprat_catalog_section', $key );
+    }
+};
+add_action( 'created_product_cat', $deprat_native_save_section, 120 );
+add_action( 'edited_product_cat', $deprat_native_save_section, 120 );
