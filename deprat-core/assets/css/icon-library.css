@@ -44,3 +44,22 @@
 .deprat-section-icon-choice{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px}
 .deprat-section-icon-choice svg,.deprat-section-icon-choice img{display:block;flex-shrink:0;object-fit:contain;object-position:center}
 @media(max-width:800px){.deprat-library-grid{grid-template-columns:repeat(auto-fill,minmax(125px,1fr))}}
+
+/* 0.1.54 — Cadrage carré interactif pour photos non carrées. */
+.deprat-library-edit-preview{
+ position:relative;overflow:hidden;touch-action:none;cursor:grab;user-select:none;
+ flex:0 0 145px;width:145px;height:145px;padding:0;
+}
+.deprat-library-edit-preview.is-croppable:active{cursor:grabbing}
+.deprat-library-edit-preview>img{
+ display:block;width:100%;height:100%;max-width:none;max-height:none;
+ object-fit:cover;pointer-events:none;
+}
+.deprat-library-edit-preview:focus-visible{outline:3px solid #b68b24;outline-offset:2px}
+.deprat-library-card .deprat-library-art>img.deprat-library-image,
+.deprat-section-icon-choice img.deprat-library-image,
+.deprat-section-icon-wrap img.deprat-library-image,
+.deprat-category-link-icon img.deprat-library-image{
+ object-fit:cover!important;
+}
+.deprat-library-position-status{margin:8px 0 0!important;font-weight:700;color:#17477d!important}
