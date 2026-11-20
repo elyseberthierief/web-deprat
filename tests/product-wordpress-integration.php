@@ -691,4 +691,54 @@ deprat_integration_assert( $category_slide_type && false === $category_slide_typ
 deprat_integration_assert( false !== has_action( 'admin_menu' ),
     'Le menu Paramètres de la boutique doit rester enregistré.' );
 
+// Fonds personnalisés : aucune configuration => bleu standard DEPRAT.
+$defaults = deprat_category_slide_bg_config( 0 );
+deprat_integration_assert( 'standard' === $defaults['mode'],
+    'Le fond standard DEPRAT doit rester le mode implicite.' );
+
+// Un slide de boutique générale n'apparaît sur aucune catégorie.
+$shop_slide_id = wp_insert_post( array(
+    'post_type' => 'deprat_cat_slide', 'post_status' => 'publish',
+    'post_title' => 'Bannière boutique - test', 'menu_order' => 0,
+), true );
+deprat_integration_assert( ! is_wp_error( $shop_slide_id ) && $shop_slide_id > 0,
+    'La bannière de boutique générale doit être créable.' );
+update_post_meta( $shop_slide_id, '_deprat_category_slide_scope', 'shop' );
+update_post_meta( $shop_slide_id, '_deprat_category_slide_heading', 'Nos composants et pièces pro' );
+update_post_meta( $shop_slide_id, '_deprat_category_slide_bg_mode', 'gradient' );
+update_post_meta( $shop_slide_id, '_deprat_category_slide_bg_start', '#123456' );
+update_post_meta( $shop_slide_id, '_deprat_category_slide_bg_end', '#abcdef' );
+$shop_slides = deprat_category_slides_for_shop();
+deprat_integration_assert( count( $shop_slides ) > 0 && 'gradient' === $shop_slides[0]['background']['mode'],
+    'Le slide boutique doit mémoriser le dégradé personnalisé.' );
+$other_slides = deprat_category_slides_for_term( (int) $tube_category['term_id'] );
+deprat_integration_assert( 0 === count( $other_slides ),
+    'Un slide général ne doit jamais être repris sur les pages catégorie.' );
+ob_start();
+deprat_category_slide_render();
+$shop_slide_output = ob_get_clean();
+deprat_integration_assert(
+    false !== strpos( $shop_slide_output, 'Nos composants et pièces pro' )
+    && false !== strpos( $shop_slide_output, 'data-background-mode="gradient"' )
+    && false !== strpos( $shop_slide_output, '#123456' )
+    && false !== strpos( $shop_slide_output, '#abcdef' ),
+    'La boutique doit afficher ses propres slides et leurs couleurs.' );
+update_post_meta( $shop_slide_id, '_deprat_category_slide_bg_mode', 'solid' );
+update_post_meta( $shop_slide_id, '_deprat_category_slide_bg_solid', '#225588' );
+ob_start();
+deprat_category_slide_render();
+$solid_slide_output = ob_get_clean();
+deprat_integration_assert(
+    false !== strpos( $solid_slide_output, 'data-background-mode="solid"' )
+    && false !== strpos( $solid_slide_output, 'background-color:#225588' ),
+    'Le fond uni doit couvrir tout le bandeau.' );
+update_post_meta( $shop_slide_id, '_deprat_category_slide_bg_mode', 'image' );
+update_post_meta( $shop_slide_id, '_deprat_category_slide_bg_image', 0 );
+deprat_integration_assert( 'standard' === deprat_category_slide_bg_config( $shop_slide_id )['mode'],
+    'Une image de fond manquante doit revenir au bleu DEPRAT.' );
+update_post_meta( $shop_slide_id, '_deprat_category_slide_bg_mode', 'standard' );
+deprat_integration_assert( 'standard' === deprat_category_slide_bg_config( $shop_slide_id )['mode'],
+    'Le mode DEPRAT standard doit être réactivable.' );
+wp_delete_post( $shop_slide_id, true );
+
 WP_CLI::success( 'WordPress et WooCommerce : sauvegarde, médias et affichages vérifiés.' );
