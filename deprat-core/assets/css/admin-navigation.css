@@ -324,3 +324,28 @@ body.deprat-admin-mode.index-php #dashboard-widgets .postbox .inside{
 body.deprat-admin-mode.index-php #dashboard-widgets .postbox .handlediv{
   margin:7px;
 }
+
+/* 0.1.70 — Le nom du groupe est un vrai lien, sans doublon « Ouvrir ... ».
+   Le chevron conserve la fonction déplier/replier. */
+.deprat-admin-menu .deprat-menu-details > summary > .deprat-menu-heading-link{
+    display:inline-flex!important;align-items:center;
+    flex:1 1 auto;min-height:0!important;
+    padding:0!important;margin:0!important;
+    background:none!important;border:0!important;
+    border-radius:0!important;box-shadow:none!important;
+    color:inherit!important;font-size:inherit!important;
+    font-weight:inherit!important;line-height:inherit!important;
+    text-decoration:none!important;
+}
+.deprat-admin-menu .deprat-menu-details > summary > .deprat-menu-heading-link:hover{
+    text-decoration:underline!important;
+}
+.deprat-admin-menu .deprat-menu-details > summary > .deprat-menu-heading-link.is-active{
+    color:#fff!important;
+    text-decoration:underline!important;
+    text-decoration-color:#d6ad4c!important;
+    text-underline-offset:4px;
+}
+.deprat-admin-menu .deprat-menu-details > summary > .deprat-menu-chevron{
+    cursor:pointer;
+}
