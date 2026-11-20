@@ -103,3 +103,8 @@ Version 0.1.56 — Bibliothèque d'icônes : déplacement visuel du recadrage.
 - Un glissement lent est pris en compte grâce à un calcul cumulatif ; les % correspondent à la position visible.
 - Le cadrage reste déplaçable à la souris, au toucher et aux flèches du clavier, puis enregistré.
 - Ne change pas les icônes existantes tant que l'éditeur n'enregistre pas leurs modifications.
+
+Version 0.1.57 — Bandeau catégorie et navigation :
+- Suppression des marges et espaces Astra entre l'en-tête et le bandeau des pages catégories produit uniquement.
+- Trait doré de la navigation desktop rapproché du titre, sans modifier le chevron de méga-menu.
+- Titre de la section de sous-catégories : « Choisissez une sous-catégorie ». Suppression de la phrase redondante, sans toucher aux classes HTML ni à leur CSS.
