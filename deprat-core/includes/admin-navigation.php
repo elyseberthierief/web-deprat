@@ -109,13 +109,28 @@ function deprat_admin_adv_action_count() {
     if ( ! function_exists( 'wc_get_orders' ) ) { return 0; }
     $cached = get_transient( 'deprat_admin_adv_action_count_v1' );
     if ( false !== $cached ) { return (int) $cached; }
-    $orders = wc_get_orders( array(
-        'type' => 'shop_order',
-        'status' => array( 'wc-dpr-recu', 'wc-dpr-encours', 'wc-dpr-accepte' ),
-        'meta_query' => array( array( 'key' => '_deprat_demande', 'value' => 'oui' ) ),
-        'limit' => 1, 'paginate' => true, 'return' => 'ids',
-    ) );
-    $count = is_object( $orders ) && isset( $orders->total ) ? (int) $orders->total : 0;
+    // Contrôle réel du méta DEPRAT pour compatibilité HPOS et commandes classiques.
+    // Une requête paginée évite de charger tous les dossiers en mémoire.
+    $count = 0;
+    $page = 1;
+    $page_size = 100;
+    do {
+        $orders = wc_get_orders( array(
+            'type' => 'shop_order',
+            'status' => array( 'dpr-recu', 'dpr-encours', 'dpr-accepte' ),
+            'limit' => $page_size,
+            'page' => $page,
+            'orderby' => 'ID',
+            'order' => 'DESC',
+        ) );
+        if ( ! is_array( $orders ) ) { break; }
+        foreach ( $orders as $order ) {
+            if ( $order instanceof WC_Order && 'oui' === $order->get_meta( '_deprat_demande', true ) ) {
+                $count++;
+            }
+        }
+        $page++;
+    } while ( count( $orders ) === $page_size );
     set_transient( 'deprat_admin_adv_action_count_v1', $count, MINUTE_IN_SECONDS );
     return $count;
 }
