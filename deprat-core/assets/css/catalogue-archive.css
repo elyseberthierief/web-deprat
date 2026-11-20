@@ -573,3 +573,32 @@ body.tax-product_cat #primary.deprat-catalog > .deprat-cat-hero{
     text-shadow:0 1px 4px rgba(0,22,50,.2);
 }
 /* Sans slide personnalisé, le dégradé DEPRAT original reste inchangé. */
+
+/* 0.1.59 — La boutique « Nos composants » possède elle aussi un hero.
+   Les marges Astra créent sinon une bande blanche entre la navigation
+   et le slide. Ne toucher qu'aux archives WooCommerce de la boutique. */
+body.post-type-archive-product #content,
+body.post-type-archive-product #content > .ast-container,
+body.post-type-archive-product #content .ast-container > #primary.deprat-catalog,
+body.post-type-archive-product #primary.deprat-catalog,
+body.woocommerce-shop #content,
+body.woocommerce-shop #content > .ast-container,
+body.woocommerce-shop #primary.deprat-catalog {
+    margin-top:0!important;
+    padding-top:0!important;
+}
+body.post-type-archive-product #content > .ast-container,
+body.woocommerce-shop #content > .ast-container {
+    align-items:flex-start;
+}
+/* Astra peut aussi ajouter le retrait au conteneur WooCommerce. */
+body.post-type-archive-product .ast-woocommerce-container:has(> #primary.deprat-catalog),
+body.woocommerce-shop .ast-woocommerce-container:has(> #primary.deprat-catalog) {
+    padding-top:0!important;
+    margin-top:0!important;
+}
+body.post-type-archive-product #primary.deprat-catalog > .deprat-cat-hero,
+body.woocommerce-shop #primary.deprat-catalog > .deprat-cat-hero {
+    margin-top:0!important;
+}
+/* Conserver le retrait habituel sous le slide pour les produits et filtres. */

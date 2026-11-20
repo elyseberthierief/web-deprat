@@ -1,4 +1,4 @@
-DEPRAT Core 0.1.58
+DEPRAT Core 0.1.59
 
 Le plugin reprend les extraits PHP actifs dans la sauvegarde du 14 novembre 2026.
 Extraits globaux : 5 à 11 et 15.
@@ -116,3 +116,5 @@ Version 0.1.58 — Fonds des slides, boutique et catégories :
 - Dégradé DEPRAT conservé automatiquement sur les anciennes bannières et sur les catégories sans slide personnalisé. Un choix invalide ou une image manquante revient au mode standard.
 - Un slide peut aussi être affecté à la boutique générale « Nos composants », sans se propager aux catégories.
 - Retour au fond standard possible à tout moment ; les anciennes couleurs et images restent mémorisées.
+
+Version 0.1.59 — Suppression de l'espace Astra entre le header et le slide de la boutique « Nos composants » ; pages produits inchangées.

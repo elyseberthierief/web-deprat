@@ -47,7 +47,7 @@ add_filter( 'template_include', 'deprat_catalog_template', 45 );
 
 function deprat_catalog_assets() {
     if ( ! deprat_catalog_is_archive() ) { return; }
-    wp_enqueue_style( 'deprat-catalogue', plugins_url( 'assets/css/catalogue-archive.css', dirname( __DIR__ ) . '/deprat-core.php' ), array(), '0.1.58' );
+    wp_enqueue_style( 'deprat-catalogue', plugins_url( 'assets/css/catalogue-archive.css', dirname( __DIR__ ) . '/deprat-core.php' ), array(), '0.1.59' );
     // Le même diaporama anime les catégories ET la boutique « Nos composants ».
     if ( is_product_category() || is_shop() ) { wp_enqueue_script( 'deprat-category-slides', plugins_url( 'assets/js/category-slides.js', dirname( __DIR__ ) . '/deprat-core.php' ), array(), '0.1.58', true ); }
     wp_enqueue_script( 'deprat-catalogue', plugins_url( 'assets/js/catalogue-archive.js', dirname( __DIR__ ) . '/deprat-core.php' ), array(), '0.1.38', true );
