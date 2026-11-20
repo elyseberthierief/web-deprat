@@ -4,6 +4,10 @@
  * Le test restaure le prénom et supprime la commande temporaire.
  */
 defined( 'ABSPATH' ) || exit( 1 );
+// WP-CLI exécute les tests hors wp-admin : charger explicitement le snippet.
+if ( ! function_exists( 'deprat_accueil_afficher_portail' ) ) {
+    require_once WP_PLUGIN_DIR . '/deprat-core/snippets/admin-12.php';
+}
 
 if ( ! function_exists( 'deprat_accueil_afficher_portail' )
     || ! function_exists( 'deprat_admin_adv_action_count' )
