@@ -252,11 +252,22 @@ $gallery_ids = $gallery_product ? $gallery_product->get_gallery_image_ids() : ar
         <div class="deprat-category-dialog" role="dialog" aria-modal="true" aria-labelledby="deprat-category-title">
             <header><h2 id="deprat-category-title">Créer une catégorie</h2><button type="button" class="button" data-category-close aria-label="Fermer">×</button></header>
             <label class="deprat-tech-field"><span>Nom de la catégorie</span><input type="text" maxlength="160" data-category-name placeholder="Ex. Tubes acier"></label>
+            <label class="deprat-tech-field"><span>Section DEPRAT</span><select data-category-section>
+                <?php foreach ( deprat_catalog_section_definitions() as $section_key => $section_title ) : ?>
+                    <option value="<?php echo esc_attr( $section_key ); ?>"><?php echo esc_html( $section_title ); ?></option>
+                <?php endforeach; ?>
+            </select></label>
             <label class="deprat-tech-field"><span>Catégorie parente</span><select data-category-parent><option value="0">Aucune — catégorie principale</option>
-                <?php foreach ( get_terms( array( 'taxonomy' => 'product_cat', 'hide_empty' => false ) ) as $term ) : ?>
-                    <option value="<?php echo esc_attr( $term->term_id ); ?>"><?php echo esc_html( $term->name ); ?></option>
-                <?php endforeach; ?></select>
-            </label>
+                <?php $previous_section = ''; foreach ( deprat_category_tree_sectioned_options() as $term ) :
+                    if ( $previous_section !== $term['section'] ) :
+                        if ( '' !== $previous_section ) { echo '</optgroup>'; }
+                        $previous_section = $term['section'];
+                        echo '<optgroup label="' . esc_attr( $term['sectionTitle'] ) . '">';
+                    endif; ?>
+                    <option value="<?php echo esc_attr( $term['id'] ); ?>"><?php echo esc_html( str_repeat( '— ', min( 10, (int) $term['depth'] ) ) . $term['name'] ); ?></option>
+                <?php endforeach; if ( '' !== $previous_section ) { echo '</optgroup>'; } ?>
+            </select></label>
+            <p class="deprat-category-section-hint">L’ordre des sections et des catégories suit « Organiser les catégories ». Une sous-catégorie hérite de la section de son parent.</p>
             <p class="deprat-category-error" role="alert" data-category-error hidden></p>
             <footer><button type="button" class="button" data-category-close>Annuler</button><button type="button" class="button button-primary" data-category-submit>Créer et sélectionner</button></footer>
         </div>
