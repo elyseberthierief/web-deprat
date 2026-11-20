@@ -21,6 +21,7 @@ if ( ! function_exists( 'deprat_accueil_adv_statut' ) ) {
             'dpr-recu'    => 'Nouvelle demande',
             'dpr-encours' => 'Devis en traitement',
             'dpr-envoye'  => 'Devis à valider',
+            'dpr-modifie' => 'Devis modifié à valider',
             'dpr-accepte' => 'Devis accepté',
             'dpr-facture' => 'Facture disponible',
             'dpr-termine' => 'Terminée',
@@ -29,8 +30,84 @@ if ( ! function_exists( 'deprat_accueil_adv_statut' ) ) {
     }
 }
 
+/** Tableau de bord professionnel DEPRAT : accueil, raccourcis et 2 colonnes. */
+function deprat_accueil_afficher_portail() {
+    $user = wp_get_current_user();
+    $first_name = trim( (string) get_user_meta( $user->ID, 'first_name', true ) );
+    $welcome_name = $first_name ?: trim( (string) $user->display_name );
+    $pending_count = (int) ( count_users()['avail_roles']['deprat_pending'] ?? 0 );
+    $adv_count = function_exists( 'deprat_admin_adv_action_count' ) ? deprat_admin_adv_action_count() : 0;
+    ?>
+    <div class="deprat-dash-shell">
+        <header class="deprat-dash-welcome">
+            <div>
+                <p class="deprat-dash-eyebrow">Tableau de bord professionnel</p>
+                <h1>Bienvenue<?php echo $welcome_name ? ', ' . esc_html( $welcome_name ) : ''; ?> !</h1>
+                <p>Retrouvez vos commandes, vos produits et les comptes professionnels à traiter.</p>
+            </div>
+            <span class="deprat-dash-brand">DEPRAT</span>
+        </header>
+        <nav class="deprat-dash-quick-links" aria-label="Accès rapides aux espaces DEPRAT">
+            <?php if ( current_user_can( 'manage_woocommerce' ) ) : ?>
+                <a class="deprat-dash-quick deprat-dash-quick--orders" href="<?php echo esc_url( admin_url( 'admin.php?page=wc-orders' ) ); ?>">
+                    <span class="deprat-dash-quick-symbol" aria-hidden="true">☷</span>
+                    <span class="deprat-dash-quick-content"><strong>Commandes</strong><small>Consulter et traiter les demandes</small></span>
+                    <?php if ( $adv_count > 0 ) : ?><span class="deprat-dash-quick-count"><?php echo esc_html( (string) $adv_count ); ?> à traiter</span><?php endif; ?>
+                </a>
+            <?php endif; ?>
+            <?php if ( current_user_can( 'edit_products' ) ) : ?>
+                <a class="deprat-dash-quick deprat-dash-quick--products" href="<?php echo esc_url( admin_url( 'edit.php?post_type=product' ) ); ?>">
+                    <span class="deprat-dash-quick-symbol" aria-hidden="true">◇</span>
+                    <span class="deprat-dash-quick-content"><strong>Produits</strong><small>Gérer les fiches du catalogue</small></span>
+                    <span class="deprat-dash-quick-arrow" aria-hidden="true">↗</span>
+                </a>
+            <?php endif; ?>
+            <?php if ( current_user_can( 'list_users' ) ) : ?>
+                <a class="deprat-dash-quick deprat-dash-quick--pending" href="<?php echo esc_url( admin_url( 'users.php?deprat_view=clients&role=deprat_pending' ) ); ?>">
+                    <span class="deprat-dash-quick-symbol" aria-hidden="true">♙</span>
+                    <span class="deprat-dash-quick-content"><strong>Comptes pro en attente</strong><small>Examiner les nouvelles inscriptions</small></span>
+                    <span class="deprat-dash-quick-count"><?php echo esc_html( (string) $pending_count ); ?></span>
+                </a>
+            <?php endif; ?>
+        </nav>
+        <div class="deprat-dash-two-columns">
+            <?php if ( current_user_can( 'manage_woocommerce' ) && function_exists( 'wc_get_orders' ) ) : ?>
+            <section class="deprat-dash-panel" aria-labelledby="deprat-dash-orders-heading">
+                <header class="deprat-dash-panel-header">
+                    <div><h2 id="deprat-dash-orders-heading">Dernières commandes</h2><p>Les 5 dossiers les plus récents</p></div>
+                    <a href="<?php echo esc_url( admin_url( 'admin.php?page=wc-orders' ) ); ?>">Tout voir</a>
+                </header>
+                <?php deprat_accueil_afficher_demandes(); ?>
+            </section>
+            <?php endif; ?>
+            <?php if ( current_user_can( 'promote_users' ) && current_user_can( 'list_users' ) ) : ?>
+            <section class="deprat-dash-panel" aria-labelledby="deprat-dash-pending-heading">
+                <header class="deprat-dash-panel-header">
+                    <div><h2 id="deprat-dash-pending-heading">Comptes à valider</h2><p>Demandes d'ouverture de compte professionnel</p></div>
+                    <a href="<?php echo esc_url( admin_url( 'users.php?deprat_view=clients&role=deprat_pending' ) ); ?>">Tout voir</a>
+                </header>
+                <?php deprat_accueil_afficher_comptes(); ?>
+            </section>
+            <?php endif; ?>
+        </div>
+    </div>
+    <?php
+}
+
 /** 1. Les deux widgets sur Tableau de bord > Accueil. */
 add_action( 'wp_dashboard_setup', function () {
+    // Un seul panneau large, organisé en interne en deux colonnes.
+    // En mode classique, les widgets WordPress d'origine sont conservés.
+    if ( function_exists( 'deprat_admin_design_enabled' ) && deprat_admin_design_enabled() ) {
+        if ( current_user_can( 'manage_woocommerce' ) || current_user_can( 'promote_users' ) ) {
+            wp_add_dashboard_widget(
+                'deprat_accueil_portail',
+                'Accueil DEPRAT',
+                'deprat_accueil_afficher_portail'
+            );
+        }
+        return;
+    }
     if ( current_user_can( 'manage_woocommerce' ) && function_exists( 'wc_get_orders' ) ) {
         wp_add_dashboard_widget(
             'deprat_accueil_demandes',
@@ -61,10 +138,10 @@ function deprat_accueil_afficher_demandes() {
     // Dans une boutique DEPRAT dédiée, cela couvre largement les derniers dossiers.
     $commandes = wc_get_orders( array(
         'type'    => 'shop_order',
-        'limit'   => 80,
+        'limit'   => 60,
         'orderby' => 'date',
         'order'   => 'DESC',
-        'status'  => array( 'dpr-recu', 'dpr-encours', 'dpr-envoye', 'dpr-accepte', 'dpr-facture', 'dpr-termine' ),
+        'status'  => array( 'dpr-recu', 'dpr-encours', 'dpr-envoye', 'dpr-modifie', 'dpr-accepte', 'dpr-facture', 'dpr-termine' ),
     ) );
 
     $trouvees = array();
@@ -72,7 +149,7 @@ function deprat_accueil_afficher_demandes() {
         if ( ! $commande instanceof WC_Order ) { continue; }
         if ( 'oui' !== $commande->get_meta( '_deprat_demande', true ) ) { continue; }
         $trouvees[] = $commande;
-        if ( count( $trouvees ) >= 8 ) { break; }
+        if ( count( $trouvees ) >= 5 ) { break; }
     }
 
     echo '<div class="deprat-home-help">Accès rapide aux dossiers du service ADV. Les états sont actualisés lors du chargement de la page.</div>';
@@ -118,7 +195,7 @@ function deprat_accueil_afficher_comptes() {
         'role'        => 'deprat_pending',
         'meta_key'    => 'deprat_account_status',
         'meta_value'  => 'pending',
-        'number'      => 8,
+        'number'      => 5,
         'orderby'     => 'registered',
         'order'       => 'DESC',
         'count_total' => true,
@@ -168,7 +245,7 @@ function deprat_accueil_afficher_comptes() {
         echo '</td></tr>';
     }
     echo '</tbody></table></div>';
-    echo '<p class="deprat-home-footer"><a href="' . esc_url( admin_url( 'users.php?role=deprat_pending' ) ) . '">Afficher les comptes en attente →</a></p>';
+    echo '<p class="deprat-home-footer"><a href="' . esc_url( admin_url( 'users.php?deprat_view=clients&role=deprat_pending' ) ) . '">Afficher les comptes en attente →</a></p>';
 }
 
 /** 4. Validation sécurisée d'un compte depuis l'accueil WordPress. */
