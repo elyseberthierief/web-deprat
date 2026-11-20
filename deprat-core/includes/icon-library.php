@@ -57,7 +57,7 @@ function deprat_icon_library_markup( $key, $class = 'deprat-section-icon', $size
     if ( ! isset( $entries[ $key ] ) ) { return ''; }
     $row = $entries[ $key ];
     if ( $row['media_id'] ) {
-        return (string) wp_get_attachment_image( $row['media_id'], 'full', false, array(
+        return (string) wp_get_attachment_image( $row['media_id'], 'medium', false, array(
             'class' => $class . ' deprat-library-image',
             'alt' => '', 'aria-hidden' => 'true', 'loading' => 'lazy',
             'style' => 'object-fit:cover;object-position:' . (int) $row['position_x'] . '% ' . (int) $row['position_y'] . '%',
