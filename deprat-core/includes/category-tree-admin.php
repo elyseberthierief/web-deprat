@@ -793,7 +793,10 @@ add_filter( 'terms_clauses', static function ( $clauses, $taxonomies, $args ) {
     foreach ( $rows as $row ) { $ids[] = (int) $row['id']; }
     // Tous les identifiants sont des entiers provenant des vrais termes WP.
     // FIELD() suit exactement l'ordre sauvegardé par l'organisateur.
-    $clauses['orderby'] = 'ORDER BY FIELD(t.term_id, ' . implode( ',', $ids ) . ') ASC';
+    $ordered = 'FIELD(t.term_id, ' . implode( ',', $ids ) . ')';
+    // Une éventuelle catégorie système WooCommerce « Non classé » n'est
+    // pas gérée dans l'organisateur : la placer après les sections DEPRAT.
+    $clauses['orderby'] = 'ORDER BY (' . $ordered . ' = 0) ASC, ' . $ordered . ' ASC';
     return $clauses;
 }, 999, 3 );
 
