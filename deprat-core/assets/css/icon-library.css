@@ -63,3 +63,93 @@
  object-fit:cover!important;
 }
 .deprat-library-position-status{margin:8px 0 0!important;font-weight:700;color:#17477d!important}
+
+/* 0.1.56 — Recadrage VISUEL : la vraie photo bouge en direct dans un
+   masque 1:1. Lignes des tiers visibles pendant le survol / le déplacement. */
+.deprat-library-crop-stage{
+    display:flex;
+    flex:0 0 192px;
+    width:192px;
+    flex-direction:column;
+    align-items:center;
+    gap:8px;
+}
+.deprat-library-edit-preview{
+    display:block!important;
+    position:relative;
+    width:192px!important;
+    height:192px!important;
+    flex:none!important;
+    aspect-ratio:1;
+    padding:0!important;
+    overflow:hidden;
+    border:2px solid #adc5e5;
+    border-radius:12px;
+    box-sizing:border-box;
+    background-color:#f0f5fc;
+    background-image:
+      linear-gradient(45deg,#e5edf8 25%,transparent 25%),
+      linear-gradient(-45deg,#e5edf8 25%,transparent 25%),
+      linear-gradient(45deg,transparent 75%,#e5edf8 75%),
+      linear-gradient(-45deg,transparent 75%,#e5edf8 75%);
+    background-size:18px 18px;
+    background-position:0 0,0 9px,9px -9px,-9px 0;
+    touch-action:none;
+    cursor:grab;
+    user-select:none;
+}
+.deprat-library-edit-preview>img{
+    display:block!important;
+    width:100%!important;
+    height:100%!important;
+    min-width:100%!important;
+    min-height:100%!important;
+    max-width:100%!important;
+    max-height:100%!important;
+    padding:0!important;
+    margin:0!important;
+    object-fit:cover!important;
+    object-position:50% 50%;
+    pointer-events:none;
+    transition:none!important;
+    user-select:none;
+}
+.deprat-library-edit-preview.is-croppable::after{
+    content:"";
+    position:absolute;
+    inset:0;
+    z-index:2;
+    pointer-events:none;
+    opacity:.55;
+    background:
+      linear-gradient(to right,transparent calc(33.333% - .5px),rgba(255,255,255,.9) 33.333%,transparent calc(33.333% + .5px),transparent calc(66.667% - .5px),rgba(255,255,255,.9) 66.667%,transparent calc(66.667% + .5px)),
+      linear-gradient(to bottom,transparent calc(33.333% - .5px),rgba(255,255,255,.9) 33.333%,transparent calc(33.333% + .5px),transparent calc(66.667% - .5px),rgba(255,255,255,.9) 66.667%,transparent calc(66.667% + .5px));
+    mix-blend-mode:difference;
+    transition:opacity .12s;
+}
+.deprat-library-edit-preview.is-croppable:hover::after,
+.deprat-library-edit-preview.is-dragging::after,
+.deprat-library-edit-preview:focus-visible::after{opacity:1}
+.deprat-library-edit-preview.is-dragging{
+    cursor:grabbing!important;
+    border-color:#c69a32;
+    box-shadow:0 0 0 3px rgba(198,154,50,.18);
+}
+.deprat-library-crop-hint{
+    font-size:12px;
+    color:#315a91;
+    font-weight:700;
+    text-align:center;
+    line-height:1.4;
+}
+.deprat-library-position-status{
+    display:inline-block;
+    padding:5px 9px;
+    border-radius:7px;
+    background:#eaf2fb;
+    font-variant-numeric:tabular-nums;
+}
+@media(max-width:700px){
+    .deprat-library-crop-stage{width:180px;flex-basis:180px}
+    .deprat-library-edit-preview{width:180px!important;height:180px!important}
+}
