@@ -416,3 +416,12 @@ body #masthead .custom-logo-link img{
 
 /* Préserver le cadrage personnalisé des images de bibliothèque sur toutes les pages. */
 body img.deprat-library-image{object-fit:cover!important}
+
+/* 0.1.57 — Soulignement doré rapproché des libellés.
+   Uniquement la barre desktop : ne pas toucher aux flèches du méga-menu. */
+@media (min-width:922px) {
+    body #masthead .main-header-menu > .menu-item > a.menu-link::before,
+    body #masthead .main-header-menu > .menu-item > a:not(.ast-menu-toggle)::before {
+        bottom:20px!important;
+    }
+}
