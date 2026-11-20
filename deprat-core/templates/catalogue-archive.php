@@ -14,8 +14,10 @@ $roots = deprat_catalog_root_categories();
 <main id="primary" class="deprat-catalog" aria-label="Catalogue professionnel DEPRAT">
     <?php if ( ! $is_hub && $category && is_a( $category, 'WP_Term' ) ) : ?>
         <?php deprat_category_slide_render( $category ); ?>
+    <?php elseif ( $is_hub && ! $is_all ) : ?>
+        <?php deprat_category_slide_render(); // Boutique générale : ses propres slides. ?>
     <?php endif; ?>
-    <?php if ( $is_hub ) : ?>
+    <?php if ( $is_hub && $is_all ) : ?>
     <nav class="deprat-catalog-breadcrumb" aria-label="Fil d’Ariane">
         <?php if ( $is_hub && ! $is_all ) : ?>
             <strong aria-current="page">Nos composants</strong>
