@@ -517,3 +517,8 @@
 
 /* Les icônes personnalisées utilisent le cadrage manuel de l'administration. */
 .deprat-catalog-child-icon img.deprat-library-image{object-fit:cover!important}
+
+/* Le bandeau doit rester dans le <main> d'Astra, avant les filtres ;
+   ne jamais être un frère latéral du contenu dans le conteneur flex. */
+.deprat-catalog:has(> .deprat-cat-hero){padding-top:0}
+.deprat-catalog>.deprat-cat-hero{margin-bottom:28px;flex:none;clear:both}
