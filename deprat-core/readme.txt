@@ -1,4 +1,4 @@
-DEPRAT Core 0.1.60
+DEPRAT Core 0.1.61
 
 Le plugin reprend les extraits PHP actifs dans la sauvegarde du 14 novembre 2026.
 Extraits globaux : 5 à 11 et 15.
@@ -124,3 +124,10 @@ Version 0.1.60 — Aperçu panier de devis au survol :
 - Après ajout de produit AJAX, remplacement de l'ensemble du bouton et de l'aperçu par les fragments WooCommerce, ouverture temporaire de la fenêtre et animation « pop » du compteur doré.
 - Fermeture automatique, fermeture clavier Escape et animations désactivables par l'option d'accessibilité « réduire les animations ».
 - Aucune tarification ou fausse disponibilité n'est introduite dans le mini-panier B2B.
+
+Version 0.1.61 — En-tête fixe sur tout le site :
+- Les 3 rangées Astra (coordonnées, identité/recherche/compte/devis, menu principal) restent ensemble en haut lors du scroll.
+- Un espace de remplacement de hauteur calculée évite le saut et le chevauchement des contenus, y compris les slides des catégories et boutique générale.
+- Ajustement à la barre d'administration WordPress, aux changements de largeur et au menu mobile.
+- Le méga-menu et le mini-panier de devis restent au-dessus du contenu.
+- Contrôler sur ordinateur/mobile, avec et sans barre admin, sur boutique, page catégories et fiches produits.
