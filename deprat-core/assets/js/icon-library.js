@@ -148,10 +148,11 @@
             var bounds = preview.getBoundingClientRect();
             var square = Math.max(1, Math.min(bounds.width, bounds.height));
             var scale = Math.max(square / sourceWidth, square / sourceHeight);
-            var excessX = Math.max(1, sourceWidth * scale - square);
-            var excessY = Math.max(1, sourceHeight * scale - square);
-            // Déplacer la photo vers la droite révèle davantage la partie gauche.
-            movePosition(-(event.clientX - dragging.x) / excessX * 100, -(event.clientY - dragging.y) / excessY * 100);
+            var excessX = Math.max(0, sourceWidth * scale - square);
+            var excessY = Math.max(0, sourceHeight * scale - square);
+            // Déplacer la photo ne modifie que l'axe où un vrai recadrage existe.
+            movePosition(excessX > 1 ? -(event.clientX - dragging.x) / excessX * 100 : 0,
+                excessY > 1 ? -(event.clientY - dragging.y) / excessY * 100 : 0);
             dragging.x = event.clientX; dragging.y = event.clientY;
         });
         preview.addEventListener('pointerup', function () { dragging = null; });
