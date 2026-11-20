@@ -111,6 +111,8 @@
         shopChildren.push({title:'Clients',url:users?users.url:config.clientUrl,icon:'users',children:clientChildren});
         var marketingChildren = [];
         marketingChildren.push(item('Promotions / Codes',marketingUrl || config.marketingUrl,'ticket-percent'));
+        // Toujours pointer vers le vrai type de contenu de slides DEPRAT,
+        // pas vers edit.php (liste des articles WordPress).
         var homeChildren=[item('Slides d’accueil',config.homeSlideUrl,'images')];
         var postChildren=[item('Tous les articles',posts?posts.url:config.blogUrl,'newspaper')];
         if (posts) {
@@ -224,11 +226,30 @@
 
         function isActiveUrl(url) {
             try {
-                var current=new URL(window.location.href), target=new URL(url,location.href);
-                if (current.pathname!==target.pathname) {return false;}
-                var params=target.searchParams;
+                var current=new URL(window.location.href);
+                var target=new URL(url,window.location.href);
+                if (current.origin!==target.origin || current.pathname!==target.pathname) {return false;}
+
+                // Avant, un lien edit.php sans post_type était considéré actif
+                // pour TOUTES les listes (slides, produits, articles...).
+                // De même admin.php sans page pouvait activer plusieurs menus.
+                // Comparer les deux sens, y compris l'absence du paramètre.
                 var keys=['page','post_type','tab','role','path'];
-                return keys.every(function(key) { return !params.has(key) || params.get(key)===current.searchParams.get(key); });
+                return keys.every(function (key) {
+                    var actual=current.searchParams.get(key);
+                    var expected=target.searchParams.get(key);
+                    if (key==='post_type' && /\/edit\.php$/.test(current.pathname)) {
+                        actual=actual || 'post';
+                        expected=expected || 'post';
+                    }
+                    if (key==='tab' &&
+                        current.searchParams.get('page')==='deprat-shop-settings' &&
+                        target.searchParams.get('page')==='deprat-shop-settings') {
+                        actual=actual || 'categories';
+                        expected=expected || 'categories';
+                    }
+                    return actual===expected;
+                });
             }catch(e){return false;}
         }
         function renderLink(n,level) {
