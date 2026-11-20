@@ -105,9 +105,7 @@ function deprat_site_header_tiers() {
                         <?php endif; ?>
                     </div>
                 </div>
-                <?php if ( is_user_logged_in() ) : ?>
-                    <?php echo deprat_site_header_quote_button(); // Lien panier, icône et compteur, un seul bouton. ?>
-                <?php endif; ?>
+                <?php echo deprat_site_header_quote_button(); // Toujours visible : panier accessible aux visiteurs. ?>
             </div>
         </div>
     </div>
@@ -201,6 +199,9 @@ function deprat_site_header_quote_button() {
             $html .= '<p class="deprat-header-mini-cart-more">+ ' . esc_html( $count - $shown ) . ' autre(s) référence(s)</p>';
         }
     }
+    if ( ! is_user_logged_in() && $count ) {
+        $html .= '<p class="deprat-header-mini-cart-guest-note">Votre sélection est conservée pendant votre navigation. Connectez-vous ou créez un compte professionnel uniquement pour envoyer la demande.</p>';
+    }
     $html .= '<a class="deprat-header-mini-cart-cta" href="' . esc_url( $url ) . '">Voir ma demande de devis <span aria-hidden="true">→</span></a>';
     $html .= '</section></div>';
     return $html;
@@ -208,7 +209,7 @@ function deprat_site_header_quote_button() {
 
 /** WooCommerce met à jour simultanément le compteur ET la fenêtre de survol. */
 add_filter( 'woocommerce_add_to_cart_fragments', static function ( $fragments ) {
-    if ( is_user_logged_in() && function_exists( 'WC' ) && WC()->cart ) {
+    if ( function_exists( 'WC' ) && WC()->cart ) {
         $fragments['#deprat-header-quote-widget'] = deprat_site_header_quote_button();
     }
     return $fragments;
@@ -220,8 +221,8 @@ add_filter( 'woocommerce_add_to_cart_fragments', static function ( $fragments ) 
  * la clé WooCommerce évite de supprimer une autre ligne par erreur.
  */
 function deprat_quote_remove_cart_item_ajax() {
-    if ( ! is_user_logged_in() || ! function_exists( 'WC' ) ) {
-        wp_send_json_error( array( 'message' => 'Reconnectez-vous pour modifier votre demande.' ), 403 );
+    if ( ! function_exists( 'WC' ) ) {
+        wp_send_json_error( array( 'message' => 'Le panier est indisponible.' ), 503 );
     }
     if ( ! check_ajax_referer( 'deprat_quote_remove_item', 'security', false ) ) {
         wp_send_json_error( array( 'message' => 'Session expirée. Actualisez la page.' ), 403 );
@@ -251,7 +252,7 @@ add_action( 'wc_ajax_nopriv_deprat_quote_remove_item', 'deprat_quote_remove_cart
 
 /** Chargement sur toutes les pages ayant le header DEPRAT, et non les seules archives. */
 add_action( 'wp_enqueue_scripts', static function () {
-    if ( ! is_user_logged_in() || ! function_exists( 'WC' ) ) { return; }
+    if ( ! function_exists( 'WC' ) ) { return; }
     wp_enqueue_script(
         'deprat-quote-hover',
         plugins_url( 'assets/js/quote-hover.js', dirname( __DIR__ ) . '/deprat-core.php' ),
