@@ -137,20 +137,84 @@ function deprat_site_header_quote_item( $items, $args ) {
 }
 // La demande de devis figure désormais dans l'en-tête central : pas de doublon dans le menu.
 
-/** Un bouton entier clicable, lié au panier WooCommerce et à son nombre d'articles. */
+/**
+ * Le bouton et sa fenêtre d'aperçu appartiennent à une même zone de survol.
+ * Pas de prix car le site est un catalogue avec demande de devis.
+ */
 function deprat_site_header_quote_button() {
-    $url = function_exists( 'wc_get_cart_url' ) ? wc_get_cart_url() : '';
+    if ( ! function_exists( 'wc_get_cart_url' ) ) { return ''; }
+    $url = wc_get_cart_url();
     if ( ! $url ) { return ''; }
-    $count = function_exists( 'WC' ) && WC()->cart ? (int) count( WC()->cart->get_cart() ) : 0;
-    $badge = $count > 0 ? '<span class="deprat-header-quote-count" aria-label="' . esc_attr( $count . ' articles dans la demande' ) . '">' . esc_html( $count > 99 ? '99+' : (string) $count ) . '</span>' : '';
-    return '<a id="deprat-header-quote-link" class="deprat-header-quote-button" href="' . esc_url( $url ) . '">'
-        . '<span class="deprat-header-quote-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 2h12v20l-3-2-3 2-3-2-3 2V2Z"/><path d="M9 7h6M9 11h6M9 15h4"/></svg></span>'
-        . '<span>Ma demande de devis</span>' . $badge . '</a>';
+    $cart = function_exists( 'WC' ) && WC()->cart ? WC()->cart : null;
+    $items = $cart ? $cart->get_cart() : array();
+    $count = count( $items );
+    $badge = $count > 0
+        ? '<span class="deprat-header-quote-count" aria-label="' . esc_attr( sprintf( _n( '%d référence dans la demande', '%d références dans la demande', $count, 'deprat-core' ), $count ) ) . '">'
+            . esc_html( $count > 99 ? '99+' : (string) $count ) . '</span>'
+        : '';
+
+    $icon = '<span class="deprat-header-quote-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 2h12v20l-3-2-3 2-3-2-3 2V2Z"/><path d="M9 7h6M9 11h6M9 15h4"/></svg></span>';
+    $html = '<div id="deprat-header-quote-widget" class="deprat-header-quote-widget" data-deprat-quote-widget>';
+    $html .= '<a id="deprat-header-quote-link" class="deprat-header-quote-button" href="' . esc_url( $url ) . '"'
+        . ' aria-haspopup="true" aria-controls="deprat-header-mini-cart">'
+        . $icon . '<span>Ma demande de devis</span>' . $badge . '</a>';
+    $html .= '<section class="deprat-header-mini-cart" id="deprat-header-mini-cart"'
+        . ' aria-label="Aperçu de ma demande de devis" data-deprat-mini-cart>';
+    $html .= '<div class="deprat-header-mini-cart-head"><strong>Ma demande de devis</strong>'
+        . '<span>' . esc_html( sprintf( _n( '%d référence', '%d références', $count, 'deprat-core' ), $count ) ) . '</span></div>';
+
+    if ( ! $count ) {
+        $html .= '<p class="deprat-header-mini-cart-empty">Votre demande de devis est vide.</p>';
+    } else {
+        $html .= '<div class="deprat-header-mini-cart-items">';
+        $shown = 0;
+        foreach ( $items as $item ) {
+            if ( $shown >= 5 ) { break; }
+            $product = isset( $item['data'] ) && is_a( $item['data'], 'WC_Product' ) ? $item['data'] : null;
+            if ( ! $product || ! $product->exists() ) { continue; }
+            $shown++;
+            $name = $product->get_name();
+            $permalink = $product->is_visible() ? $product->get_permalink() : '';
+            $image = $product->get_image( 'woocommerce_thumbnail', array(
+                'class' => 'deprat-header-mini-cart-thumb',
+                'loading' => 'lazy',
+                'alt' => '',
+            ) );
+            $label = $permalink
+                ? '<a href="' . esc_url( $permalink ) . '">' . esc_html( $name ) . '</a>'
+                : '<span>' . esc_html( $name ) . '</span>';
+            $quantity = isset( $item['quantity'] ) ? max( 1, (int) $item['quantity'] ) : 1;
+            $html .= '<div class="deprat-header-mini-cart-item">' . $image
+                . '<div class="deprat-header-mini-cart-details">' . $label
+                . '<span class="deprat-header-mini-cart-meta">Quantité : ' . esc_html( $quantity ) . '</span>'
+                . '</div></div>';
+        }
+        $html .= '</div>';
+        if ( $count > $shown ) {
+            $html .= '<p class="deprat-header-mini-cart-more">+ ' . esc_html( $count - $shown ) . ' autre(s) référence(s)</p>';
+        }
+    }
+    $html .= '<a class="deprat-header-mini-cart-cta" href="' . esc_url( $url ) . '">Voir ma demande de devis <span aria-hidden="true">→</span></a>';
+    $html .= '</section></div>';
+    return $html;
 }
-/** Recalculer le compteur immédiatement après l'ajout AJAX au panier. */
+
+/** WooCommerce met à jour simultanément le compteur ET la fenêtre de survol. */
 add_filter( 'woocommerce_add_to_cart_fragments', static function ( $fragments ) {
     if ( is_user_logged_in() && function_exists( 'WC' ) && WC()->cart ) {
-        $fragments['#deprat-header-quote-link'] = deprat_site_header_quote_button();
+        $fragments['#deprat-header-quote-widget'] = deprat_site_header_quote_button();
     }
     return $fragments;
 } );
+
+/** Chargement sur toutes les pages ayant le header DEPRAT, et non les seules archives. */
+add_action( 'wp_enqueue_scripts', static function () {
+    if ( ! is_user_logged_in() || ! function_exists( 'WC' ) ) { return; }
+    wp_enqueue_script(
+        'deprat-quote-hover',
+        plugins_url( 'assets/js/quote-hover.js', dirname( __DIR__ ) . '/deprat-core.php' ),
+        array( 'jquery' ),
+        '0.1.60',
+        true
+    );
+}, 110 );
