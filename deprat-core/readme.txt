@@ -1,4 +1,4 @@
-DEPRAT Core 0.1.59
+DEPRAT Core 0.1.60
 
 Le plugin reprend les extraits PHP actifs dans la sauvegarde du 14 novembre 2026.
 Extraits globaux : 5 à 11 et 15.
@@ -118,3 +118,9 @@ Version 0.1.58 — Fonds des slides, boutique et catégories :
 - Retour au fond standard possible à tout moment ; les anciennes couleurs et images restent mémorisées.
 
 Version 0.1.59 — Suppression de l'espace Astra entre le header et le slide de la boutique « Nos composants » ; pages produits inchangées.
+
+Version 0.1.60 — Aperçu panier de devis au survol :
+- En desktop, survol/focus du bouton bleu affiche une petite fenêtre indiquant les références, images et quantités de la demande. Lien vers le panier complet.
+- Après ajout de produit AJAX, remplacement de l'ensemble du bouton et de l'aperçu par les fragments WooCommerce, ouverture temporaire de la fenêtre et animation « pop » du compteur doré.
+- Fermeture automatique, fermeture clavier Escape et animations désactivables par l'option d'accessibilité « réduire les animations ».
+- Aucune tarification ou fausse disponibilité n'est introduite dans le mini-panier B2B.

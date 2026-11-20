@@ -741,4 +741,21 @@ deprat_integration_assert( 'standard' === deprat_category_slide_bg_config( $shop
     'Le mode DEPRAT standard doit être réactivable.' );
 wp_delete_post( $shop_slide_id, true );
 
+// Le mini-panier de devis doit afficher une vraie liste et pouvoir rafraîchir
+// tout le composant (bouton + liste) via les fragments WooCommerce.
+$mini_cart_html = deprat_site_header_quote_button();
+deprat_integration_assert(
+    false !== strpos( $mini_cart_html, 'deprat-header-quote-widget' )
+    && false !== strpos( $mini_cart_html, 'deprat-header-mini-cart' )
+    && false !== strpos( $mini_cart_html, 'Ma demande de devis' )
+    && false !== strpos( $mini_cart_html, 'Voir ma demande de devis' ),
+    'Le devis doit disposer du bouton complet et de son mini-panier.'
+);
+$fragments = apply_filters( 'woocommerce_add_to_cart_fragments', array() );
+deprat_integration_assert(
+    ! empty( $fragments['#deprat-header-quote-widget'] )
+    && false !== strpos( $fragments['#deprat-header-quote-widget'], 'deprat-header-mini-cart' ),
+    'Les fragments WooCommerce doivent actualiser ensemble compteur et aperçu du devis.'
+);
+
 WP_CLI::success( 'WordPress et WooCommerce : sauvegarde, médias et affichages vérifiés.' );

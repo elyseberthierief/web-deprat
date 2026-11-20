@@ -425,3 +425,110 @@ body img.deprat-library-image{object-fit:cover!important}
         bottom:20px!important;
     }
 }
+
+/* 0.1.60 — Le bouton devis et sa fenêtre d'aperçu constituent un seul groupe.
+   Ouverture au survol, au focus clavier et temporairement après un ajout. */
+@media(min-width:922px){
+ body #masthead{overflow:visible!important}
+ body #masthead .deprat-header-identity-row,
+ body #masthead .deprat-header-shell,
+ body #masthead .deprat-header-identity-inner{overflow:visible!important}
+ body #masthead .deprat-header-identity-row{position:relative;z-index:40}
+ body #masthead .deprat-header-quote-widget{
+   position:relative;display:flex;justify-content:flex-end;align-items:center;min-width:0;
+   z-index:150;
+ }
+ body #masthead .deprat-header-quote-widget>.deprat-header-quote-button{
+   position:relative;
+   display:inline-flex;align-items:center;justify-content:center;gap:10px;
+   width:100%;min-height:49px;
+ }
+ body #masthead .deprat-header-mini-cart{
+   position:absolute;top:calc(100% + 11px);right:0;
+   width:min(365px,calc(100vw - 36px));
+   max-height:min(480px,75vh);
+   display:flex;flex-direction:column;
+   padding:0;overflow:hidden;
+   color:#173e72;background:#fff;
+   border:1px solid #d5e1ef;border-radius:14px;
+   box-shadow:0 17px 42px rgba(11,43,90,.2);
+   opacity:0;visibility:hidden;pointer-events:none;
+   transform:translateY(-7px);
+   transition:opacity .2s ease,transform .2s ease,visibility .2s;
+   z-index:200;
+ }
+ /* La zone invisible fait le pont entre le bouton et la fenêtre : elle
+    reste ouverte quand on descend la souris vers les articles. */
+ body #masthead .deprat-header-quote-widget::after{
+   content:"";position:absolute;z-index:1;top:100%;right:0;
+   width:100%;height:14px;pointer-events:auto;background:transparent;
+ }
+ body #masthead .deprat-header-mini-cart::before{
+   content:"";position:absolute;top:0;left:0;right:0;height:3px;background:#c59a2d;
+ }
+ body #masthead .deprat-header-quote-widget:hover>.deprat-header-mini-cart,
+ body #masthead .deprat-header-quote-widget:focus-within>.deprat-header-mini-cart,
+ body #masthead .deprat-header-quote-widget.is-open>.deprat-header-mini-cart{
+   opacity:1;visibility:visible;pointer-events:auto;transform:translateY(0);
+ }
+ body #masthead .deprat-header-quote-widget:has(>.deprat-header-mini-cart:hover)>.deprat-header-mini-cart{
+   opacity:1;visibility:visible;pointer-events:auto;
+ }
+ body #masthead .deprat-header-mini-cart-head{
+   display:flex;justify-content:space-between;align-items:center;gap:10px;
+   padding:17px 17px 13px;border-bottom:1px solid #e5edf6;
+ }
+ body #masthead .deprat-header-mini-cart-head strong{color:#113b79;font-size:15px;font-weight:850}
+ body #masthead .deprat-header-mini-cart-head span{font-size:12px;color:#617894;white-space:nowrap}
+ body #masthead .deprat-header-mini-cart-items{
+   overflow-y:auto;overscroll-behavior:contain;padding:2px 14px;max-height:290px;
+ }
+ body #masthead .deprat-header-mini-cart-item{
+   display:flex;gap:12px;align-items:center;padding:12px 2px;
+   border-bottom:1px solid #edf1f6;min-width:0;
+ }
+ body #masthead .deprat-header-mini-cart-item:last-child{border-bottom:0}
+ body #masthead .deprat-header-mini-cart-thumb{
+   display:block;width:62px;height:62px;min-width:62px;
+   border:1px solid #e7edf5;border-radius:8px;background:#f8fafd;
+   object-fit:contain;
+ }
+ body #masthead .deprat-header-mini-cart-details{display:flex;flex-direction:column;gap:5px;min-width:0}
+ body #masthead .deprat-header-mini-cart-details>a,
+ body #masthead .deprat-header-mini-cart-details>span:first-child{
+   font-size:13px;line-height:1.35;color:#123d7b;text-decoration:none;font-weight:750;
+ }
+ body #masthead .deprat-header-mini-cart-details>a:hover{color:#0866b4;text-decoration:underline}
+ body #masthead .deprat-header-mini-cart-meta{font-size:12px;color:#657c95}
+ body #masthead .deprat-header-mini-cart-empty,
+ body #masthead .deprat-header-mini-cart-more{
+   padding:15px 17px;margin:0;color:#647c96;font-size:13px;
+ }
+ body #masthead .deprat-header-mini-cart-more{padding-top:4px}
+ body #masthead .deprat-header-mini-cart-cta{
+   margin:12px 14px 14px;padding:12px 14px;min-height:44px;
+   display:flex;align-items:center;justify-content:center;gap:11px;
+   background:#103b80;color:#fff!important;font-size:13px;font-weight:800;
+   text-decoration:none!important;text-align:center;border-radius:9px;
+ }
+ body #masthead .deprat-header-mini-cart-cta:hover{background:#092c66}
+ body #masthead .deprat-header-quote-widget.is-just-added .deprat-header-quote-button{
+   box-shadow:0 0 0 3px rgba(196,153,42,.27);
+ }
+ body #masthead .deprat-header-quote-widget.is-just-added .deprat-header-quote-count{
+   animation:deprat-quote-badge-pop .62s cubic-bezier(.2,1.35,.4,1) both;
+ }
+}
+@keyframes deprat-quote-badge-pop{
+  0%{transform:scale(.5);opacity:.6}
+  45%{transform:scale(1.42);opacity:1}
+  72%{transform:scale(.91)}
+  100%{transform:scale(1);opacity:1}
+}
+@media(max-width:921px){
+ body #masthead .deprat-header-quote-widget{display:none!important}
+}
+@media(prefers-reduced-motion:reduce){
+ body #masthead .deprat-header-mini-cart{transition:none!important}
+ body #masthead .deprat-header-quote-widget.is-just-added .deprat-header-quote-count{animation:none!important}
+}
