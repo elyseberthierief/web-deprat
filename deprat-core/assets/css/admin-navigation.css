@@ -51,6 +51,8 @@ body.deprat-admin-mode .deprat-admin-menu{
     font-size:23px;font-weight:750;
     line-height:1;
 }
+.deprat-admin-brand-mark:has(img){border:0;background:transparent}
+.deprat-admin-brand-mark img{display:block;width:100%;height:100%;object-fit:contain}
 .deprat-admin-brand strong{font-size:21px;font-weight:680;letter-spacing:.025em}
 .deprat-admin-brand small{display:block;width:100%;font-size:10px;font-weight:500;letter-spacing:.16em;color:#acbfd6;padding-left:47px;margin-top:-15px}
 .deprat-admin-space{margin:0 0 9px}
