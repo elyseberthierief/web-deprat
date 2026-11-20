@@ -203,6 +203,30 @@
         // Réglages ADMINISTRATEUR par la boucle entries ci-dessus.
         // Ne pas réinsérer Paramètres boutique dans la partie technique.
 
+        // Regrouper les réglages sans perdre les liens natifs des extensions.
+        // Les nouveaux outils non reconnus arrivent dans « Autres extensions ».
+        var adminBuckets=[
+            {title:'WooCommerce',icon:'shopping-cart',children:[]},
+            {title:'Elementor',icon:'layout',children:[]},
+            {title:'Sécurité et sauvegarde',icon:'shield',children:[]},
+            {title:'Réglages de base WP',icon:'settings',children:[]},
+            {title:'Autres extensions',icon:'puzzle',children:[]}
+        ];
+        function bucketFor(node) {
+            var key=(node.title+' '+node.url).toLowerCase();
+            if (/woocommerce|wc-admin|paiements?|payments?|statistiques|analytics/.test(key)) {return 0;}
+            if (/elementor|modèles|modeles|templates?/.test(key)) {return 1;}
+            if (/wp[ -]?pusher|wppusher|duplicator|migration|backup|sauvegard|wordfence|sucuri|solid.security|updraft|malcare|sécurité|securite|security/.test(key)) {return 2;}
+            if (/apparence|appearance|astra|themes?|extensions?|plugins?|réglages|settings|outils|tools|commentaires|comments|utilisateurs|users|wp mail smtp|wpforms|snippets?|widgets?|menus?/.test(key)) {return 3;}
+            return 4;
+        }
+        adminChildren.forEach(function(node){
+            adminBuckets[bucketFor(node)].children.push(node);
+        });
+        // Les en-têtes sont uniquement des groupes à déplier, aucune page fictive.
+        // Ne pas recréer d'entrée pour un outil qui n'est pas installé.
+        var groupedAdminChildren=adminBuckets.filter(function(b){return b.children.length>0;});
+
         // Accès immédiat à la page WP Pusher Plugins utilisée pour DEPRAT Core.
         // Raccourci demandé : la page WP Pusher Plugins avec le bouton
         // « Update plugin » DEPRAT Core, et non update-core.php de WordPress.
@@ -232,7 +256,7 @@
             {title:'Espace Articles',tone:'articles',icon:'newspaper',url:config.blogUrl,children:postChildren},
             {title:'Espace Pages',tone:'pages',icon:'files',url:config.pagesUrl,children:pageChildren},
             {title:'Médias',tone:'medias',icon:'images',url:media?media.url:config.mediaUrl},
-            {title:'Réglages ADMINISTRATEUR',tone:'admin',icon:'lock',children:adminChildren}
+            {title:'Réglages ADMINISTRATEUR',tone:'admin',icon:'lock',children:groupedAdminChildren}
         );
 
         var svgPaths={
@@ -250,6 +274,7 @@
             files:'<path d="M8 3h9l4 4v13a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M17 3v5h4M2 8v13a2 2 0 0 0 2 2h12M10 12h7m-7 4h7"/>',
             puzzle:'<path d="M9 3h6v4a2 2 0 1 1 4 0h2v6h-4a2 2 0 1 0 0 4v4h-6v-4a2 2 0 1 0-4 0H3v-6h4a2 2 0 1 0 0-4H3V3z"/>',
             shield:'<path d="M12 2 3 6v6c0 6 4 9 9 10 5-1 9-4 9-10V6z"/>',
+            layout:'<rect x="2" y="3" width="20" height="18" rx="2"/><path d="M8 3v18M8 9h14"/>',
             lock:'<rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/><circle cx="12" cy="15.5" r="1"/>',
             'ticket-percent':'<path d="M3 7h18v4a2 2 0 0 0 0 4v3H3v-3a2 2 0 0 0 0-4z"/><path d="m9 15 6-6m-6 0h.1m6 6h.1"/>',
             plus:'<path d="M12 5v14m-7-7h14"/>',
@@ -334,7 +359,12 @@
             label.textContent=n.title;
             link.appendChild(label);
             if (n.badgeCount>0) { link.appendChild(badge(n.badgeCount)); }
-            if (isActiveUrl(n.url)) {link.classList.add('is-active');link.setAttribute('aria-current','page');}
+            var editingProduct=(n.title==='Produits' && config.currentPostType==='product' &&
+                (/\/post\.php$/.test(location.pathname) || /\/post-new\.php$/.test(location.pathname)));
+            if (isActiveUrl(n.url) || editingProduct) {
+                link.classList.add('is-active');
+                link.setAttribute('aria-current','page');
+            }
             return link;
         }
         function renderSection(n,level,rootTone) {
@@ -370,11 +400,25 @@
             var body=document.createElement('div');body.className='deprat-menu-children';
             n.children.forEach(function(child){ body.appendChild(renderSection(child,level+1,rootTone)); });
             details.appendChild(body);
-            if (body.querySelector('.is-active') ||
+            // L'état ouvert/fermé est mémorisé pour chacun des groupes :
+            // plusieurs rubriques peuvent rester dépliées simultanément.
+            // Une fiche produit en modification doit garder Boutique ouvert.
+            var isProductEditor=(
+                (config.currentPostType==='product' &&
+                 (/\/post\.php$/.test(location.pathname) || /\/post-new\.php$/.test(location.pathname))) ||
+                (/\/post-new\.php$/.test(location.pathname) && /(?:\?|&)post_type=product(?:&|$)/.test(location.search))
+            );
+            var key='deprat-admin-open:' + rootTone + ':' + level + ':' + n.title;
+            var remembered=null;
+            try {remembered=sessionStorage.getItem(key);}catch(err) {}
+            var currentBranch=Boolean(body.querySelector('.is-active') ||
                 (n.title==='Clients' && /\/users\.php$/.test(location.pathname)) ||
-                (level===0 && rootTone==='boutique' && /deprat-shop-settings/.test(location.search))) {
-                details.open=true;
-            }
+                (level===0 && rootTone==='boutique' &&
+                  (/deprat-shop-settings/.test(location.search) || isProductEditor)));
+            details.open=currentBranch || remembered==='1';
+            details.addEventListener('toggle',function(){
+                try{sessionStorage.setItem(key,details.open?'1':'0');}catch(err){}
+            });
 
             return details;
         }
