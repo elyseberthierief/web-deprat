@@ -647,6 +647,74 @@ add_action( 'admin_head', function() {
             }
         }
 
+
+        /* Correctif 0.1.75 : le vrai tableau DEPRAT est stylisé ici,
+           après les anciennes règles de ce même snippet. */
+        body.woocommerce_page_wc-orders .wp-list-table,
+        body.post-type-shop_order .wp-list-table {
+            width:calc(100% - 48px)!important;max-width:calc(100% - 48px)!important;
+            margin:18px 24px 26px!important;border:1px solid #dce6f1!important;
+            border-radius:12px!important;
+        }
+        body.woocommerce_page_wc-orders .wp-list-table thead th,
+        body.post-type-shop_order .wp-list-table thead th {
+            padding:10px!important;font-size:11px!important;
+            line-height:1.35!important;font-weight:650!important;
+        }
+        body.woocommerce_page_wc-orders .wp-list-table tbody td,
+        body.woocommerce_page_wc-orders .wp-list-table tbody th,
+        body.post-type-shop_order .wp-list-table tbody td,
+        body.post-type-shop_order .wp-list-table tbody th {
+            padding:9px 10px!important;height:auto!important;
+            font-size:12.5px!important;line-height:1.35!important;
+        }
+        body.woocommerce_page_wc-orders .deprat-l2-time,
+        body.post-type-shop_order .deprat-l2-time {margin-top:2px!important}
+        body.woocommerce_page_wc-orders .deprat-l2-pill,
+        body.post-type-shop_order .deprat-l2-pill {
+            padding:5px 9px!important;font-size:11px!important;font-weight:650!important;
+        }
+        body.woocommerce_page_wc-orders .deprat-l2-open,
+        body.post-type-shop_order .deprat-l2-open {
+            padding:7px 11px!important;font-size:12px!important;font-weight:650!important;
+        }
+        body.woocommerce_page_wc-orders #wpbody-content .wrap h1.wp-heading-inline,
+        body.post-type-shop_order #wpbody-content .wrap h1.wp-heading-inline {
+            color:#143e7a!important;font-size:27px!important;font-weight:650!important;
+            letter-spacing:-.02em!important;line-height:1.3!important;
+        }
+        body.woocommerce_page_wc-orders #wpbody-content .wrap .page-title-action,
+        body.post-type-shop_order #wpbody-content .wrap .page-title-action {
+            display:inline-flex!important;align-items:center!important;
+            padding:9px 15px!important;min-height:40px!important;
+            background:#193f7b!important;color:#fff!important;
+            border:1px solid #193f7b!important;border-radius:11px!important;
+            font-size:13px!important;font-weight:630!important;box-shadow:none!important;
+        }
+        body.woocommerce_page_wc-orders #wpbody-content .wrap .page-title-action:hover,
+        body.post-type-shop_order #wpbody-content .wrap .page-title-action:hover {
+            background:#235292!important;border-color:#235292!important;
+        }
+        body.woocommerce_page_wc-orders .subsubsub li a,
+        body.post-type-shop_order .subsubsub li a {
+            padding:10px 15px!important;border-radius:13px!important;
+            font-size:13px!important;font-weight:570!important;
+            background:#f7faff!important;color:#143e7a!important;
+            border:1px solid #d7e5f4!important;
+        }
+        body.woocommerce_page_wc-orders .subsubsub li a.current,
+        body.post-type-shop_order .subsubsub li a.current {
+            background:#193f7b!important;border-color:#193f7b!important;
+            color:#fff!important;font-weight:650!important;
+        }
+        @media(max-width:782px){
+            body.woocommerce_page_wc-orders .wp-list-table,
+            body.post-type-shop_order .wp-list-table {
+                width:calc(100% - 20px)!important;max-width:calc(100% - 20px)!important;
+                margin:12px 10px 20px!important;
+            }
+        }
+
     </style>
 
     <?php
