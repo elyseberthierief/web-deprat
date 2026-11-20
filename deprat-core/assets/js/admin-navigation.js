@@ -359,7 +359,12 @@
             label.textContent=n.title;
             link.appendChild(label);
             if (n.badgeCount>0) { link.appendChild(badge(n.badgeCount)); }
-            if (isActiveUrl(n.url)) {link.classList.add('is-active');link.setAttribute('aria-current','page');}
+            var editingProduct=(n.title==='Produits' && config.currentPostType==='product' &&
+                (/\/post\.php$/.test(location.pathname) || /\/post-new\.php$/.test(location.pathname)));
+            if (isActiveUrl(n.url) || editingProduct) {
+                link.classList.add('is-active');
+                link.setAttribute('aria-current','page');
+            }
             return link;
         }
         function renderSection(n,level,rootTone) {
