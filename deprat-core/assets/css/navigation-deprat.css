@@ -532,3 +532,41 @@ body img.deprat-library-image{object-fit:cover!important}
  body #masthead .deprat-header-mini-cart{transition:none!important}
  body #masthead .deprat-header-quote-widget.is-just-added .deprat-header-quote-count{animation:none!important}
 }
+
+/* 0.1.61 — Le masthead COMPLET reste visible au défilement : contacts,
+   logo/recherche/compte, puis menu principal Astra. Ne pas fixer les bandes
+   séparément : sous-menus et mini-panier doivent rester dans le même contexte. */
+body.deprat-sticky-header-enabled #masthead{
+    position:fixed!important;
+    top:var(--deprat-sticky-top,0px)!important;
+    left:0!important;
+    right:0!important;
+    width:100%!important;
+    z-index:9990!important;
+    margin:0!important;
+    transform:none!important;
+    backface-visibility:hidden;
+}
+body.deprat-sticky-header-enabled .deprat-sticky-header-spacer{
+    display:block!important;
+    width:100%!important;
+    min-height:0!important;
+    padding:0!important;
+    margin:0!important;
+    border:0!important;
+    visibility:hidden;
+    pointer-events:none;
+}
+body.deprat-sticky-header-enabled #masthead .deprat-header-mini-cart,
+body.deprat-sticky-header-enabled #masthead .sub-menu{
+    z-index:9995;
+}
+/* Maintenir les panneaux mobiles Astra utilisables avec le header fixé. */
+@media(max-width:921px){
+  body.deprat-sticky-header-enabled #masthead{
+      max-height:calc(100dvh - var(--deprat-sticky-top,0px));
+  }
+  body.deprat-sticky-header-enabled #masthead .ast-mobile-popup-drawer{
+      max-height:calc(100dvh - var(--deprat-sticky-top,0px));
+  }
+}
