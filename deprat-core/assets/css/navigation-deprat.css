@@ -413,3 +413,6 @@ body #masthead .custom-logo-link img{
     bottom:14px;
   }
 }
+
+/* Préserver le cadrage personnalisé des images de bibliothèque sur toutes les pages. */
+body img.deprat-library-image{object-fit:cover!important}
