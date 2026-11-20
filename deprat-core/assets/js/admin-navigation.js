@@ -97,8 +97,9 @@
             item('Liste des comptes ouverts',users?users.url:config.clientUrl,'users'),
             item('Nouvelle ouverture / autorisation',config.pendingUrl,'user-check')
         ];
+        shopChildren.push({title:'Clients',url:users?users.url:config.clientUrl,icon:'users',children:clientChildren});
         var marketingChildren = [];
-        if (marketingUrl) { marketingChildren.push(item('Promotions / Codes',marketingUrl,'ticket-percent')); }
+        marketingChildren.push(item('Promotions / Codes',marketingUrl || config.marketingUrl,'ticket-percent'));
         var homeChildren=[item('Slides d’accueil',home?home.url:config.homeSlideUrl,'images')];
         var postChildren=[item('Tous les articles',posts?posts.url:config.blogUrl,'newspaper')];
         if (posts) {
@@ -131,6 +132,20 @@
                     children:extras.map(function(c){return item(c.title,c.url,'chevron-right');})});
             }
         }
+        if (marketing) {
+            var marketExtras=marketing.children.filter(function(c){return !/coupon|promotion|code promo/i.test(c.title);});
+            if (marketExtras.length) {
+                adminChildren.push({title:'Autres outils Marketing',url:marketing.url,icon:'settings',
+                    children:marketExtras.map(function(c){return item(c.title,c.url,'chevron-right');})});
+            }
+        }
+        if (home && home.children.length) {
+            var homeExtras=home.children.filter(function(c){return !/tous|all|ajouter|add new/i.test(c.title);});
+            if (homeExtras.length) {
+                adminChildren.push({title:'Autres réglages Slides accueil',url:home.url,icon:'settings',
+                    children:homeExtras.map(function(c){return item(c.title,c.url,'chevron-right');})});
+            }
+        }
         if (users) {
             var userExtras=users.children.filter(function(c){return !/tous les comptes|all users/i.test(c.title);});
             if (userExtras.length) {
@@ -150,8 +165,7 @@
         var groups=[
             {title:'Tableau de bord',tone:'dashboard',icon:'house',url:dashboard?dashboard.url:config.dashboardUrl},
             {title:'Espace Boutique',tone:'boutique',icon:'shopping-cart',children:shopChildren},
-            {title:'Clients',tone:'clients',icon:'users',children:clientChildren},
-            {title:'Espace Marketing',tone:'marketing',icon:'megaphone',children:marketingChildren},
+             {title:'Espace Marketing',tone:'marketing',icon:'megaphone',children:marketingChildren},
             {title:'Espace Page d’accueil',tone:'accueil',icon:'house',children:homeChildren},
             {title:'Espace Articles',tone:'articles',icon:'newspaper',children:postChildren},
             {title:'Médias',tone:'medias',icon:'images',url:media?media.url:config.mediaUrl},
