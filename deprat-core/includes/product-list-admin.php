@@ -195,6 +195,19 @@ function deprat_product_list_admin_markup() {
                 </div>
                 <div class="deprat-products-header-search" data-deprat-search-destination></div>
             </header>
+            <dialog class="deprat-products-category-dialog" data-deprat-category-dialog aria-labelledby="deprat-new-category-title">
+                <form method="dialog" data-deprat-category-form>
+                    <h2 id="deprat-new-category-title">Nouvelle catégorie</h2>
+                    <p data-deprat-category-context>Créer une catégorie dans la rubrique sélectionnée.</p>
+                    <label for="deprat-category-name">Nom de la catégorie</label>
+                    <input id="deprat-category-name" name="name" type="text" maxlength="160" required autocomplete="off" placeholder="Ex. Embouts de tube">
+                    <p class="deprat-products-category-feedback" data-deprat-category-feedback role="status" aria-live="polite"></p>
+                    <div class="deprat-products-dialog-actions">
+                        <button type="button" class="button" data-deprat-dialog-close>Annuler</button>
+                        <button type="submit" class="button button-primary">Créer la catégorie</button>
+                    </div>
+                </form>
+            </dialog>
             <h2 class="deprat-products-level-title">Sections</h2>
             <nav class="deprat-products-sections" aria-label="Filtrer les produits par section">
                 <?php
@@ -209,7 +222,13 @@ function deprat_product_list_admin_markup() {
             </nav>
             <?php if ( $section ) : ?>
             <div class="deprat-products-hierarchy">
-                <h2 class="deprat-products-level-title">Catégories</h2>
+                <div class="deprat-products-level-heading">
+                    <h2 class="deprat-products-level-title">Catégories</h2>
+                    <?php if ( current_user_can( 'manage_product_terms' ) ) : ?>
+                        <button type="button" class="deprat-products-add-category" data-deprat-create-category data-parent="0"
+                            data-section="<?php echo esc_attr( $section ); ?>" data-parent-name="<?php echo esc_attr( $definitions[ $section ] ); ?>">＋ Ajouter une catégorie</button>
+                    <?php endif; ?>
+                </div>
                 <nav class="deprat-products-categories" aria-label="Catégories de la section sélectionnée">
                     <?php
                     $current_root_id = $path ? (int) $path[0]->term_id : 0;
@@ -246,6 +265,11 @@ function deprat_product_list_admin_markup() {
                                 <h2 class="deprat-products-level-title deprat-products-level-title--sub">Sous-catégories</h2>
                                 <span aria-hidden="true" class="deprat-products-subcategory-arrow">⌄</span>
                             </summary>
+                            <?php if ( current_user_can( 'manage_product_terms' ) ) : ?>
+                                <button type="button" class="deprat-products-add-category deprat-products-add-subcategory"
+                                    data-deprat-create-category data-parent="<?php echo esc_attr( (string) $selected->term_id ); ?>"
+                                    data-section="" data-parent-name="<?php echo esc_attr( $selected->name ); ?>">＋ Ajouter une sous-catégorie</button>
+                            <?php endif; ?>
                             <nav class="deprat-products-children" aria-label="Sous-catégories de <?php echo esc_attr( $selected->name ); ?>">
                             <?php deprat_product_list_nav_item( 'Tous',
                                 deprat_product_list_count( deprat_product_list_term_ids( $selected ) ),
@@ -264,6 +288,13 @@ function deprat_product_list_admin_markup() {
                     <?php endif; ?>
                 </div>
             </div>
+            <?php endif; ?>
+            <?php if ( current_user_can( 'edit_products' ) ) : ?>
+                <a data-deprat-new-product-link class="deprat-products-inline-add"
+                    href="<?php echo esc_url( add_query_arg(
+                        $selected ? array( 'deprat_prefill_cat' => (int) $selected->term_id ) : array(),
+                        admin_url( 'post-new.php?post_type=product' )
+                    ) ); ?>">＋ Nouveau produit<?php echo $selected ? ' dans ' . esc_html( $selected->name ) : ''; ?></a>
             <?php endif; ?>
             <div class="deprat-products-filters">
                 <label><span class="screen-reader-text">État du stock</span><select name="deprat_stock" data-deprat-filter>
@@ -368,7 +399,11 @@ add_action( 'manage_product_posts_custom_column', static function ( $column, $po
 
 function deprat_product_list_admin_assets( $hook ) {
     if ( 'edit.php' !== $hook || ! deprat_product_list_is_screen() ) { return; }
-    wp_enqueue_style( 'deprat-product-list', plugins_url( 'assets/css/product-list-admin.css', dirname( __DIR__ ) . '/deprat-core.php' ), array(), '0.1.43' );
-    wp_enqueue_script( 'deprat-product-list', plugins_url( 'assets/js/product-list-admin.js', dirname( __DIR__ ) . '/deprat-core.php' ), array(), '0.1.43', true );
+    wp_enqueue_style( 'deprat-product-list', plugins_url( 'assets/css/product-list-admin.css', dirname( __DIR__ ) . '/deprat-core.php' ), array(), '0.1.72' );
+    wp_enqueue_script( 'deprat-product-list', plugins_url( 'assets/js/product-list-admin.js', dirname( __DIR__ ) . '/deprat-core.php' ), array(), '0.1.72', true );
+    wp_add_inline_script( 'deprat-product-list', 'window.depratProductCreate=' . wp_json_encode( array(
+        'ajaxUrl' => admin_url( 'admin-ajax.php' ),
+        'nonce' => wp_create_nonce( 'deprat_categories_tree' ),
+    ) ) . ';', 'before' );
 }
 add_action( 'admin_enqueue_scripts', 'deprat_product_list_admin_assets' );
