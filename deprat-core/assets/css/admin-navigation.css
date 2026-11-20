@@ -368,3 +368,19 @@ body.deprat-admin-mode.index-php #dashboard-widgets .postbox .handlediv{
     padding-left:8px;
     margin-bottom:7px;
 }
+
+/* 0.1.72 — Menu latéral autonome, ne remonte pas lorsque la page change.
+   On maintient le repli WP responsive déjà prévu à 782px. */
+@media(min-width:783px){
+    body.deprat-admin-mode #adminmenuwrap{
+        position:fixed!important;left:0;top:32px;bottom:0;
+        height:calc(100vh - 32px)!important;
+        min-height:0!important;
+        overflow-y:auto!important;overflow-x:hidden!important;
+        overscroll-behavior:contain;
+        scrollbar-width:thin;scrollbar-color:#536e91 transparent;
+    }
+    body.deprat-admin-mode .deprat-admin-menu{
+        min-height:100%;height:auto;
+    }
+}
