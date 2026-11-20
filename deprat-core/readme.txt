@@ -189,3 +189,5 @@ Version 0.1.70 — Espace Pages dans l'administration DEPRAT :
 - Sous-menu Toutes les pages vers la liste native edit.php?post_type=page, et Ajouter une page vers post-new.php?post_type=page.
 - Le menu Pages WordPress n'est pas dupliqué sous Réglages ADMINISTRATEUR ; toutes les pages et leurs contenus restent inchangés.
 - Retour en un clic au menu classique toujours disponible.
+
+- Ergonomie de la barre latérale : supprimer partout les liens redondants « Ouvrir [rubrique] ». Un clic sur le nom d'une rubrique ouvre directement sa page WordPress ; le chevron sert uniquement à afficher ou masquer les sous-rubriques. Cette règle est commune à Boutique, Paramètres, Clients, Marketing, Accueil, Articles, Pages et autres menus d'extensions.
