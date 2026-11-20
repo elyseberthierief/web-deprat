@@ -715,6 +715,87 @@ add_action( 'admin_head', function() {
             }
         }
 
+
+        /* 0.1.76 — Onglets Commandes : mêmes cartes que la navigation Produits.
+         * Les liens et compteurs natifs WooCommerce restent fonctionnels. */
+        body.woocommerce_page_wc-orders .subsubsub,
+        body.post-type-shop_order .subsubsub {
+            display:flex!important;
+            flex-wrap:wrap!important;
+            gap:9px!important;
+            margin:16px 0 22px!important;
+        }
+        body.woocommerce_page_wc-orders .subsubsub li a,
+        body.post-type-shop_order .subsubsub li a {
+            position:relative;
+            display:inline-flex!important;
+            align-items:center!important;
+            gap:8px!important;
+            min-height:48px!important;
+            padding:11px 15px!important;
+            background:#fff!important;
+            color:#153d74!important;
+            border:1px solid #d6e2f1!important;
+            border-radius:10px!important;
+            box-shadow:0 2px 6px rgba(18,59,119,.03)!important;
+            font-size:12.5px!important;
+            font-weight:650!important;
+            line-height:1.35!important;
+            text-decoration:none!important;
+            transition:background-color .15s,border-color .15s;
+        }
+        body.woocommerce_page_wc-orders .subsubsub li a:hover:not(.current),
+        body.post-type-shop_order .subsubsub li a:hover:not(.current) {
+            background:#eef6ff!important;
+            border-color:#b5cce7!important;
+        }
+        body.woocommerce_page_wc-orders .subsubsub li a.current,
+        body.post-type-shop_order .subsubsub li a.current {
+            background:linear-gradient(145deg,#1159b0,#123e7c)!important;
+            color:#fff!important;
+            border-color:#1455a3!important;
+            font-weight:700!important;
+        }
+        body.woocommerce_page_wc-orders .subsubsub li a.current::after,
+        body.post-type-shop_order .subsubsub li a.current::after {
+            content:"";
+            position:absolute;bottom:0;left:0;right:0;height:3px;
+            border-radius:3px;background:#e5ac3a;
+        }
+        body.woocommerce_page_wc-orders .subsubsub li a .count,
+        body.post-type-shop_order .subsubsub li a .count {
+            display:inline-flex!important;
+            align-items:center;justify-content:center;
+            min-width:22px;min-height:22px;
+            margin-left:0!important;
+            padding:0 6px!important;
+            box-sizing:border-box;
+            border-radius:16px!important;
+            background:#ebf1f9!important;
+            color:#234b84!important;
+            font-size:10.5px!important;
+            font-weight:700!important;
+        }
+        body.woocommerce_page_wc-orders .subsubsub li a.current .count,
+        body.post-type-shop_order .subsubsub li a.current .count {
+            background:#447cbd!important;color:#fff!important;
+        }
+        body.woocommerce_page_wc-orders #wpbody-content .wrap h1.wp-heading-inline,
+        body.post-type-shop_order #wpbody-content .wrap h1.wp-heading-inline {
+            color:#153c7b!important;
+            font-size:30px!important;
+            font-weight:750!important;
+            letter-spacing:-.03em!important;
+        }
+        @media(max-width:782px){
+            body.woocommerce_page_wc-orders .subsubsub li a,
+            body.post-type-shop_order .subsubsub li a {
+                min-height:42px!important;
+                padding:9px 12px!important;
+                font-size:12px!important;
+            }
+        }
+
     </style>
 
     <?php
@@ -759,7 +840,7 @@ add_action( 'admin_footer', function() {
 
                 if ( h ) {
                     h.textContent =
-                        'DEPRAT — Demandes professionnelles';
+                        'Commandes';
                 }
             }
         );
