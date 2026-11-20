@@ -80,8 +80,49 @@ body.deprat-admin-mode .deprat-admin-menu{
     opacity:.94;
 }
 .deprat-admin-menu .deprat-menu-icon svg{display:block;width:19px;height:19px}
-.deprat-admin-menu .deprat-menu-chevron{margin-left:auto;font-size:20px;line-height:1;transform:rotate(0);transition:transform .14s}
-.deprat-admin-menu details[open] > summary .deprat-menu-chevron{transform:rotate(180deg)}
+/* Chevrons harmonisés : petits, centrés, avec rotation au dépliage. */
+.deprat-admin-menu .deprat-menu-chevron{
+    margin-left:auto;flex:0 0 17px;width:17px;height:17px;
+    display:grid;place-items:center;line-height:0;
+    color:rgba(233,243,254,.78);
+    transition:transform .18s ease,color .18s ease;
+}
+.deprat-admin-menu .deprat-menu-chevron svg{
+    width:14px;height:14px;display:block;
+}
+.deprat-admin-menu .deprat-menu-details.level-1 .deprat-menu-chevron,
+.deprat-admin-menu .deprat-menu-details.level-2 .deprat-menu-chevron{
+    width:14px;height:14px;flex-basis:14px;
+}
+.deprat-admin-menu .deprat-menu-details.level-1 .deprat-menu-chevron svg,
+.deprat-admin-menu .deprat-menu-details.level-2 .deprat-menu-chevron svg{width:12px;height:12px}
+.deprat-admin-menu details[open] > summary .deprat-menu-chevron{transform:rotate(180deg);color:#fff}
+.deprat-admin-menu .deprat-native-menu-icon .wp-menu-image{
+    width:20px!important;height:20px!important;position:static!important;
+    float:none!important;margin:0!important;display:grid!important;
+    place-items:center;
+    background:none!important;
+}
+.deprat-admin-menu .deprat-native-menu-icon .wp-menu-image:before{
+    font:normal 19px/1 dashicons!important;
+    color:#dfebf9!important;
+    padding:0!important;
+    width:20px!important;height:20px!important;
+    display:block!important;
+    text-align:center!important;
+}
+.deprat-admin-menu .deprat-native-menu-icon .wp-menu-image img{
+    display:block!important;width:19px!important;height:19px!important;
+    max-width:19px!important;max-height:19px!important;
+    object-fit:contain;opacity:.92;padding:0!important;margin:0!important;
+}
+.deprat-admin-menu .deprat-native-menu-icon .wp-menu-image.svg{
+    background-size:19px 19px!important;background-position:center!important;
+    background-repeat:no-repeat!important;
+}
+.deprat-admin-menu .deprat-native-menu-icon .wp-menu-image.svg:before{
+    display:none!important;
+}
 .deprat-admin-menu summary{list-style:none}
 .deprat-admin-menu summary::-webkit-details-marker{display:none}
 .deprat-admin-menu .deprat-admin-space > details > summary,
