@@ -90,7 +90,7 @@ const assert = require( 'assert' );
             'La grille conserve la photo des produits.' );
         const gridImageHeight = await page.locator( '#the-list > tr[id^="post-"] .column-thumb img' )
             .first().evaluate( img => img.getBoundingClientRect().height );
-        assert( gridImageHeight >= 185, 'Les photos en grille doivent être agrandies à environ 190 px.' );
+        assert( gridImageHeight >= 135 && gridImageHeight <= 145, 'Les photos en grille compacte doivent mesurer environ 140 px.' );
         await page.screenshot( { path: process.env.RUNNER_TEMP + '/deprat-produits-admin-grille.png', fullPage: true } );
         await viewList.click();
         assert.strictEqual( await viewList.getAttribute( 'aria-pressed' ), 'true',
