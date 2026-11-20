@@ -758,4 +758,23 @@ deprat_integration_assert(
     'Les fragments WooCommerce doivent actualiser ensemble compteur et aperçu du devis.'
 );
 
+// Un visiteur non connecté doit construire sa liste de devis sans compte.
+// En revanche l'envoi réel reste protégé dans le flux DEPRAT.
+$before_guest = get_current_user_id();
+wp_set_current_user( 0 );
+$guest_quote = deprat_site_header_quote_button();
+deprat_integration_assert(
+    false !== strpos( $guest_quote, 'deprat-header-quote-widget' )
+    && false !== strpos( $guest_quote, 'Ma demande de devis' ),
+    'Le bouton panier doit rester visible sans connexion.' );
+$guest_fragments = apply_filters( 'woocommerce_add_to_cart_fragments', array() );
+deprat_integration_assert(
+    isset( $guest_fragments['#deprat-header-quote-widget'] ),
+    'Le compteur et le mini-panier doivent aussi se rafraîchir pour les visiteurs.' );
+deprat_integration_assert(
+    function_exists( 'deprat_quote_remove_cart_item_ajax' )
+    && has_action( 'wc_ajax_nopriv_deprat_quote_remove_item', 'deprat_quote_remove_cart_item_ajax' ),
+    'Un visiteur doit pouvoir retirer une référence en AJAX de son panier de session.' );
+wp_set_current_user( $before_guest );
+
 WP_CLI::success( 'WordPress et WooCommerce : sauvegarde, médias et affichages vérifiés.' );
