@@ -123,6 +123,7 @@ function deprat_icon_library_render_admin() {
                 <div class="deprat-library-card" data-library-key="<?php echo esc_attr( $key ); ?>"
                     data-library-name="<?php echo esc_attr( $entry['name'] ); ?>"
                     data-library-media="<?php echo absint( $entry['media_id'] ); ?>"
+                    data-library-source="<?php echo $entry['media_id'] ? esc_url( wp_get_attachment_image_url( $entry['media_id'], 'full' ) ) : ''; ?>"
                     data-library-position-x="<?php echo (int) $entry['position_x']; ?>"
                     data-library-position-y="<?php echo (int) $entry['position_y']; ?>">
                     <div class="deprat-library-actions">
@@ -144,11 +145,14 @@ function deprat_icon_library_render_admin() {
                     <input type="text" data-library-name maxlength="60" required placeholder="Ex. Moteur filaire">
                 </label>
                 <div class="deprat-library-image-field">
-                    <div class="deprat-library-edit-preview" data-library-preview tabindex="0" role="group" aria-label="Cadrage carré de l’icône : faites glisser l’image pour la déplacer">Choisir une image</div>
+                    <div class="deprat-library-crop-stage">
+                        <div class="deprat-library-edit-preview" data-library-preview tabindex="0" role="group" aria-label="Déplacer la photo dans le cadre carré avec la souris, le doigt ou les flèches du clavier">Choisir une image</div>
+                        <div class="deprat-library-crop-hint" aria-hidden="true">↔ Glisser pour déplacer ↕</div>
+                    </div>
                     <div>
                         <button type="button" class="button" data-library-choose>Choisir ou importer une image</button>
                         <button type="button" class="button" data-library-clear hidden>Retirer l’image</button>
-                        <p>PNG, JPG ou WebP. Faites glisser l’image dans le carré pour choisir son cadrage. Utilisez les flèches du clavier pour affiner. Le nom et le cadrage seront enregistrés.</p><p class="deprat-library-position-status" data-library-position-status>Position : centre</p>
+                        <p>Déplacez la photo directement dans le cadre carré : vous verrez le recadrage évoluer en temps réel. Les lignes d’aide indiquent la zone conservée. Utilisez aussi les flèches du clavier pour ajuster précisément.</p><p class="deprat-library-position-status" data-library-position-status>Position : centre</p>
                     </div>
                 </div>
                 <p class="deprat-library-error" data-library-error role="alert" hidden></p>
@@ -164,8 +168,8 @@ function deprat_icon_library_render_admin() {
 
 add_action( 'admin_enqueue_scripts', static function ( $hook ) {
     if ( ! in_array( $hook, array( 'product_page_deprat-categories-tree', 'toplevel_page_deprat-shop-settings' ), true ) ) { return; }
-    wp_enqueue_style( 'deprat-icon-library', plugins_url( 'assets/css/icon-library.css', dirname( __DIR__ ) . '/deprat-core.php' ), array( 'deprat-category-tree' ), '0.1.54' );
-    wp_enqueue_script( 'deprat-icon-library', plugins_url( 'assets/js/icon-library.js', dirname( __DIR__ ) . '/deprat-core.php' ), array( 'jquery', 'media-views' ), '0.1.48', true );
+    wp_enqueue_style( 'deprat-icon-library', plugins_url( 'assets/css/icon-library.css', dirname( __DIR__ ) . '/deprat-core.php' ), array( 'deprat-category-tree' ), '0.1.56' );
+    wp_enqueue_script( 'deprat-icon-library', plugins_url( 'assets/js/icon-library.js', dirname( __DIR__ ) . '/deprat-core.php' ), array( 'jquery', 'media-views' ), '0.1.56', true );
     wp_localize_script( 'deprat-icon-library', 'depratIconLibrary', array(
         'ajaxUrl' => admin_url( 'admin-ajax.php' ),
         'nonce' => wp_create_nonce( 'deprat_icon_library' ),
