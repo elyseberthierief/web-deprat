@@ -9,6 +9,40 @@
         var wrap = document.getElementById('adminmenuwrap');
         var config = window.depratAdminNavigation;
         if (!original || !wrap || !config || wrap.querySelector('.deprat-admin-menu')) { return; }
+        // Onglets réels WordPress « Utilisateurs », sans perdre la recherche,
+        // les filtres, les rôles ou les actions de validation existants.
+        if (/\/users\.php$/.test(location.pathname)) {
+            var tabs=document.querySelector('.subsubsub');
+            if (tabs) {
+                var tabItems=Array.from(tabs.querySelectorAll(':scope > li'));
+                var groups=[
+                    {label:'Tous',value:null},
+                    {label:'Administrateurs',value:'administrator'},
+                    {label:'Clients',value:'customer'},
+                    {label:'Comptes pro en attente',value:'deprat_pending'}
+                ];
+                groups.forEach(function(group) {
+                    var li=tabItems.find(function(item) {
+                        var anchor=item.querySelector('a[href]');
+                        if (!anchor) {return false;}
+                        var u=new URL(anchor.href,location.href);
+                        var role=u.searchParams.get('role');
+                        return group.value===null ? !role : role===group.value;
+                    });
+                    if (!li) {return;}
+                    var anchor=li.querySelector('a');
+                    var count=anchor.querySelector('.count');
+                    var originalCount=count?count.textContent.replace(/[()]/g,'').trim():'';
+                    anchor.textContent=group.label+' ';
+                    if (originalCount) {
+                        var span=document.createElement('span');
+                        span.className='count';span.textContent=originalCount;
+                        anchor.appendChild(span);
+                    }
+                    tabs.appendChild(li);
+                });
+            }
+        }
         var entries = [];
         var used = new Set();
         function clean(str) { return (str || '').replace(/\s+/g, ' ').trim(); }
