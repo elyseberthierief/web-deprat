@@ -49,8 +49,72 @@ function deprat_category_tree_front_children( $parent ) {
     if ( is_wp_error( $terms ) || ! is_array( $terms ) ) { return array(); }
     return deprat_category_tree_sort_terms( $terms );
 }
-/** Arborescence compacte destinée au sélecteur de la fiche produit. */
+/**
+ * Arborescence commune aux écrans WordPress et à la fiche produit.
+ * L'ordre des sections provient de « Organiser les catégories » ;
+ * chaque groupe contient ses racines et tous ses descendants dans
+ * l'ordre « order » WooCommerce sauvegardé par l'organisateur.
+ */
+function deprat_category_tree_sectioned_options() {
+    $terms = deprat_category_tree_terms();
+    $by_parent = array();
+    $default = (int) get_option( 'default_product_cat', 0 );
+    foreach ( $terms as $term ) {
+        $parent = (int) $term->parent;
+        if ( $parent === $default ) { $parent = 0; }
+        $by_parent[ $parent ][] = $term;
+    }
+    foreach ( $by_parent as &$siblings ) {
+        $siblings = deprat_category_tree_sort_terms( $siblings );
+    }
+    unset( $siblings );
+
+    $groups = array_fill_keys( array_keys( deprat_catalog_section_definitions() ), array() );
+    foreach ( isset( $by_parent[0] ) ? $by_parent[0] : array() as $root ) {
+        $section = deprat_catalog_section_for_term( $root );
+        if ( ! isset( $groups[ $section ] ) ) { $section = 'autres'; }
+        $groups[ $section ][] = $root;
+    }
+
+    $rows = array();
+    $seen = array();
+    $titles = deprat_catalog_section_definitions();
+    $walk = static function ( $term, $depth, $section ) use ( &$walk, &$rows, &$seen, $by_parent, $titles ) {
+        $id = (int) $term->term_id;
+        if ( isset( $seen[ $id ] ) || $depth > 30 ) { return; }
+        $seen[ $id ] = true;
+        $rows[] = array(
+            'id' => $id,
+            'parent' => (int) $term->parent,
+            'depth' => $depth,
+            'name' => $term->name,
+            'section' => $section,
+            'sectionTitle' => isset( $titles[ $section ] ) ? $titles[ $section ] : 'Autres composants',
+        );
+        foreach ( isset( $by_parent[ $id ] ) ? $by_parent[ $id ] : array() as $child ) {
+            $walk( $child, $depth + 1, $section );
+        }
+    };
+    foreach ( $groups as $section => $roots ) {
+        foreach ( $roots as $root ) { $walk( $root, 0, $section ); }
+    }
+    // Ne jamais perdre les catégories orphelines ou anciennes.
+    foreach ( $terms as $term ) {
+        if ( ! isset( $seen[ (int) $term->term_id ] ) ) {
+            $section = deprat_catalog_section_for_term( $term );
+            $walk( $term, 0, isset( $titles[ $section ] ) ? $section : 'autres' );
+        }
+    }
+    return $rows;
+}
+
+/** Sélecteur de la fiche produit : mêmes sections et mêmes positions. */
 function deprat_category_tree_flat_options() {
+    return deprat_category_tree_sectioned_options();
+}
+
+/** Ancien sélecteur conservé ci-dessous pour référence de migration. */
+function deprat_category_tree_flat_options_legacy() {
     $terms = deprat_category_tree_terms();
     $result = array();
     $visited = array();
