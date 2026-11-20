@@ -163,7 +163,7 @@ function deprat_icon_library_render_admin() {
 }
 
 add_action( 'admin_enqueue_scripts', static function ( $hook ) {
-    if ( 'product_page_deprat-categories-tree' !== $hook ) { return; }
+    if ( ! in_array( $hook, array( 'product_page_deprat-categories-tree', 'toplevel_page_deprat-shop-settings' ), true ) ) { return; }
     wp_enqueue_style( 'deprat-icon-library', plugins_url( 'assets/css/icon-library.css', dirname( __DIR__ ) . '/deprat-core.php' ), array( 'deprat-category-tree' ), '0.1.54' );
     wp_enqueue_script( 'deprat-icon-library', plugins_url( 'assets/js/icon-library.js', dirname( __DIR__ ) . '/deprat-core.php' ), array( 'jquery', 'media-views' ), '0.1.48', true );
     wp_localize_script( 'deprat-icon-library', 'depratIconLibrary', array(
