@@ -471,7 +471,7 @@ const assert = require( 'assert' );
         }
         await page.goto( fullShopUrl, { waitUntil: 'domcontentloaded' } );
         await page.waitForSelector( '.deprat-catalog-results' );
-        assert( ( await page.locator( '.deprat-cat-hero h1' ).textContent() ).includes( 'Tous les composants' ),
+        assert( ( await page.locator( '.deprat-catalog-header h1' ).textContent() ).includes( 'Tous les composants' ),
             'Le bouton ouvre une page Tous les composants et non la page des catégories.' );
         const allProductsText = await page.locator( '[data-catalog-products]' ).textContent();
         assert( allProductsText.includes( 'Tube de test' ) && allProductsText.includes( 'Embout DEPRAT de test' ),
