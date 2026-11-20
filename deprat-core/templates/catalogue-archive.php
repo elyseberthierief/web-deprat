@@ -11,10 +11,10 @@ $is_all = $is_hub && deprat_catalog_show_all_products();
 $category = ! $is_hub ? get_queried_object() : null;
 $roots = deprat_catalog_root_categories();
 ?>
-<?php if ( ! $is_hub && $category && is_a( $category, 'WP_Term' ) ) : ?>
-    <?php deprat_category_slide_render( $category ); ?>
-<?php endif; ?>
 <main id="primary" class="deprat-catalog" aria-label="Catalogue professionnel DEPRAT">
+    <?php if ( ! $is_hub && $category && is_a( $category, 'WP_Term' ) ) : ?>
+        <?php deprat_category_slide_render( $category ); ?>
+    <?php endif; ?>
     <?php if ( $is_hub ) : ?>
     <nav class="deprat-catalog-breadcrumb" aria-label="Fil d’Ariane">
         <?php if ( $is_hub && ! $is_all ) : ?>
