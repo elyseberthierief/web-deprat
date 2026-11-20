@@ -833,6 +833,48 @@
         schedule();
     }
 
+    function setupCategoryPrefill() {
+        var config=window.depratProductEditor;
+        if(!config || !Array.isArray(config.prefillCategoryIds) || !config.prefillCategoryIds.length){return;}
+        var selected=new Set(config.prefillCategoryIds.map(String));
+        var tries=0;
+        function apply(){
+            var inputs=document.querySelectorAll(
+                '#product_catchecklist input[type="checkbox"], '+
+                '#product_catchecklist-pop input[type="checkbox"], '+
+                'input[name="tax_input[product_cat][]"]'
+            );
+            var count=0;
+            inputs.forEach(function(input){
+                if(selected.has(input.value)){
+                    if(!input.checked){
+                        input.checked=true;
+                        input.dispatchEvent(new Event('change',{bubbles:true}));
+                    }
+                    count++;
+                }
+            });
+            return count>0;
+        }
+        if(!apply()){
+            var observer=new MutationObserver(function(){
+                tries++;
+                if(apply() || tries>200){observer.disconnect();}
+            });
+            observer.observe(document.body,{childList:true,subtree:true});
+            window.addEventListener('load',apply,{once:true});
+        }
+        var header=document.querySelector('.wrap h1.wp-heading-inline, .wrap h1');
+        if(header && !document.querySelector('.deprat-prefill-category-notice')){
+            var info=document.createElement('div');
+            info.className='notice notice-info deprat-prefill-category-notice';
+            var paragraph=document.createElement('p');
+            paragraph.textContent='Classement DEPRAT présélectionné : '+config.prefillCategoryLabel;
+            info.appendChild(paragraph);
+            header.insertAdjacentElement('afterend',info);
+        }
+    }
+
     function start() {
         var editor = document.querySelector( '.deprat-tech-editor' );
         if ( ! editor ) {
