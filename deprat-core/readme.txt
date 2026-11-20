@@ -1,4 +1,4 @@
-DEPRAT Core 0.1.63
+DEPRAT Core 0.1.64
 
 Le plugin reprend les extraits PHP actifs dans la sauvegarde du 14 novembre 2026.
 Extraits globaux : 5 à 11 et 15.
@@ -143,3 +143,12 @@ Version 0.1.63 — Envoi devis invité :
 - « Se connecter pour envoyer » affiche désormais la fenêtre modale WooCommerce avec identifiant/e-mail, mot de passe, mémorisation et oubli de mot de passe. Aucun renvoi vers wp-login.php / wp-admin.
 - « Créer un compte pro » ouvre la page Mon compte WooCommerce, qui utilise le formulaire d'ouverture DEPRAT complet (société, SIRET, adresse, coordonnées) lorsque les inscriptions clients sont activées.
 - Le panier reste en session pendant la connexion et la page d'inscription ; l'envoi reste protégé côté serveur.
+
+Version 0.1.64 — Admin DEPRAT métier et finition typographique :
+- Barre latérale administrateur colorée par espace : Tableau de bord, Espace Boutique (Commandes, Produits, Paramètres boutique, Clients), Marketing, Page d'accueil, Articles, Médias et Réglages ADMINISTRATEUR.
+- Les menus sont dérivés des liens de l'installation WordPress ; les extensions inconnues/nouvelles restent dans Réglages ADMINISTRATEUR, leurs sous-pages conservées.
+- Aucune suppression des menus WordPress, aucun changement de rôle ni de permission ADV ; personnalisation réservée aux administrateurs (manage_options).
+- Bouton « Admin classique » en barre admin et en bas du menu pour restaurer immédiatement le wp-admin d'origine ; retour à « Admin DEPRAT » via la même barre. Préférence mémorisée par utilisateur.
+- La page Organiser les catégories utilise des fontes moins grasses, des ombres discrètes et des angles moins ronds, sans toucher aux outils de déplacement/sauvegarde.
+- Certaines rubriques futures (caractéristiques techniques globales, produits mis en avant) ne reçoivent pas encore de faux liens.
+- En cas de blocage visuel, le plugin n'altère pas les destinations natives ; revenir au menu classique par la barre WordPress.
