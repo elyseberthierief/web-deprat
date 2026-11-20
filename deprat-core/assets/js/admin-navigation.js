@@ -151,7 +151,10 @@
         }
         // Ne pas réinsérer Paramètres boutique dans la partie technique.
 
+        // La page native WordPress de maintenance et d'extensions à mettre à jour.
+        // Accès immédiat en tête du menu, réservé à l'administrateur.
         var groups=[
+            {title:'Mises à jour',tone:'updates',icon:'refresh',url:config.updatesUrl},
             {title:'Tableau de bord',tone:'dashboard',icon:'house',url:dashboard?dashboard.url:config.dashboardUrl},
             {title:'Espace Boutique',tone:'boutique',icon:'shopping-cart',children:shopChildren},
              {title:'Espace Marketing',tone:'marketing',icon:'megaphone',children:marketingChildren},
@@ -162,6 +165,7 @@
         ];
 
         var svgPaths={
+            refresh:'<path d="M20 7v5h-5M4 17v-5h5"/><path d="M5.5 9a7 7 0 0 1 12-2l2.5 5M18.5 15a7 7 0 0 1-12 2L4 12"/>',
             house:'<path d="m3 10 9-7 9 7v11h-6v-7H9v7H3z"/>',
             'shopping-cart':'<circle cx="9" cy="20" r="1"/><circle cx="19" cy="20" r="1"/><path d="M2 3h3l3 13h12l2-9H6"/>',
             users:'<circle cx="9" cy="8" r="3"/><path d="M3 21v-2a6 6 0 0 1 12 0v2"/><path d="M17 5a3 3 0 0 1 0 6m1 5a5 5 0 0 1 3 5"/>',
