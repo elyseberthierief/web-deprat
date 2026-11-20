@@ -46,32 +46,125 @@ add_action( 'admin_bar_menu', static function ( $bar ) {
     ) );
 }, 999 );
 
+/**
+ * Dans l'admin DEPRAT, la liste Clients n'inclut jamais les administrateurs.
+ * La vue administrateurs se trouve dans Réglages ADMINISTRATEUR.
+ */
+function deprat_admin_users_view() {
+    return isset( $_GET['deprat_view'] ) && 'admins' === sanitize_key( wp_unslash( $_GET['deprat_view'] ) )
+        ? 'admins' : 'clients';
+}
+
+add_action( 'pre_get_users', static function ( $query ) {
+    if ( ! deprat_admin_design_enabled() || ! current_user_can( 'list_users' )
+        || ! function_exists( 'get_current_screen' ) ) { return; }
+    $screen = get_current_screen();
+    if ( ! $screen || 'users' !== $screen->id ) { return; }
+    if ( isset( $_REQUEST['action'] ) && is_scalar( $_REQUEST['action'] )
+        && ! in_array( sanitize_key( wp_unslash( $_REQUEST['action'] ) ), array( '', '-1' ), true ) ) { return; }
+    if ( 'admins' === deprat_admin_users_view() ) {
+        $query->set( 'role', 'administrator' );
+        $query->set( 'role__in', array() );
+        $query->set( 'role__not_in', array() );
+        return;
+    }
+    $role = isset( $_GET['role'] ) && is_scalar( $_GET['role'] )
+        ? sanitize_key( wp_unslash( $_GET['role'] ) ) : '';
+    $allowed = array( 'customer', 'deprat_pending' );
+    $query->set( 'role', in_array( $role, $allowed, true ) ? $role : '' );
+    $query->set( 'role__in', in_array( $role, $allowed, true ) ? array() : $allowed );
+    $query->set( 'role__not_in', array( 'administrator' ) );
+}, 999 );
+
+add_filter( 'views_users', static function ( $views ) {
+    if ( ! deprat_admin_design_enabled() || ! current_user_can( 'list_users' ) ) { return $views; }
+    $roles = count_users()['avail_roles'] ?? array();
+    $current_role = isset( $_GET['role'] ) && is_scalar( $_GET['role'] )
+        ? sanitize_key( wp_unslash( $_GET['role'] ) ) : '';
+    $link = static function ( $label, $url, $count, $active ) {
+        return '<a href="' . esc_url( $url ) . '"' . ( $active ? ' class="current" aria-current="page"' : '' ) . '>'
+            . esc_html( $label ) . ' <span class="count">(' . esc_html( (string) $count ) . ')</span></a>';
+    };
+    $clients = admin_url( 'users.php?deprat_view=clients' );
+    $admins = admin_url( 'users.php?deprat_view=admins' );
+    if ( 'admins' === deprat_admin_users_view() ) {
+        return array(
+            'administrator' => $link( 'Administrateurs', $admins, (int) ( $roles['administrator'] ?? 0 ), true ),
+            'deprat_clients' => '<a href="' . esc_url( $clients ) . '">Retour aux clients professionnels</a>',
+        );
+    }
+    return array(
+        'deprat_all_clients' => $link( 'Tous les clients', $clients,
+            (int) ( $roles['customer'] ?? 0 ) + (int) ( $roles['deprat_pending'] ?? 0 ),
+            ! in_array( $current_role, array( 'customer', 'deprat_pending' ), true ) ),
+        'customer' => $link( 'Clients actifs', add_query_arg( 'role', 'customer', $clients ),
+            (int) ( $roles['customer'] ?? 0 ), 'customer' === $current_role ),
+        'deprat_pending' => $link( 'Comptes pro en attente', add_query_arg( 'role', 'deprat_pending', $clients ),
+            (int) ( $roles['deprat_pending'] ?? 0 ), 'deprat_pending' === $current_role ),
+    );
+} );
+
+/** Ne compter que les demandes exigeant une intervention du service ADV. */
+function deprat_admin_adv_action_count() {
+    if ( ! function_exists( 'wc_get_orders' ) ) { return 0; }
+    $cached = get_transient( 'deprat_admin_adv_action_count_v1' );
+    if ( false !== $cached ) { return (int) $cached; }
+    // Contrôle réel du méta DEPRAT pour compatibilité HPOS et commandes classiques.
+    // Une requête paginée évite de charger tous les dossiers en mémoire.
+    $count = 0;
+    $page = 1;
+    $page_size = 100;
+    do {
+        $orders = wc_get_orders( array(
+            'type' => 'shop_order',
+            'status' => array( 'dpr-recu', 'dpr-encours', 'dpr-accepte' ),
+            'limit' => $page_size,
+            'page' => $page,
+            'orderby' => 'ID',
+            'order' => 'DESC',
+        ) );
+        if ( ! is_array( $orders ) ) { break; }
+        foreach ( $orders as $order ) {
+            if ( $order instanceof WC_Order && 'oui' === $order->get_meta( '_deprat_demande', true ) ) {
+                $count++;
+            }
+        }
+        $page++;
+    } while ( count( $orders ) === $page_size );
+    set_transient( 'deprat_admin_adv_action_count_v1', $count, MINUTE_IN_SECONDS );
+    return $count;
+}
+foreach ( array( 'woocommerce_order_status_changed', 'woocommerce_new_order', 'woocommerce_update_order', 'woocommerce_order_deleted' ) as $deprat_event ) {
+    add_action( $deprat_event, static function () { delete_transient( 'deprat_admin_adv_action_count_v1' ); } );
+}
+unset( $deprat_event );
+
 add_action( 'admin_enqueue_scripts', static function () {
     if ( ! deprat_admin_design_enabled() ) { return; }
     wp_enqueue_style(
         'deprat-admin-navigation',
         plugins_url( 'assets/css/admin-navigation.css', dirname( __DIR__ ) . '/deprat-core.php' ),
         array(),
-        '0.1.72'
+        '0.1.78'
     );
     wp_enqueue_script(
         'deprat-admin-navigation',
         plugins_url( 'assets/js/admin-navigation.js', dirname( __DIR__ ) . '/deprat-core.php' ),
         array(),
-        '0.1.72',
+        '0.1.78',
         true
     );
     wp_enqueue_style(
         'deprat-admin-screen-polish',
         plugins_url( 'assets/css/admin-screen-polish.css', dirname( __DIR__ ) . '/deprat-core.php' ),
         array( 'deprat-admin-navigation' ),
-        '0.1.72'
+        '0.1.78'
     );
     wp_enqueue_script(
         'deprat-admin-screen-polish',
         plugins_url( 'assets/js/admin-screen-polish.js', dirname( __DIR__ ) . '/deprat-core.php' ),
         array( 'deprat-admin-navigation' ),
-        '0.1.72',
+        '0.1.78',
         true
     );
     wp_add_inline_script(
@@ -86,9 +179,11 @@ add_action( 'admin_enqueue_scripts', static function () {
             'currentPostType' => (string) ( get_current_screen() && get_current_screen()->post_type ? get_current_screen()->post_type : '' ),
             'ordersUrl' => admin_url( 'admin.php?page=wc-orders' ),
             'settingsUrl' => admin_url( 'admin.php?page=deprat-shop-settings' ),
-            'clientUrl' => admin_url( 'users.php' ),
-            'pendingUrl' => admin_url( 'users.php?role=deprat_pending' ),
+            'clientUrl' => admin_url( 'users.php?deprat_view=clients' ),
+            'adminUsersUrl' => admin_url( 'users.php?deprat_view=admins' ),
+            'pendingUrl' => admin_url( 'users.php?deprat_view=clients&role=deprat_pending' ),
             'pendingCount' => (int) ( count_users()['avail_roles']['deprat_pending'] ?? 0 ),
+            'advActionCount' => deprat_admin_adv_action_count(),
             'marketingUrl' => admin_url( 'admin.php?page=wc-admin&path=/marketing' ),
             'homeSlideUrl' => admin_url( 'edit.php?post_type=deprat_slide' ),
             'blogUrl' => admin_url( 'edit.php' ),

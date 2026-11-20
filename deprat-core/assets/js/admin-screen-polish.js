@@ -6,6 +6,15 @@
  'use strict';
  function init(){
    if(!document.body.classList.contains('deprat-admin-mode')){return;}
+   // L'intitulé de l'écran suit maintenant la vraie liste visible.
+   if(/\/users\.php$/.test(location.pathname)){
+      var usersTitle=document.querySelector('#wpbody-content>.wrap>h1');
+      if(usersTitle){
+         usersTitle.textContent=new URLSearchParams(location.search).get('deprat_view')==='admins'
+            ? 'Comptes administrateurs' : 'Clients professionnels';
+      }
+      return;
+   }
    if(!/\/upload\.php$/.test(location.pathname)){return;}
    var wrap=document.querySelector('#wpbody-content>.wrap');
    if(!wrap || wrap.querySelector('.deprat-editorial-shortcuts')){return;}

@@ -16,6 +16,7 @@ jobs:
       - name: Vérifier la syntaxe PHP
         run: |
           php -l deprat-core/deprat-core.php
+          php -l deprat-core/snippets/admin-12.php
           php -l deprat-core/includes/product-technical-data.php
           php -l deprat-core/includes/product-shape.php
           php -l deprat-core/includes/icon-library.php
@@ -106,6 +107,10 @@ jobs:
         run: php /tmp/wp-cli.phar eval-file "$GITHUB_WORKSPACE/tests/product-wordpress-integration.php" --path=/tmp/deprat-wp
       - name: Tester les slides d’accueil et le masquage
         run: php /tmp/wp-cli.phar eval-file "$GITHUB_WORKSPACE/tests/home-hero-integration.php" --path=/tmp/deprat-wp
+      - name: Tester le tableau de bord et la pastille ADV
+        run: php /tmp/wp-cli.phar eval-file "$GITHUB_WORKSPACE/tests/admin-dashboard-integration.php" --path=/tmp/deprat-wp
+      - name: Vérifier les filtres Clients et Administrateurs
+        run: php /tmp/wp-cli.phar eval-file "$GITHUB_WORKSPACE/tests/admin-clients-integration.php" --path=/tmp/deprat-wp
       - name: Tester les icônes et images des catégories WooCommerce
         run: php /tmp/wp-cli.phar eval-file "$GITHUB_WORKSPACE/tests/category-visual-integration.php" --path=/tmp/deprat-wp
       - name: Vérifier les pages Astra et le téléchargement du PDF

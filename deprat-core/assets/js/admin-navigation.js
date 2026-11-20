@@ -9,40 +9,9 @@
         var wrap = document.getElementById('adminmenuwrap');
         var config = window.depratAdminNavigation;
         if (!original || !wrap || !config || wrap.querySelector('.deprat-admin-menu')) { return; }
-        // Onglets réels WordPress « Utilisateurs », sans perdre la recherche,
-        // les filtres, les rôles ou les actions de validation existants.
-        if (/\/users\.php$/.test(location.pathname)) {
-            var tabs=document.querySelector('.subsubsub');
-            if (tabs) {
-                var tabItems=Array.from(tabs.querySelectorAll(':scope > li'));
-                var groups=[
-                    {label:'Tous',value:null},
-                    {label:'Administrateurs',value:'administrator'},
-                    {label:'Clients',value:'customer'},
-                    {label:'Comptes pro en attente',value:'deprat_pending'}
-                ];
-                groups.forEach(function(group) {
-                    var li=tabItems.find(function(item) {
-                        var anchor=item.querySelector('a[href]');
-                        if (!anchor) {return false;}
-                        var u=new URL(anchor.href,location.href);
-                        var role=u.searchParams.get('role');
-                        return group.value===null ? !role : role===group.value;
-                    });
-                    if (!li) {return;}
-                    var anchor=li.querySelector('a');
-                    var count=anchor.querySelector('.count');
-                    var originalCount=count?count.textContent.replace(/[()]/g,'').trim():'';
-                    anchor.textContent=group.label+' ';
-                    if (originalCount) {
-                        var span=document.createElement('span');
-                        span.className='count';span.textContent=originalCount;
-                        anchor.appendChild(span);
-                    }
-                    tabs.appendChild(li);
-                });
-            }
-        }
+        // Les onglets Clients et Administrateurs sont construits côté PHP,
+        // avec de vrais filtres de requête et des compteurs cohérents.
+        // Ne jamais les réécrire ici avec des liens WordPress « Tous ».
         var entries = [];
         var used = new Set();
         function clean(str) { return (str || '').replace(/\s+/g, ' ').trim(); }
@@ -140,15 +109,20 @@
         // Caractéristiques techniques : lorsque leur écran dédié sera ajouté,
         // il sera classé ici ; pas de lien factice vers un outil inexistant.
         shopChildren.push(shopSettings);
-        // Le menu Clients ouvre la liste complète ; seul l'onglet de
-        // validation est une sous-rubrique.
+        // La liste Clients ne contient ni administrateurs ni comptes techniques.
+        // Deux vrais liens permettent d'ouvrir l'ensemble ou les comptes à valider.
+        shopChildren[0].badgeCount=Number(config.advActionCount)||0;
+        shopChildren[0].badgeLabel='commandes nécessitant une action du service ADV';
         var clientChildren=[
+            item('Tous les clients',config.clientUrl,'users'),
             item('Comptes pro en attente',config.pendingUrl,'user-check')
         ];
-        clientChildren[0].badgeCount=Number(config.pendingCount)||0;
+        clientChildren[1].badgeCount=Number(config.pendingCount)||0;
+        clientChildren[1].badgeLabel='comptes professionnels en attente de validation';
         shopChildren.push({
             title:'Clients',url:config.clientUrl,icon:'users',
             hideOpenLink:true,badgeCount:Number(config.pendingCount)||0,
+            badgeLabel:'comptes professionnels en attente de validation',
             children:clientChildren
         });
         var marketingChildren = [];
@@ -225,6 +199,10 @@
         });
         // Les en-têtes sont uniquement des groupes à déplier, aucune page fictive.
         // Ne pas recréer d'entrée pour un outil qui n'est pas installé.
+        // Accès distinct aux administrateurs : jamais dans la liste Clients.
+        adminBuckets[3].children.unshift(item(
+            'Comptes administrateurs',config.adminUsersUrl,'users'
+        ));
         var groupedAdminChildren=adminBuckets.filter(function(b){return b.children.length>0;});
 
         // Accès immédiat à la page WP Pusher Plugins utilisée pour DEPRAT Core.
@@ -325,7 +303,7 @@
                 // pour TOUTES les listes (slides, produits, articles...).
                 // De même admin.php sans page pouvait activer plusieurs menus.
                 // Comparer les deux sens, y compris l'absence du paramètre.
-                var keys=['page','post_type','tab','role','path'];
+                var keys=['page','post_type','tab','role','path','deprat_view'];
                 return keys.every(function (key) {
                     var actual=current.searchParams.get(key);
                     var expected=target.searchParams.get(key);
@@ -343,11 +321,11 @@
                 });
             }catch(e){return false;}
         }
-        function badge(count) {
+        function badge(count,label) {
             var el=document.createElement('span');
             el.className='deprat-admin-pending-badge';
             el.textContent=String(count>99?'99+':count);
-            el.setAttribute('aria-label',String(count)+' comptes professionnels en attente');
+            el.setAttribute('aria-label',String(count)+' '+(label||'éléments à traiter'));
             return el;
         }
         function renderLink(n,level) {
@@ -358,7 +336,7 @@
             var label=document.createElement('span');
             label.textContent=n.title;
             link.appendChild(label);
-            if (n.badgeCount>0) { link.appendChild(badge(n.badgeCount)); }
+            if (n.badgeCount>0) { link.appendChild(badge(n.badgeCount,n.badgeLabel)); }
             var editingProduct=(n.title==='Produits' && config.currentPostType==='product' &&
                 (/\/post\.php$/.test(location.pathname) || /\/post-new\.php$/.test(location.pathname)));
             if (isActiveUrl(n.url) || editingProduct) {
@@ -390,7 +368,7 @@
                 }
                 summary.appendChild(headingLink);
             } else { summary.appendChild(label); }
-            if (n.badgeCount>0) { summary.appendChild(badge(n.badgeCount)); }
+            if (n.badgeCount>0) { summary.appendChild(badge(n.badgeCount,n.badgeLabel)); }
             var arrow=document.createElement('span');
             arrow.className='deprat-menu-chevron';
             arrow.setAttribute('aria-hidden','true');
@@ -412,7 +390,8 @@
             var remembered=null;
             try {remembered=sessionStorage.getItem(key);}catch(err) {}
             var currentBranch=Boolean(body.querySelector('.is-active') ||
-                (n.title==='Clients' && /\/users\.php$/.test(location.pathname)) ||
+                (n.title==='Clients' && /\/users\.php$/.test(location.pathname) &&
+                  new URLSearchParams(location.search).get('deprat_view')!=='admins') ||
                 (level===0 && rootTone==='boutique' &&
                   (/deprat-shop-settings/.test(location.search) || isProductEditor)));
             details.open=currentBranch || remembered==='1';
