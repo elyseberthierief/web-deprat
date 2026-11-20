@@ -645,10 +645,15 @@
                 ? window.depratProductEditor.categoryTree : [];
             var ranks = {};
             var depths = {};
+            var sectionNames = {};
+            var sectionKeys = {};
             treeOrder.forEach( function ( term, index ) {
                 ranks[String( term.id )] = index;
                 depths[String( term.id )] = Math.min( 12, Math.max( 0, Number( term.depth ) || 0 ) );
+                sectionNames[String(term.id)] = term.sectionTitle || 'Autres composants';
+                sectionKeys[String(term.id)] = term.section || 'autres';
             } );
+            var previousSection = null;
             if ( categoryList ) {
                 var nativeInputs = Array.from( categoryList.querySelectorAll( 'input[type="checkbox"]' ) );
                 nativeInputs.sort( function ( left, right ) {
@@ -661,6 +666,14 @@
                         return;
                     }
                     seen[ original.value ] = true;
+                    var sectionKey = sectionKeys[original.value] || 'autres';
+                    if (sectionKey!==previousSection) {
+                        previousSection=sectionKey;
+                        var sectionTitle=document.createElement('div');
+                        sectionTitle.className='deprat-product-category-section-heading';
+                        sectionTitle.textContent=sectionNames[original.value] || 'Autres composants';
+                        categoryOptions.appendChild(sectionTitle);
+                    }
                     var nativeLabel = original.closest( 'label' );
                     var name = nativeLabel ? nativeLabel.textContent.trim() : original.value;
                     var label = document.createElement( 'label' );
