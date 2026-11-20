@@ -82,3 +82,26 @@ add_action( 'admin_enqueue_scripts', static function () {
         'before'
     );
 } );
+
+/**
+ * Tableau de bord DEPRAT : retirer uniquement les boîtes superflues de
+ * l'écran administrateur, sans désactiver les extensions correspondantes.
+ */
+add_action( 'wp_dashboard_setup', static function () {
+    if ( ! deprat_admin_design_enabled() ) { return; }
+    $ids = array(
+        'dashboard_recent_comments',
+        'dashboard_quick_press',
+        'wpforms_reports_widget_lite',
+        'wpforms_dashboard_widget',
+        'wpforms_reports_widget',
+        'wpforms_tasks_widget',
+        'wpforms_welcome_widget',
+    );
+    foreach ( $ids as $id ) {
+        foreach ( array( 'normal', 'side', 'column3', 'column4' ) as $context ) {
+            remove_meta_box( $id, 'dashboard', $context );
+        }
+    }
+}, PHP_INT_MAX );
+
