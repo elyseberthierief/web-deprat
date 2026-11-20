@@ -105,6 +105,11 @@
         if (posts) {
             var addPost=posts.children.find(function(c){return /ajouter|add new/i.test(c.title);});
             if (addPost) { postChildren.push(item('Ajouter un article',addPost.url,'plus')); }
+            posts.children.forEach(function(c){
+                if (/catégor|categor|étiquette|tag/i.test(c.title)) {
+                    addUnique(postChildren,item(c.title,c.url,'chevron-right'));
+                }
+            });
         }
 
         var adminChildren=[];
@@ -210,7 +215,7 @@
                 var current=new URL(window.location.href), target=new URL(url,location.href);
                 if (current.pathname!==target.pathname) {return false;}
                 var params=target.searchParams;
-                var keys=['page','post_type','tab','role'];
+                var keys=['page','post_type','tab','role','path'];
                 return keys.every(function(key) { return !params.has(key) || params.get(key)===current.searchParams.get(key); });
             }catch(e){return false;}
         }
