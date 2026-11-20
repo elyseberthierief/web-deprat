@@ -86,6 +86,15 @@ add_action( 'admin_menu', static function () {
         'deprat-categories-tree',
         'deprat_category_tree_admin_page'
     );
+    add_menu_page(
+        'Paramètres de la boutique',
+        'Paramètres boutique',
+        'manage_product_terms',
+        'deprat-shop-settings',
+        'deprat_category_tree_admin_page',
+        'dashicons-admin-generic',
+        56
+    );
 }, 50 );
 
 
@@ -119,7 +128,7 @@ function deprat_category_tree_render_icon_picker( $context ) {
 }
 
 function deprat_category_tree_admin_assets( $hook ) {
-    if ( 'product_page_deprat-categories-tree' !== $hook ) { return; }
+    if ( ! in_array( $hook, array( 'product_page_deprat-categories-tree', 'toplevel_page_deprat-shop-settings' ), true ) ) { return; }
     wp_enqueue_style( 'deprat-category-tree', plugins_url( 'assets/css/category-tree-admin.css', dirname( __DIR__ ) . '/deprat-core.php' ), array(), '0.1.50' );
     wp_enqueue_style( 'deprat-catalog-sections-editor',
         plugins_url( 'assets/css/catalogue-sections.css', dirname( __DIR__ ) . '/deprat-core.php' ),
@@ -249,8 +258,24 @@ function deprat_category_tree_admin_visual_menu() {
 function deprat_category_tree_admin_page() {
     if ( ! current_user_can( 'manage_product_terms' ) ) { wp_die( 'Vous ne pouvez pas organiser les catégories.' ); }
     $terms = deprat_category_tree_terms();
+    $tab = isset( $_GET['tab'] ) ? sanitize_key( wp_unslash( $_GET['tab'] ) ) : 'categories';
+    if ( ! in_array( $tab, array( 'categories', 'icons', 'slides' ), true ) ) { $tab = 'categories'; }
+    $base = admin_url( 'admin.php?page=deprat-shop-settings' );
     ?>
-    <div class="wrap deprat-tree-admin" data-deprat-category-tree>
+    <div class="wrap deprat-tree-admin deprat-shop-settings" data-deprat-category-tree>
+        <h1>Paramètres de la boutique</h1>
+        <nav class="nav-tab-wrapper deprat-shop-tabs" aria-label="Paramètres de la boutique">
+            <?php foreach ( array( 'categories' => '1. Organiser les catégories', 'icons' => '2. Les icônes', 'slides' => '3. Les slides' ) as $key => $label ) : ?>
+                <a class="nav-tab <?php echo $tab === $key ? 'nav-tab-active' : ''; ?>"
+                   href="<?php echo esc_url( add_query_arg( 'tab', $key, $base ) ); ?>"
+                   <?php echo $tab === $key ? 'aria-current="page"' : ''; ?>><?php echo esc_html( $label ); ?></a>
+            <?php endforeach; ?>
+        </nav>
+        <?php if ( 'icons' === $tab ) : ?>
+            <?php deprat_icon_library_render_admin(); ?>
+        <?php elseif ( 'slides' === $tab ) : ?>
+            <?php if ( function_exists( 'deprat_category_slide_admin_list' ) ) { deprat_category_slide_admin_list(); } ?>
+        <?php else : ?>
         <div class="deprat-tree-heading">
             <div>
                 
@@ -274,7 +299,6 @@ function deprat_category_tree_admin_page() {
             <span data-tree-unsaved class="deprat-tree-unsaved" hidden>Modifications non enregistrées</span>
             <span data-tree-status role="status" aria-live="polite"></span>
         </div>
-        <?php deprat_icon_library_render_admin(); ?>
         <?php deprat_category_tree_admin_visual_menu(); ?>
         <details class="deprat-tree-advanced" data-tree-advanced>
             <summary>Gestion avancée de l’arborescence (optionnelle)</summary>
@@ -368,6 +392,7 @@ function deprat_category_tree_admin_page() {
                 </div>
             </form>
         </div>
+        <?php endif; ?>
     </div>
     <?php
 }
