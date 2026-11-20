@@ -59,8 +59,8 @@
             keyInput.value = card ? card.getAttribute('data-library-key') : '';
             nameInput.value = card ? card.getAttribute('data-library-name') : '';
             imageId = card ? Number(card.getAttribute('data-library-media')) || 0 : 0;
-            positionX = card ? Number(card.getAttribute('data-library-position-x')) || 50 : 50;
-            positionY = card ? Number(card.getAttribute('data-library-position-y')) || 50 : 50;
+            positionX = card && card.hasAttribute('data-library-position-x') ? Number(card.getAttribute('data-library-position-x')) : 50;
+            positionY = card && card.hasAttribute('data-library-position-y') ? Number(card.getAttribute('data-library-position-y')) : 50;
             heading.textContent = card ? 'Modifier l’icône' : 'Ajouter une icône';
             var img = card && card.querySelector('.deprat-library-art img');
             setPreview(img ? img.src : '');
